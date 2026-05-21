@@ -38,6 +38,10 @@ const elBtnSettingsClose = document.getElementById('btn-settings-close');
 const elSettingsOverlay = document.getElementById('settings-overlay');
 const elSettingsCheckRunes = document.getElementById('settings-check-runes');
 const elSettingsCheckSpells = document.getElementById('settings-check-spells');
+const elSettingsCheckFlashD = document.getElementById('settings-check-flash-d');
+const elListStartingItems = document.getElementById('list-starting-items');
+const elListBootsItems = document.getElementById('list-boots-items');
+const elListCoreItems = document.getElementById('list-core-items');
 const elBtnSettingsDone = document.getElementById('btn-settings-done');
 
 const elInputLolPath = document.getElementById('input-lol-path');
@@ -52,7 +56,8 @@ let activeScrapedData = null;
 let appConfig = {
   autoApplyRunes: true,
   autoApplySpells: true,
-  customLoLPath: ''
+  customLoLPath: '',
+  flashOnD: false
 };
 
 // ==========================================================================
@@ -99,6 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const handleToggleChange = () => {
     appConfig.autoApplyRunes = elCheckAutoRunes.checked;
     appConfig.autoApplySpells = elCheckAutoSpells.checked;
+    appConfig.flashOnD = elSettingsCheckFlashD.checked;
     
     // Sync states
     elCheckAutoRunesWelcome.checked = appConfig.autoApplyRunes;
@@ -108,11 +114,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.api.toggleAutoApply({
       autoApplyRunes: appConfig.autoApplyRunes,
-      autoApplySpells: appConfig.autoApplySpells
+      autoApplySpells: appConfig.autoApplySpells,
+      flashOnD: appConfig.flashOnD
     });
 
     updateBottomActionLayout();
   };
+
+  elSettingsCheckFlashD.addEventListener('change', handleToggleChange);
 
   [elCheckAutoRunesWelcome, elCheckAutoSpellsWelcome, elCheckAutoRunes, elCheckAutoSpells, elSettingsCheckRunes, elSettingsCheckSpells].forEach(box => {
     box.addEventListener('change', (e) => {
@@ -169,6 +178,7 @@ function updateConfigUI(config) {
   elCheckAutoSpells.checked = config.autoApplySpells;
   elSettingsCheckRunes.checked = config.autoApplyRunes;
   elSettingsCheckSpells.checked = config.autoApplySpells;
+  elSettingsCheckFlashD.checked = !!config.flashOnD;
   elInputLolPath.value = config.customLoLPath || '';
 }
 
@@ -282,6 +292,7 @@ window.api.onScrapeSuccess((data) => {
 function renderBuildDetails(data) {
   const runes = data.runes;
   const summoners = data.summoners;
+  const items = data.items || { startingBuild: [], popularBoots: [], coreItems: [] };
 
   // 1. Draw Primary Tree Header details
   elIconPrimaryStyle.src = `https://ddragon.leagueoflegends.com/cdn/img/${runes.primaryStyleIcon}`;
@@ -336,8 +347,45 @@ function renderBuildDetails(data) {
     elListSpells.appendChild(container);
   });
 
-  // 7. Update Footer Indicators
+  // 7. Draw Recommended Items
+  renderItemGroup(elListStartingItems, items.startingBuild);
+  renderItemGroup(elListBootsItems, items.popularBoots);
+  renderItemGroup(elListCoreItems, items.coreItems);
+
+  // 8. Update Footer Indicators
   updateBottomActionLayout();
+}
+
+// Helper to render a group of item items beautifully
+function renderItemGroup(container, itemsList) {
+  if (!container) return;
+  container.innerHTML = '';
+  if (!itemsList || itemsList.length === 0) {
+    const emptySpan = document.createElement('span');
+    emptySpan.className = 'rune-desc';
+    emptySpan.textContent = 'Ninguno';
+    container.appendChild(emptySpan);
+    return;
+  }
+
+  itemsList.forEach(item => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'item-wrapper';
+    wrapper.title = `${item.name} (${item.gold} oro)`;
+
+    const img = document.createElement('img');
+    img.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/item/${item.id}.png`;
+    img.className = 'item-icon';
+    img.alt = item.name;
+    
+    // In case specific DDragon item ID fails to load, draw placeholder
+    img.onerror = () => {
+      img.src = 'https://ddragon.leagueoflegends.com/cdn/14.10.1/img/item/3601.png';
+    };
+
+    wrapper.appendChild(img);
+    container.appendChild(wrapper);
+  });
 }
 
 // Helper to construct a single visual row element for a rune

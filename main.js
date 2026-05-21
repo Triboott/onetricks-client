@@ -13,6 +13,7 @@ let config = {
   autoApplyRunes: true,
   autoApplySpells: true,
   customLoLPath: '',
+  flashOnD: false
 };
 
 // Global application state
@@ -41,6 +42,46 @@ function saveConfig() {
   } catch (e) {
     console.error('Failed to save config:', e);
   }
+}
+
+function applyFlashPreference(summoners) {
+  if (!summoners || !summoners.raw) return summoners;
+
+  const raw = { ...summoners.raw };
+  const spell1 = { ...summoners.spell1 };
+  const spell2 = { ...summoners.spell2 };
+
+  const hasFlash = raw.spell1Id === 4 || raw.spell2Id === 4;
+  if (hasFlash) {
+    if (config.flashOnD) {
+      // We want Flash on spell1 (D)
+      if (raw.spell2Id === 4) {
+        // Swap them
+        const tempId = raw.spell1Id;
+        raw.spell1Id = raw.spell2Id;
+        raw.spell2Id = tempId;
+
+        const tempSpell = { ...spell1 };
+        summoners.spell1 = { ...spell2 };
+        summoners.spell2 = tempSpell;
+      }
+    } else {
+      // We want Flash on spell2 (F)
+      if (raw.spell1Id === 4) {
+        // Swap them
+        const tempId = raw.spell1Id;
+        raw.spell1Id = raw.spell2Id;
+        raw.spell2Id = tempId;
+
+        const tempSpell = { ...spell1 };
+        summoners.spell1 = { ...spell2 };
+        summoners.spell2 = tempSpell;
+      }
+    }
+  }
+
+  summoners.raw = raw;
+  return summoners;
 }
 
 function createWindow() {
@@ -203,6 +244,10 @@ async function triggerScrape(championName, role) {
       return;
     }
 
+    if (scraped && scraped.summoners) {
+      scraped.summoners = applyFlashPreference(scraped.summoners);
+    }
+
     appState.scrapedData = scraped;
     sendToRenderer('scrape-success', scraped);
 
@@ -250,10 +295,25 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, flashOnD }) => {
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
+  if (flashOnD !== undefined) {
+    config.flashOnD = flashOnD;
+  }
   saveConfig();
+
+  // In-session dynamic update for Flash preference!
+  if (appState.scrapedData && appState.scrapedData.summoners) {
+    appState.scrapedData.summoners = applyFlashPreference(appState.scrapedData.summoners);
+    sendToRenderer('scrape-success', appState.scrapedData);
+
+    if (config.autoApplySpells) {
+      connector.applySummonerSpells(appState.scrapedData.summoners.raw).catch(err => {
+        console.error('Failed to auto-apply summoner spells on toggle:', err);
+      });
+    }
+  }
 });
 
 ipcMain.on('save-custom-path', (event, pathStr) => {

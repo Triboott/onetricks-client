@@ -161,6 +161,7 @@ const server = https.createServer(httpsOptions, (req, res) => {
     return;
   }
 
+  console.log(`[MOCK LCU] ⚠️ Fallthrough to 444 for: ${req.method} "${url.pathname}"`);
   res.writeHead(444);
   res.end();
 });

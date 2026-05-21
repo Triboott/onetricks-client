@@ -262,12 +262,14 @@ class OnetricksScraper {
       if (data && Array.isArray(data)) {
         data.forEach(style => {
           this.stylesDict[style.key] = style.id;
-          style.slots.forEach(slot => {
+          style.slots.forEach((slot, slotIndex) => {
             slot.runes.forEach(rune => {
-              // Populate meta dictionary mapping
+              // Populate meta dictionary mapping with styleId and isKeystone flag
               this.perksMap[rune.id] = {
                 name: rune.name,
-                icon: rune.icon
+                icon: rune.icon,
+                styleId: style.id,
+                isKeystone: slotIndex === 0
               };
 
               // Normalize names to prevent mismatch
@@ -451,6 +453,7 @@ class OnetricksScraper {
   parseScrapedData(championName, { nextData, images }, role = '') {
     let rawRunes = null;
     let rawSummoners = null;
+    let rawItems = null;
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
@@ -516,6 +519,60 @@ class OnetricksScraper {
               spell2Id: parseInt(spells[1])
             };
           }
+
+          // 6. Extract Item Builds from JSON!
+          const itemData = (nextData && nextData.props && nextData.props.pageProps && nextData.props.pageProps.itemData) || bestPatchData.itemData || {};
+          
+          let startingBuild = [];
+          if (bestPatchData.startingItems && bestPatchData.startingItems.length > 0) {
+            const firstSet = bestPatchData.startingItems[0][0];
+            startingBuild = firstSet.map(idStr => {
+              const id = idStr.toString();
+              return {
+                id,
+                name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+                gold: itemData[id] ? itemData[id].gold : 0
+              };
+            });
+          }
+
+          let popularBoots = [];
+          if (bestPatchData.boots && bestPatchData.boots.length > 0) {
+            popularBoots = bestPatchData.boots.slice(0, 2).map(b => {
+              const id = b[0].toString();
+              return {
+                id,
+                name: itemData[id] ? itemData[id].name : `Botas ${id}`,
+                gold: itemData[id] ? itemData[id].gold : 0
+              };
+            });
+          }
+
+          let coreItems = [];
+          if (bestPatchData.popularItems && bestPatchData.popularItems.length > 0) {
+            const startingIds = startingBuild.map(i => i.id);
+            const bootsIds = popularBoots.map(i => i.id);
+            
+            const filteredItems = bestPatchData.popularItems.filter(item => {
+              const id = item[0].toString();
+              return !startingIds.includes(id) && !bootsIds.includes(id);
+            });
+
+            coreItems = filteredItems.slice(0, 6).map(item => {
+              const id = item[0].toString();
+              return {
+                id,
+                name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+                gold: itemData[id] ? itemData[id].gold : 0
+              };
+            });
+          }
+
+          rawItems = {
+            startingBuild,
+            popularBoots,
+            coreItems
+          };
         }
       }
     }
@@ -665,7 +722,8 @@ class OnetricksScraper {
     return {
       champion: championName,
       runes: rawRunes || this.getDefaultRunes(championName),
-      summoners: rawSummoners
+      summoners: rawSummoners,
+      items: rawItems || this.getDefaultItems(championName)
     };
   }
 
@@ -700,6 +758,23 @@ class OnetricksScraper {
       primaryStyleId: 8000, // Precision
       subStyleId: 8400, // Resolve
       selectedPerkIds: [8010, 9111, 9104, 8299, 8446, 8473, 5005, 5008, 5002] // Conqueror setup
+    };
+  }
+
+  getDefaultItems(champ) {
+    return {
+      startingBuild: [
+        { id: '1055', name: 'Espada de Doran', gold: 450 },
+        { id: '2003', name: 'Poción de vida', gold: 50 },
+        { id: '3340', name: 'Tótem guardián', gold: 0 }
+      ],
+      popularBoots: [
+        { id: '3047', name: 'Botas de acero revestidas', gold: 1100 }
+      ],
+      coreItems: [
+        { id: '3071', name: 'Cuchilla negra', gold: 3000 },
+        { id: '6610', name: 'Firmamento desgarrado', gold: 3100 }
+      ]
     };
   }
 
@@ -751,7 +826,7 @@ class OnetricksScraper {
           id,
           name: perkInfo.name,
           icon: perkInfo.icon,
-          desc: index === 0 ? 'Runa Clave' : 'Runa Mayor',
+          desc: perkInfo.isKeystone ? 'Runa Clave' : 'Runa Mayor',
           isShard: false
         };
       }
@@ -766,13 +841,26 @@ class OnetricksScraper {
       };
     });
 
-    // Separate Primary, Secondary and Shards for clean rendering
-    // Indexes 0-3 are Primary (Keystone + 3 standard)
-    // Indexes 4-5 are Secondary (2 standard)
-    // Indexes 6-8 are Stat Shards (3 shards)
-    const primaryPerks = resolvedPerks.slice(0, 4);
-    const secondaryPerks = resolvedPerks.slice(4, 6);
-    const shardsPerks = resolvedPerks.slice(6, 9);
+    // Group runes by style dynamically
+    const allRunes = resolvedPerks.filter(p => !p.isShard);
+    const shardsPerks = resolvedPerks.filter(p => p.isShard);
+
+    let primaryPerks = allRunes.filter(p => this.perksMap[p.id] && this.perksMap[p.id].styleId === runes.primaryStyleId);
+    let secondaryPerks = allRunes.filter(p => this.perksMap[p.id] && this.perksMap[p.id].styleId === runes.subStyleId);
+
+    // Resilient fallback if dynamic filtering is incomplete
+    if (primaryPerks.length !== 4 || secondaryPerks.length !== 2) {
+      console.log(`[SCRAPER] Dynamic grouping incomplete (Primary: ${primaryPerks.length}, Secondary: ${secondaryPerks.length}). Using index-based fallback.`);
+      primaryPerks = allRunes.slice(0, 4);
+      secondaryPerks = allRunes.slice(4, 6);
+    } else {
+      // Sort primary tree so Keystone is always first
+      primaryPerks.sort((a, b) => {
+        const aKey = this.perksMap[a.id]?.isKeystone ? 1 : 0;
+        const bKey = this.perksMap[b.id]?.isKeystone ? 1 : 0;
+        return bKey - aKey;
+      });
+    }
 
     // Resolve Summoner Spells
     const spell1 = this.spellsMap[summoners.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
@@ -796,7 +884,8 @@ class OnetricksScraper {
         raw: summoners,
         spell1: { id: summoners.spell1Id, name: spell1.name, icon: spell1.icon },
         spell2: { id: summoners.spell2Id, name: spell2.name, icon: spell2.icon }
-      }
+      },
+      items: scraped.items || { startingBuild: [], popularBoots: [], coreItems: [] }
     };
   }
 }
