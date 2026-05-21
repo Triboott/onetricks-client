@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Onetricks Client</title>
+  <!-- Google Fonts Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- Custom Borderless App Header -->
+  <header class="app-header">
+    <div class="logo-area">
+      <span class="logo-accent">ONETRICKS</span>
+      <span class="logo-sub">CLIENT</span>
+    </div>
+    <div class="header-controls">
+      <!-- Status Indicator -->
+      <div class="connection-pill" id="lcu-pill">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">DESCONECTADO</span>
+      </div>
+      <button class="icon-btn" id="btn-settings" title="Ajustes">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+      <button class="window-btn minimize" id="btn-minimize">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+      <button class="window-btn close" id="btn-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="app-body">
+    
+    <!-- STATE 1: WELCOME SCREEN (NO ACTIVE CHAMP SELECT) -->
+    <section class="screen active" id="screen-welcome">
+      <div class="welcome-container glass-card">
+        <div class="welcome-header">
+          <div class="orb-glowing purple"></div>
+          <h1>Preparado para Onetricks</h1>
+          <p>Entra en selección de campeones en League of Legends y buscaremos automáticamente las mejores runas y hechizos de los mejores One-tricks mundiales.</p>
+        </div>
+        
+        <div class="feature-rows">
+          <div class="feature-card">
+            <div class="feat-icon blue">⚡</div>
+            <div class="feat-info">
+              <h3>Runas al Instante</h3>
+              <p>Detectamos tu campeón al hacer hover o fijarlo e importamos las runas recomendadas de onetricks.gg en menos de un segundo.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon purple">🔥</div>
+            <div class="feat-info">
+              <h3>Hechizos Auto</h3>
+              <p>Cambia automáticamente a los hechizos óptimos (como Destello y Prender) según lo que jueguen los mejores del mundo.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feat-icon gold">🏆</div>
+            <div class="feat-info">
+              <h3>Datos de Elite</h3>
+              <p>No más estadísticas generales. Runas directas de los OTP en ELOs Challenger, Grandmaster y Master.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-config-footer">
+          <div class="config-toggle-group">
+            <label class="switch-container">
+              <input type="checkbox" id="check-auto-runes-welcome" checked>
+              <span class="slider"></span>
+              <span class="switch-label">Auto-Runas</span>
+            </label>
+            <label class="switch-container">
+              <input type="checkbox" id="check-auto-spells-welcome" checked>
+              <span class="slider"></span>
+              <span class="switch-label">Auto-Hechizos</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATE 2: CHAMPION SELECT WORKSPACE -->
+    <section class="screen" id="screen-workspace">
+      <div class="workspace-grid">
+        
+        <!-- LEFT COLUMN: CHAMPION SPLASH BANNER -->
+        <div class="champion-banner glass-card" id="champ-bg-banner">
+          <div class="banner-overlay"></div>
+          <div class="champion-meta">
+            <div class="portrait-container">
+              <img src="" alt="Champion" id="champ-portrait" class="champ-portrait">
+            </div>
+            <h2 id="champ-name">CAMPEÓN</h2>
+            <div class="role-selector" id="role-selector">
+              <button class="role-btn active" data-role="default" title="Principal">ALL</button>
+              <button class="role-btn" data-role="top" title="Top Lane">TOP</button>
+              <button class="role-btn" data-role="jungle" title="Jungle">JUG</button>
+              <button class="role-btn" data-role="mid" title="Mid Lane">MID</button>
+              <button class="role-btn" data-role="bot" title="Bot Lane (ADC)">BOT</button>
+              <button class="role-btn" data-role="support" title="Support">SUP</button>
+            </div>
+            <span class="champ-source-label">Datos de onetricks.gg</span>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: RUNE & SUMMONERS LAYOUT -->
+        <div class="details-panel glass-card">
+          <!-- Scraping Loading Indicator Overlay -->
+          <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <p id="loading-text">Obteniendo datos de Onetricks...</p>
+          </div>
+
+          <div class="details-header">
+            <h3>Configuración Recomendada</h3>
+            <div class="quick-toggles">
+              <label class="switch-container compact">
+                <input type="checkbox" id="check-auto-runes" checked>
+                <span class="slider"></span>
+                <span class="switch-label">Auto-Runas</span>
+              </label>
+              <label class="switch-container compact">
+                <input type="checkbox" id="check-auto-spells" checked>
+                <span class="slider"></span>
+                <span class="switch-label">Auto-Hechizos</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="rune-set-tabs" class="rune-set-tabs" style="display:none"></div>
+
+          <div class="build-preview-container">
+            <!-- Rune Paths Display -->
+            <div class="rune-trees-flex">
+              <!-- Primary Tree -->
+              <div class="rune-tree-box primary">
+                <div class="tree-header">
+                  <img src="" id="icon-primary-style" class="tree-icon" alt="Primary">
+                  <span id="name-primary-style">Primaria</span>
+                </div>
+                <div class="runes-list" id="list-primary-runes">
+                  <!-- JS populated -->
+                </div>
+              </div>
+
+              <!-- Secondary Tree -->
+              <div class="rune-tree-box secondary">
+                <div class="tree-header">
+                  <img src="" id="icon-sub-style" class="tree-icon" alt="Secondary">
+                  <span id="name-sub-style">Secundaria</span>
+                </div>
+                <div class="runes-list" id="list-secondary-runes">
+                  <!-- JS populated -->
+                </div>
+              </div>
+
+              <!-- Shards & Spells Column -->
+              <div class="shards-spells-column">
+                <!-- Stat Shards Box -->
+                <div class="rune-tree-box compact-box">
+                  <div class="tree-header compact">
+                    <span>Atributos</span>
+                  </div>
+                  <div class="runes-list horizontal" id="list-shards">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+
+                <!-- Summoner Spells Box -->
+                <div class="rune-tree-box compact-box">
+                  <div class="tree-header compact">
+                    <span>Hechizos</span>
+                  </div>
+                  <div class="runes-list horizontal large-icons" id="list-spells">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items Build Section -->
+            <div class="items-build-section">
+              <div class="tree-header compact">
+                <span>Objetos Recomendados</span>
+              </div>
+              <div class="items-row-container">
+                <!-- Starting Items -->
+                <div class="item-group-box">
+                  <span class="group-label">Iniciales</span>
+                  <div class="items-list-flex" id="list-starting-items">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+
+                <!-- Boots -->
+                <div class="item-group-box">
+                  <span class="group-label">Botas</span>
+                  <div class="items-list-flex" id="list-boots-items">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+
+                <!-- Core Items -->
+                <div class="item-group-box">
+                  <span class="group-label">Principales</span>
+                  <div class="items-list-flex" id="list-core-items">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Area -->
+          <div class="action-footer">
+            <div class="action-status-indicator" id="action-status-indicator">
+              <span class="indicator-green-text">✅ Runas aplicadas automáticamente</span>
+            </div>
+            <button class="btn btn-apply neon-glow" id="btn-manual-apply">APLICAR EN EL JUEGO</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: SETTINGS OVERLAY -->
+  <div class="settings-modal-overlay" id="settings-overlay">
+    <div class="settings-modal glass-card">
+      <div class="settings-modal-header">
+        <h2>Ajustes de Onetricks Client</h2>
+        <button class="icon-btn" id="btn-settings-close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <div class="settings-modal-body">
+        <div class="settings-section">
+          <h3>Comportamiento</h3>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Importar Runas Automáticamente</h4>
+              <p>Aplica las runas directamente al juego cuando hoverees/fijes un campeón.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-runes" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Importar Hechizos Automáticamente</h4>
+              <p>Aplica los hechizos de invocador óptimos directamente al juego.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-spells" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Destello (Flash) en la D</h4>
+              <p>Coloca siempre el Destello en la tecla D en lugar de la F si está seleccionado.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-flash-d">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Ubicación de League of Legends</h3>
+          <div class="setting-item">
+            <div class="setting-desc">
+              <h4>Ruta de Instalación Personalizada</h4>
+              <p>Si la aplicación no detecta tu juego, introduce la ruta donde se encuentra el <b>lockfile</b> (habitualmente <code>C:\Riot Games\League of Legends</code>).</p>
+            </div>
+            <div class="custom-path-input-group">
+              <input type="text" id="input-lol-path" placeholder="C:\Riot Games\League of Legends" />
+              <button class="btn btn-primary" id="btn-save-path">Guardar</button>
+            </div>
+            <span class="path-success-lbl" id="path-success-lbl">Ruta guardada correctamente</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-modal-footer">
+        <button class="btn btn-secondary" id="btn-settings-done">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
