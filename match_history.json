@@ -1,0 +1,176 @@
+[
+  {
+    "regChampGameId": "KR-17-8225551403",
+    "championId": "17",
+    "platformId": "KR",
+    "tier": "Master",
+    "summonerName": "실명 중독자 #KR1",
+    "puuid": "s5pGpdvi3MOniBIM9szvudxKkMM0_097Hljr8nggN3M-8qE9sG5eOpeuGdl9R_strGHmydUx78_pbA",
+    "timestamp": 1779369888935,
+    "tbl": "globalMatches-s16",
+    "details": {
+      "playerData": {
+        "stats": {
+          "assists": 10,
+          "deaths": 2,
+          "item0": 1056,
+          "item1": 3118,
+          "item2": 3157,
+          "item3": 6653,
+          "item4": 3047,
+          "item5": 3087,
+          "item6": 3364,
+          "roleBoundItem": 1220,
+          "kills": 8,
+          "pentaKills": 0,
+          "win": true,
+          "perk0": 8005,
+          "perkSubStyle": 8400,
+          "cs": 253,
+          "lvl": 18
+        },
+        "participantId": 6,
+        "spell2Id": 4,
+        "spell1Id": 14,
+        "teamId": 200
+      },
+      "gameDuration": 1697,
+      "teamKills": 39
+    },
+    "timeline": {
+      "orderedItems": [
+        1056,
+        3087,
+        3047,
+        6653,
+        3118,
+        3157
+      ]
+    },
+    "p": "16.10",
+    "gameRoles": {
+      "enemyChampion": 526,
+      "enemyId": 1,
+      "playerRole": "top",
+      "gd15": 1526,
+      "exp15": 2509,
+      "enemyLvl": 14
+    }
+  },
+  {
+    "regChampGameId": "EUW1-17-7861065477",
+    "championId": "17",
+    "platformId": "EUW1",
+    "tier": "Challenger",
+    "summonerName": "charlomagico #TEEMO",
+    "puuid": "OXfFeCA4lSoe-4Ru_VWYomFcYh1i-HTy8f8V186hRqHo3ZM_JOV8GjFK3glqLfgBDdldV0eODWPSwg",
+    "timestamp": 1779369662971,
+    "tbl": "globalMatches-s16",
+    "details": {
+      "playerData": {
+        "stats": {
+          "assists": 5,
+          "deaths": 6,
+          "item0": 1056,
+          "item1": 6653,
+          "item2": 3087,
+          "item3": 3020,
+          "item4": 2022,
+          "item5": 1052,
+          "item6": 3340,
+          "roleBoundItem": 1220,
+          "kills": 6,
+          "pentaKills": 0,
+          "win": true,
+          "perk0": 8005,
+          "perkSubStyle": 8200,
+          "cs": 148,
+          "lvl": 15
+        },
+        "participantId": 1,
+        "spell2Id": 14,
+        "spell1Id": 4,
+        "teamId": 100
+      },
+      "gameDuration": 1405,
+      "teamKills": 36
+    },
+    "timeline": {
+      "orderedItems": [
+        1056,
+        3087,
+        3020,
+        6653,
+        2022,
+        1052
+      ]
+    },
+    "p": "16.10",
+    "gameRoles": {
+      "enemyChampion": 893,
+      "enemyId": 6,
+      "playerRole": "top",
+      "gd15": -137,
+      "exp15": -648,
+      "enemyLvl": 16
+    }
+  },
+  {
+    "regChampGameId": "KR-17-8225536592",
+    "championId": "17",
+    "platformId": "KR",
+    "tier": "Grandmaster",
+    "summonerName": "96년생 티모장인 #9202",
+    "puuid": "tvp6gb_gthRpvX07Q2dVw2ci74un7SCmt46yNr5rydrVUDyxHc2EMiKa2aHwRAvgQsQzFGFqWZ1LOQ",
+    "timestamp": 1779369563368,
+    "tbl": "globalMatches-s16",
+    "details": {
+      "playerData": {
+        "stats": {
+          "assists": 4,
+          "deaths": 11,
+          "item0": 3008,
+          "item1": 6653,
+          "item2": 3118,
+          "item3": 1026,
+          "item4": 1052,
+          "item5": 3087,
+          "item6": 3364,
+          "roleBoundItem": 1220,
+          "kills": 2,
+          "pentaKills": 0,
+          "win": false,
+          "perk0": 8005,
+          "perkSubStyle": 8300,
+          "cs": 236,
+          "lvl": 16
+        },
+        "participantId": 1,
+        "spell2Id": 14,
+        "spell1Id": 4,
+        "teamId": 100
+      },
+      "gameDuration": 1903,
+      "teamKills": 25
+    },
+    "timeline": {
+      "orderedItems": [
+        3087,
+        3008,
+        6653,
+        3118,
+        1026,
+        1052
+      ]
+    },
+    "p": "16.10",
+    "gameRoles": {
+      "enemyChampion": 516,
+      "enemyId": 6,
+      "playerRole": "top",
+      "gd15": -1321,
+      "exp15": -2128,
+      "enemyLvl": 20
+    }
+  }
+]

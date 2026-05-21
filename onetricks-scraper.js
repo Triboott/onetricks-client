@@ -178,9 +178,10 @@ class OnetricksScraper {
     this.ddragonVersion = '14.10.1'; // fallback version
     this.championsDict = { ...CHAMPION_MAP };
     this.runesDict = {}; // name -> id mapping
-    this.perksMap = {}; // id -> { name, icon } mapping
+    this.perksMap = {}; // id -> { name, icon, description } mapping
     this.summonersDict = {}; // name -> id mapping
     this.spellsMap = {}; // id -> { name, icon } mapping
+    this.itemsMap = {}; // id -> { name, description } mapping
     this.stylesDict = {
       'Precision': 8000,
       'Domination': 8100,
@@ -197,6 +198,19 @@ class OnetricksScraper {
     this.initDDragon();
   }
 
+  // Purge HTML tags from strings (<b>, <font>, <br>, etc.)
+  cleanDescription(html) {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ') // Clean consecutive whitespaces
+      .trim();
+  }
+
   // Load Data Dragon assets & cache them locally
   async initDDragon() {
     try {
@@ -206,11 +220,12 @@ class OnetricksScraper {
         console.log(`DDragon initialized on version ${this.ddragonVersion}`);
       }
 
-      // 2. Fetch Champion list, Runes, and Spells to populate dictionaries
+      // 2. Fetch Champion list, Runes, Spells, and Items to populate dictionaries
       await Promise.all([
         this.loadChampions(),
         this.loadRunes(),
-        this.loadSummoners()
+        this.loadSummoners(),
+        this.loadItems()
       ]);
 
       console.log('Static Data Dragon assets loaded successfully.');
@@ -262,12 +277,16 @@ class OnetricksScraper {
       if (data && Array.isArray(data)) {
         data.forEach(style => {
           this.stylesDict[style.key] = style.id;
-          style.slots.forEach(slot => {
+          style.slots.forEach((slot, slotIndex) => {
             slot.runes.forEach(rune => {
-              // Populate meta dictionary mapping
+              // Populate meta dictionary mapping with style and slot properties
               this.perksMap[rune.id] = {
                 name: rune.name,
-                icon: rune.icon
+                icon: rune.icon,
+                description: this.cleanDescription(rune.description),
+                styleId: style.id,
+                slotIndex: slotIndex,
+                isKeystone: slotIndex === 0
               };
 
               // Normalize names to prevent mismatch
@@ -280,8 +299,90 @@ class OnetricksScraper {
           });
         });
       }
+
+      // Check if local rune.json exists in workspace directory to override/extend descriptions
+      const localRunePath = path.join(__dirname, 'rune.json');
+      if (fs.existsSync(localRunePath)) {
+        try {
+          const rawRunes = JSON.parse(fs.readFileSync(localRunePath, 'utf8'));
+          if (Array.isArray(rawRunes)) {
+            rawRunes.forEach(style => {
+              style.slots.forEach((slot, slotIndex) => {
+                slot.runes.forEach(rune => {
+                  this.perksMap[rune.id] = {
+                    name: rune.name,
+                    icon: rune.icon || (this.perksMap[rune.id] ? this.perksMap[rune.id].icon : ''),
+                    description: this.cleanDescription(rune.description || rune.desc),
+                    styleId: style.id,
+                    slotIndex: slotIndex,
+                    isKeystone: slotIndex === 0
+                  };
+                });
+              });
+            });
+          } else {
+            // Direct mapping format: { "8128": { "name": "Cosecha Oscura", "description": "..." } }
+            Object.keys(rawRunes).forEach(id => {
+              const rune = rawRunes[id];
+              const existing = this.perksMap[parseInt(id)] || {};
+              this.perksMap[parseInt(id)] = {
+                name: rune.name,
+                icon: rune.icon || existing.icon || '',
+                description: this.cleanDescription(rune.description || rune.desc),
+                styleId: existing.styleId || null,
+                slotIndex: existing.slotIndex !== undefined ? existing.slotIndex : 9,
+                isKeystone: existing.isKeystone || false
+              };
+            });
+          }
+          console.log('[SCRAPER] rune.json local cargado y procesado con éxito.');
+        } catch (e) {
+          console.error('Error al cargar rune.json local:', e);
+        }
+      }
     } catch (e) {
       console.error('Error loading runes dict:', e);
+    }
+  }
+
+  async loadItems() {
+    try {
+      this.itemsMap = {};
+
+      // 1. Try to load local item.json from the workspace
+      const localItemPath = path.join(__dirname, 'item.json');
+      if (fs.existsSync(localItemPath)) {
+        try {
+          const rawItems = JSON.parse(fs.readFileSync(localItemPath, 'utf8'));
+          const itemsData = rawItems.data || rawItems;
+          Object.keys(itemsData).forEach(id => {
+            const item = itemsData[id];
+            this.itemsMap[parseInt(id)] = {
+              name: item.name,
+              description: this.cleanDescription(item.description || item.desc)
+            };
+          });
+          console.log('[SCRAPER] item.json local cargado y procesado con éxito.');
+          return;
+        } catch (e) {
+          console.error('Error al cargar item.json local:', e);
+        }
+      }
+
+      // 2. Fallback: Download/fetch item.json from Data Dragon
+      const data = await this.getDDragonJson(`cdn/${this.ddragonVersion}/data/es_ES/item.json`, 'item.json');
+      if (data && data.data) {
+        Object.keys(data.data).forEach(id => {
+          const item = data.data[id];
+          this.itemsMap[parseInt(id)] = {
+            name: item.name,
+            description: this.cleanDescription(item.description)
+          };
+        });
+        console.log('[SCRAPER] item.json cargado y cacheado desde Data Dragon.');
+      }
+    } catch (e) {
+      console.error('Error loading items dict:', e);
     }
   }
 
@@ -362,231 +463,649 @@ class OnetricksScraper {
       .replace(/[^a-z0-9]/g, ''); // remove non-alphanumeric
   }
 
+  getOnetricksUrlName(name) {
+    if (!name) return 'Teemo';
+    
+    // Para Teemo devolvemos Teemo con T mayúscula
+    if (name.toLowerCase() === 'teemo') {
+      return 'Teemo';
+    }
+    
+    // Para otros campeones usamos el nombre tal cual viene de Data Dragon (e.g. MissFortune, Wukong)
+    return name;
+  }
+
   // Load Champion page in offscreen browser window to easily pass Cloudflare
-  scrapeRunesAndSummoners(championName) {
+  scrapeRunesAndSummoners(championName, role = '') {
     return new Promise((resolve, reject) => {
-      const url = `https://www.onetricks.gg/es/champions/${championName}`;
-      
-      const tempWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        show: false, // head-less (offscreen)
-        webPreferences: {
-          offscreen: true,
-          images: false, // speed up loading
-          webSecurity: false
+      const getUrl = (r) => {
+        const urlChampName = this.getOnetricksUrlName(championName);
+        // URL base = rol más popular (sin parámetro)
+        // URL con rol específico = ?role=top / ?role=jungle / ?role=mid / ?role=bot / ?role=support
+        let u = `https://www.onetricks.gg/es/champions/builds/${urlChampName}`;
+        if (r && r !== 'default') {
+          u += `?role=${r.toLowerCase()}`;
         }
-      });
+        return u;
+      };
 
-      // Clear cookies/cache to avoid state bugs
-      tempWindow.webContents.session.clearStorageData();
+      const doScrape = (url, isFallback = false) => {
+        console.log(`[SCRAPER] Cargando URL: ${url} (Fallback: ${isFallback})`);
+        const tempWindow = new BrowserWindow({
+          width: 1200,
+          height: 800,
+          show: true, // Hacemos el navegador visible para que el usuario pueda ver qué pasa
+          webPreferences: {
+            offscreen: false, // Desactivamos el modo offscreen
+            images: true, // Activamos la carga de imágenes
+            webSecurity: false
+          }
+        });
 
-      // Enforce chrome user agent to avoid any bots detections
-      tempWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        // Abrimos las herramientas de desarrollo para poder inspeccionar errores
+        tempWindow.webContents.openDevTools();
 
-      // Set timeout in case loading takes too long
-      const timeout = setTimeout(() => {
-        tempWindow.destroy();
-        reject(new Error('Timeout waiting for Onetricks.gg to load'));
-      }, 15000);
+        // Clear cookies/cache to avoid state bugs
+        tempWindow.webContents.session.clearStorageData();
 
-      tempWindow.webContents.on('did-finish-load', async () => {
-        // Give client-side JS a few milliseconds to fully render / hydrate
-        await new Promise(r => setTimeout(r, 1500));
+        // Enforce chrome user agent to avoid any bots detections
+        tempWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        try {
-          // Extract Next JSON props and raw HTML structures
-          const scrapingResult = await tempWindow.webContents.executeJavaScript(`
-            (function() {
-              // 1. Try to find __NEXT_DATA__ JSON tag first
-              let nextData = null;
-              const nextEl = document.getElementById('__NEXT_DATA__');
-              if (nextEl) {
-                try {
-                  nextData = JSON.parse(nextEl.textContent);
-                } catch(e) {}
+        let isDone = false;
+        // Set timeout in case loading takes too long
+        const timeout = setTimeout(() => {
+          if (isDone) return;
+          isDone = true;
+          tempWindow.destroy();
+          if (role && role !== 'default' && !isFallback) {
+            console.log(`[SCRAPER] Timeout en rol. Reintentando con base...`);
+            doScrape(getUrl(''), true);
+          } else {
+            reject(new Error('Timeout waiting for Onetricks.gg to load'));
+          }
+        }, 15000);
+
+        tempWindow.webContents.on('did-finish-load', async () => {
+          if (isDone) return;
+
+          const currentUrl = tempWindow.webContents.getURL();
+          const currentTitle = tempWindow.webContents.getTitle();
+          console.log(`[SCRAPER] did-finish-load en URL: "${currentUrl}", Título: "${currentTitle}"`);
+
+          // Inyectar CSS para ocultar el banner de cookies y que no moleste visualmente
+          try {
+            await tempWindow.webContents.insertCSS(`
+              .fc-consent-root, 
+              .fc-ab-root, 
+              #google-fc-consent, 
+              .cmp-container, 
+              #onetrust-consent-sdk, 
+              .qc-cmp2-container, 
+              .sn-consent-tool,
+              .cookie-consent,
+              .cookie-notice,
+              #cookie-law-info-bar,
+              .didomi-popup,
+              #didomi-host,
+              .sp_consent,
+              [class*="consent" i],
+              [id*="consent" i] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
               }
+            `);
+            console.log('[SCRAPER] CSS anti-cookies inyectado correctamente.');
+          } catch (e) {
+            console.error('[SCRAPER] Error al inyectar CSS anti-cookies:', e);
+          }
 
-              // 2. Extract DOM details (alt texts and image sources)
-              const images = Array.from(document.querySelectorAll('img')).map(img => ({
-                src: img.src,
-                alt: img.alt,
-                className: img.className
-              }));
+          const titleLower = currentTitle.toLowerCase();
+          const urlLower = currentUrl.toLowerCase();
 
-              return { nextData, images };
-            })()
-          `);
+          // Check if it's the Vercel/Cloudflare/anti-bot verification page
+          if (titleLower.includes('checkpoint') || titleLower.includes('security') || titleLower.includes('just a moment') || urlLower.includes('checkpoint')) {
+            console.log(`[SCRAPER] Detectada pantalla de verificación anti-bot/Vercel ("${currentTitle}"). Esperando redirección automática a la página real...`);
+            return; // Return early, do NOT set isDone, wait for next did-finish-load
+          }
 
-          tempWindow.destroy();
-          clearTimeout(timeout);
+          // Give client-side JS a few milliseconds to fully render / hydrate
+          await new Promise(r => setTimeout(r, 2500));
+          if (isDone) return;
 
-          // Parse scraped results using our heuristics
-          const data = this.parseScrapedData(championName, scrapingResult);
-          resolve(this.resolveBuildDetails(data));
-        } catch (err) {
-          tempWindow.destroy();
-          clearTimeout(timeout);
-          reject(err);
-        }
-      });
+          try {
+            // Extract Next JSON props, raw HTML structures, and elements with data-tooltip-html
+            const scrapingResult = await tempWindow.webContents.executeJavaScript(`
+              (function() {
+                // 1. Try to dismiss cookie banner if present
+                try {
+                  function clickConsentButton(doc) {
+                    if (!doc) return false;
+                    
+                    // A. Search for common consent button classes/selectors first
+                    const selectors = [
+                      '.fc-cta-consent', // Google Funding Choices primary accept button
+                      '.fc-primary-button',
+                      'button[class*="accept"]',
+                      'button[class*="consent"]',
+                      'button[class*="cookie"]',
+                      'button[class*="agree"]',
+                      '.consent-btn',
+                      '.cookie-btn',
+                      '#accept-choices',
+                      '#onetrust-accept-btn-handler' // OneTrust
+                    ];
+                    
+                    for (const sel of selectors) {
+                      const el = doc.querySelector(sel);
+                      if (el && typeof el.click === 'function') {
+                        el.click();
+                        console.log('[SCRAPER INJECTED] Dismissed cookie banner via selector: ' + sel);
+                        return true;
+                      }
+                    }
+                    
+                    // B. Scan all clickable elements by text content
+                    const tags = ['button', 'a', 'div', 'span', 'p'];
+                    for (const tag of tags) {
+                      const elements = Array.from(doc.querySelectorAll(tag));
+                      const btn = elements.find(el => {
+                        const txt = (el.textContent || '').trim().toLowerCase();
+                        // Check exact or close matches to avoid clicking random buttons
+                        return txt === 'aceptar' || 
+                               txt === 'aceptar todo' || 
+                               txt === 'aceptar y cerrar' ||
+                               txt === 'permitir todo' || 
+                               txt === 'permitir cookies' || 
+                               txt === 'accept' || 
+                               txt === 'accept all' || 
+                               txt === 'agree' || 
+                               txt === 'agree & close' ||
+                               txt.includes('aceptar todas las cookies') ||
+                               txt.includes('accept all cookies') ||
+                               (tag === 'button' && (txt.includes('aceptar') || txt.includes('accept') || txt.includes('agree') || txt.includes('consent')));
+                      });
+                      
+                      if (btn && typeof btn.click === 'function') {
+                        btn.click();
+                        console.log('[SCRAPER INJECTED] Dismissed cookie banner via tag: ' + tag + ' with text: ' + btn.textContent.trim());
+                        return true;
+                      }
+                    }
+                    return false;
+                  }
 
-      tempWindow.webContents.on('did-fail-load', (e, code, desc) => {
-        // If error is just small resource issue, ignore, but if main load fails, reject
-        if (desc !== 'ERR_ABORTED') {
-          tempWindow.destroy();
-          clearTimeout(timeout);
-          reject(new Error(`Failed to load: ${desc} (code ${code})`));
-        }
-      });
+                  function scanAndClickBanners() {
+                    let dismissed = clickConsentButton(document);
+                    
+                    const iframes = Array.from(document.querySelectorAll('iframe'));
+                    iframes.forEach(iframe => {
+                      try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc) {
+                          const ok = clickConsentButton(iframeDoc);
+                          if (ok) dismissed = true;
+                        }
+                      } catch (e) {
+                        // cross-origin iframe check error, safe to ignore
+                      }
+                    });
+                    
+                    if (dismissed) {
+                      console.log('[SCRAPER INJECTED] Cookie consent dismissed successfully.');
+                      return true;
+                    }
+                    return false;
+                  }
 
-      tempWindow.loadURL(url);
+                  // Scan and click immediately
+                  let done = scanAndClickBanners();
+                  
+                  // Keep scanning every 300ms for up to 6 seconds in case it loads late
+                  if (!done) {
+                    let attempts = 0;
+                    const interval = setInterval(() => {
+                      attempts++;
+                      const ok = scanAndClickBanners();
+                      if (ok || attempts > 20) {
+                        clearInterval(interval);
+                      }
+                    }, 300);
+                  }
+                } catch (e) {
+                  console.error('[SCRAPER INJECTED] Error clicking cookie banner:', e);
+                }
+
+                // 2. Try to find __NEXT_DATA__ JSON tag first
+                let nextData = null;
+                const nextEl = document.getElementById('__NEXT_DATA__');
+                if (nextEl) {
+                  try {
+                    nextData = JSON.parse(nextEl.textContent);
+                  } catch(e) {}
+                }
+
+                // 3. Extract DOM details (alt texts and image sources)
+                const images = Array.from(document.querySelectorAll('img')).map(img => ({
+                  src: img.src || '',
+                  alt: img.alt || '',
+                  className: img.className || ''
+                }));
+
+                // 4. Extract elements with data-tooltip-html (active/inactive runes)
+                const tooltips = Array.from(document.querySelectorAll('[data-tooltip-html]')).map(el => ({
+                  tagName: el.tagName.toLowerCase(),
+                  className: el.className || '',
+                  tooltip: el.getAttribute('data-tooltip-html') || '',
+                  src: el.src || '',
+                  alt: el.alt || ''
+                }));
+
+                const title = document.title;
+                const html = document.documentElement.outerHTML;
+
+                return { nextData, images, tooltips, title, html };
+              })()
+            `);
+
+            if (isDone) return;
+
+            // Log page info for debugging
+            console.log(`[DEBUG SCRAPER] Title: "${scrapingResult.title}". Length: ${scrapingResult.html ? scrapingResult.html.length : 0}`);
+            fs.writeFileSync(path.join(__dirname, 'scraped_debug.html'), scrapingResult.html || '', 'utf8');
+
+            const hasNextData = !!(scrapingResult.nextData && scrapingResult.nextData.props);
+            const hasImages = scrapingResult.images && scrapingResult.images.length > 3;
+            const hasTooltips = scrapingResult.tooltips && scrapingResult.tooltips.length > 0;
+
+            if ((!hasNextData && !hasImages && !hasTooltips) && role && role !== 'default' && !isFallback) {
+              isDone = true;
+              tempWindow.destroy();
+              clearTimeout(timeout);
+              console.log(`[SCRAPER] Página vacía o bloqueada detectada para el rol. Reintentando con base...`);
+              doScrape(getUrl(''), true);
+              return;
+            }
+
+            // Parse scraped results using our resilient heuristics (NextJS stats + DOM Tooltips fallback)
+            const data = this.parseScrapedData(championName, scrapingResult, role);
+
+            // Check if we got fallbacked to default runes because both heuristics failed
+            const isUsingDefaultFallbackRunes = data.runes && data.runes.primaryStyleId === 8000 && data.runes.subStyleId === 8400 && data.runes.selectedPerkIds[0] === 8010;
+            const hadNoPerksOnPage = !scrapingResult.tooltips.some(t => {
+              const text = t.tooltip || '';
+              return text.includes('<b>') && !t.className.includes('nonActive');
+            });
+
+            if (isUsingDefaultFallbackRunes && hadNoPerksOnPage && role && role !== 'default' && !isFallback) {
+              isDone = true;
+              tempWindow.destroy();
+              clearTimeout(timeout);
+              console.log(`[SCRAPER] No se encontraron runas activas en la página del rol. Reintentando con base...`);
+              doScrape(getUrl(''), true);
+              return;
+            }
+
+            isDone = true;
+            tempWindow.destroy();
+            clearTimeout(timeout);
+            resolve(this.resolveBuildDetails(data));
+          } catch (err) {
+            if (isDone) return;
+            isDone = true;
+            tempWindow.destroy();
+            clearTimeout(timeout);
+            if (role && role !== 'default' && !isFallback) {
+              console.log(`[SCRAPER] Error al procesar rol. Reintentando con base...`, err);
+              doScrape(getUrl(''), true);
+            } else {
+              reject(err);
+            }
+          }
+        });
+
+        tempWindow.webContents.on('did-fail-load', (e, code, desc) => {
+          if (isDone) return;
+          // If error is just small resource issue, ignore, but if main load fails, reject
+          if (desc !== 'ERR_ABORTED') {
+            isDone = true;
+            tempWindow.destroy();
+            clearTimeout(timeout);
+            if (role && role !== 'default' && !isFallback) {
+              console.log(`[SCRAPER] did-fail-load en rol. Reintentando con base... (desc: ${desc})`);
+              doScrape(getUrl(''), true);
+            } else {
+              reject(new Error(`Failed to load: ${desc} (code ${code})`));
+            }
+          }
+        });
+
+        tempWindow.loadURL(url);
+      };
+
+      const initialUrl = getUrl(role);
+      doScrape(initialUrl, false);
     });
   }
 
   // Parse scraped details
-  parseScrapedData(championName, { nextData, images }) {
+  parseScrapedData(championName, { nextData, images, tooltips }, role = '') {
     let rawRunes = null;
     let rawSummoners = null;
 
-    // HEURISTIC 1: Check Next.js state data
+    console.log(`[SCRAPER] Analizando datos de onetricks para ${championName} (Rol: ${role || 'por defecto'})...`);
+
+    // HEURISTIC 1: Check Next.js state data (extremely reliable and precise)
     if (nextData && nextData.props && nextData.props.pageProps) {
-      // Recursively search Next.js pageProps for rune selections
       const pageProps = nextData.props.pageProps;
-      const foundRunes = this.searchNextPropsForRunes(pageProps);
-      if (foundRunes) {
-        rawRunes = foundRunes;
+      if (pageProps.firstItemStats) {
+        // Find stats block for the current patch (defaults to 'all' patch)
+        const patchStats = pageProps.firstItemStats['all'] || pageProps.firstItemStats[Object.keys(pageProps.firstItemStats)[0]];
+        
+        if (patchStats) {
+          // Find stats for the requested role under the patch stats
+          const roleKey = (role && role !== 'default') ? role.toLowerCase() : 'all';
+          let allStats = patchStats[roleKey] || patchStats['all'];
+
+          // On onetricks.gg, role statistics are stored under their most popular first item ID
+          // patchStats[roleKey] contains the ID of that first item as a string (e.g. "3087" for top Teemo).
+          // We must look up that item ID in patchStats to get the actual stats block!
+          if (typeof allStats === 'string' && patchStats[allStats]) {
+            console.log(`[SCRAPER] [HEURÍSTICA NEXTJS] Mapeando rol ${roleKey} a través de su item más popular: ${allStats}`);
+            allStats = patchStats[allStats];
+          }
+
+          if (allStats && typeof allStats === 'object') {
+            const popKeystone = allStats.popKeystone;
+          const popStat = allStats.popStat; // Stat Shards, e.g. [5005, 5008, 5011]
+          const sSpells = allStats.sSpells;
+
+          let keystoneId = null;
+          if (popKeystone && popKeystone.length > 0) {
+            keystoneId = popKeystone[0][0]; // Most popular keystone ID (string)
+          }
+
+          if (keystoneId && allStats.popRunes && allStats.popRunes[keystoneId]) {
+            const runePaths = allStats.popRunes[keystoneId];
+            if (runePaths && runePaths.length > 0) {
+              const bestPath = runePaths[0]; // [ [runes], winrate, [trees] ]
+              const perks = bestPath[0]; // array of standard 6 perk IDs
+              const trees = bestPath[2]; // [primaryTree, subTree, keystone]
+
+              const primaryStyleId = parseInt(trees[0]);
+              const subStyleId = parseInt(trees[1]);
+
+              // Separate and sort perks based on DDragon slotIndex to guarantee standard order
+              const primaryPerks = [];
+              const secondaryPerks = [];
+
+              perks.forEach(id => {
+                const pId = parseInt(id);
+                const meta = this.perksMap[pId];
+                if (meta) {
+                  if (meta.styleId === primaryStyleId) {
+                    primaryPerks.push({ id: pId, slotIndex: meta.slotIndex });
+                  } else if (meta.styleId === subStyleId) {
+                    secondaryPerks.push({ id: pId, slotIndex: meta.slotIndex });
+                  }
+                } else {
+                  primaryPerks.push({ id: pId, slotIndex: 9 });
+                }
+              });
+
+              primaryPerks.sort((a, b) => a.slotIndex - b.slotIndex);
+              secondaryPerks.sort((a, b) => a.slotIndex - b.slotIndex);
+
+              const sortedStandardPerks = [
+                ...primaryPerks.map(p => p.id),
+                ...secondaryPerks.map(p => p.id)
+              ];
+
+              let shards = [5005, 5008, 5011]; // AS, Adaptive, Scaling HP default
+              if (Array.isArray(popStat) && popStat.length >= 3) {
+                shards = popStat.map(x => parseInt(x));
+              }
+
+              rawRunes = {
+                name: championName,
+                primaryStyleId,
+                subStyleId,
+                selectedPerkIds: [...sortedStandardPerks, ...shards]
+              };
+
+              console.log(`[SCRAPER] [HEURÍSTICA NEXTJS] Éxito. Runas obtenidas:`, rawRunes.selectedPerkIds);
+            }
+          }
+
+          // Summoner spells
+          if (sSpells && sSpells.length > 0 && sSpells[0][0]) {
+            const firstPair = sSpells[0][0]; // ["14", "4"]
+            rawSummoners = {
+              spell1Id: parseInt(firstPair[0]),
+              spell2Id: parseInt(firstPair[1])
+            };
+            console.log(`[SCRAPER] [HEURÍSTICA NEXTJS] Hechizos obtenidos:`, rawSummoners.spell1Id, rawSummoners.spell2Id);
+          }
+        }
       }
     }
+  }
 
-    // HEURISTIC 2: Fallback to scanning page images (DOM heuristic)
-    // We scan images for IDs in sources or names in alt texts
-    const runeIds = [];
-    let primaryStyleId = null;
-    let subStyleId = null;
-    const summonerSpellIds = [];
+    // HEURISTIC 2: Fallback to DOM tooltips parsing (resilient direct scraping)
+    if (!rawRunes && tooltips && tooltips.length > 0) {
+      console.log('[SCRAPER] [FALLBACK DOM] Intentando resolver runas y hechizos desde el DOM de tooltips...');
+      const activeRunes = [];
+      const activeSummoners = [];
 
-    // Let's filter image paths containing perk IDs
-    images.forEach(img => {
-      const src = img.src || '';
-      const alt = img.alt || '';
+      tooltips.forEach(t => {
+        // Ignorar runas no activas / grises
+        if (t.className.includes('nonActive')) return;
 
-      // Check for Stat Shards (StatMod)
-      // Standard IDs: 5001 (Health), 5002 (Armor), 5003 (MR), 5005 (AS), 5007 (Ability Haste), 5008 (Adaptive Force)
-      const statShardMatch = src.match(/500[123578]/);
-      if (statShardMatch) {
-        const id = parseInt(statShardMatch[0]);
-        if (!runeIds.includes(id)) {
-          runeIds.push(id);
+        // Extraer nombre del tooltip o del alt
+        let name = '';
+        const tooltipHtml = t.tooltip || '';
+        const bMatch = tooltipHtml.match(/<b>([^<]+)<\/b>/i);
+        if (bMatch) {
+          name = bMatch[1].trim();
+        } else if (t.alt) {
+          name = t.alt.trim();
         }
-        return;
-      }
 
-      // Check if URL has a 4-digit number that matches a known rune in our dictionary
-      const fourDigitMatch = src.match(/\b(8[0-4]\d{2}|9[12]\d{2})\b/);
-      if (fourDigitMatch) {
-        const id = parseInt(fourDigitMatch[1]);
-        if (!runeIds.includes(id) && id !== 8000 && id !== 8100 && id !== 8200 && id !== 8300 && id !== 8400) {
-          runeIds.push(id);
+        if (!name) return;
+        const normName = this.normalizeString(name);
+
+        // Validar si es runa
+        const runeId = this.runesDict[normName];
+        if (runeId) {
+          if (!activeRunes.some(r => r.id === runeId)) {
+            const meta = this.perksMap[runeId];
+            activeRunes.push({
+              id: runeId,
+              styleId: meta ? meta.styleId : null,
+              slotIndex: meta ? meta.slotIndex : 9,
+              isKeystone: meta ? meta.isKeystone : false
+            });
+          }
         }
-        return;
-      }
 
-      // Try matching by image alt text or filename from URL
-      const filename = path.basename(src, '.png');
-      const normAlt = this.normalizeString(alt);
-      const normFile = this.normalizeString(filename);
-
-      // Match rune style trees
-      Object.keys(this.stylesDict).forEach(styleName => {
-        const normStyle = this.normalizeString(styleName);
-        if (normAlt === normStyle || normFile.includes(normStyle)) {
-          const styleId = this.stylesDict[styleName];
-          if (!primaryStyleId) {
-            primaryStyleId = styleId;
-          } else if (subStyleId === null && styleId !== primaryStyleId) {
-            subStyleId = styleId;
+        // Validar si es hechizo de invocador
+        const spellId = this.summonersDict[normName];
+        if (spellId) {
+          if (!activeSummoners.includes(spellId)) {
+            activeSummoners.push(spellId);
           }
         }
       });
 
-      // Match runes
-      const altRuneId = this.runesDict[normAlt] || this.runesDict[normFile];
-      if (altRuneId && !runeIds.includes(altRuneId)) {
-        runeIds.push(altRuneId);
+      console.log(`[SCRAPER] [FALLBACK DOM] Runas activas encontradas en DOM:`, activeRunes.map(r => r.id));
+      console.log(`[SCRAPER] [FALLBACK DOM] Hechizos activos encontrados en DOM:`, activeSummoners);
+
+      if (activeRunes.length >= 4) {
+        const keystone = activeRunes.find(r => r.isKeystone);
+        let primaryStyleId = keystone ? keystone.styleId : null;
+
+        if (!primaryStyleId && activeRunes.length > 0) {
+          primaryStyleId = activeRunes[0].styleId;
+        }
+
+        let subStyleId = null;
+        const otherRunes = activeRunes.filter(r => r.styleId !== primaryStyleId);
+        if (otherRunes.length > 0) {
+          subStyleId = otherRunes[0].styleId;
+        }
+
+        if (!primaryStyleId) primaryStyleId = 8000;
+        if (!subStyleId) subStyleId = 8400;
+
+        const primaryPerks = activeRunes.filter(r => r.styleId === primaryStyleId).sort((a,b) => a.slotIndex - b.slotIndex);
+        const secondaryPerks = activeRunes.filter(r => r.styleId === subStyleId).sort((a,b) => a.slotIndex - b.slotIndex);
+
+        const sortedPerkIds = [
+          ...primaryPerks.map(r => r.id),
+          ...secondaryPerks.map(r => r.id)
+        ];
+
+        // Shards por defecto: AS (5005), Fuerza Adaptable (5008), Scaling HP (5011)
+        const shards = [5005, 5008, 5011];
+
+        rawRunes = {
+          name: championName,
+          primaryStyleId,
+          subStyleId,
+          selectedPerkIds: [...sortedPerkIds.slice(0, 6), ...shards]
+        };
+
+        console.log('[SCRAPER] [FALLBACK DOM] Runas resueltas correctamente:', rawRunes.selectedPerkIds);
       }
 
-      // Match summoner spells
-      // Check standard IDs in image filenames: summonerFlash (4), summonerIgnite (14), summonerSmite (11), summonerTeleport (12), summonerExhaust (3), summonerBarrier (21), summonerHeal (7), summonerCleanse (1)
-      const spellMatch = src.match(/summoner([a-zA-Z]+)/i);
-      if (spellMatch) {
-        const spellName = spellMatch[1];
-        const spellId = this.summonersDict[this.normalizeString(spellName)];
-        if (spellId && !summonerSpellIds.includes(spellId)) {
-          summonerSpellIds.push(spellId);
+      if (activeSummoners.length >= 2) {
+        rawSummoners = {
+          spell1Id: activeSummoners[0],
+          spell2Id: activeSummoners[1]
+        };
+        console.log('[SCRAPER] [FALLBACK DOM] Hechizos resueltos correctamente:', rawSummoners);
+      }
+    }
+
+    // HEURISTIC 3: Legacy images fallback (scanning standard image tags)
+    if (!rawRunes && images && images.length > 0) {
+      console.log('[SCRAPER] [LEGACY FALLBACK] Usando escaneo heredado de imágenes...');
+      const runeIds = [];
+      let primaryStyleId = null;
+      let subStyleId = null;
+      const summonerSpellIds = [];
+
+      images.forEach(img => {
+        const src = img.src || '';
+        const alt = img.alt || '';
+
+        const statShardMatch = src.match(/500[123578]/);
+        if (statShardMatch) {
+          const id = parseInt(statShardMatch[0]);
+          if (!runeIds.includes(id)) runeIds.push(id);
+          return;
         }
-      } else {
-        const spellNumMatch = src.match(/\/(\d+)\.png$/); // e.g. .../4.png
-        if (spellNumMatch) {
-          const id = parseInt(spellNumMatch[1]);
-          // Standard summoner IDs are 1-21
-          if (id > 0 && id <= 21 && !summonerSpellIds.includes(id) && id !== 8) { // 8 is poro-snax or something
-            summonerSpellIds.push(id);
+
+        const fourDigitMatch = src.match(/\b(8[0-4]\d{2}|9[12]\d{2})\b/);
+        if (fourDigitMatch) {
+          const id = parseInt(fourDigitMatch[1]);
+          if (!runeIds.includes(id) && id !== 8000 && id !== 8100 && id !== 8200 && id !== 8300 && id !== 8400) {
+            runeIds.push(id);
+          }
+          return;
+        }
+
+        const filename = path.basename(src, '.png');
+        const normAlt = this.normalizeString(alt);
+        const normFile = this.normalizeString(filename);
+
+        Object.keys(this.stylesDict).forEach(styleName => {
+          const normStyle = this.normalizeString(styleName);
+          if (normAlt === normStyle || normFile.includes(normStyle)) {
+            const styleId = this.stylesDict[styleName];
+            if (!primaryStyleId) {
+              primaryStyleId = styleId;
+            } else if (subStyleId === null && styleId !== primaryStyleId) {
+              subStyleId = styleId;
+            }
+          }
+        });
+
+        const altRuneId = this.runesDict[normAlt] || this.runesDict[normFile];
+        if (altRuneId && !runeIds.includes(altRuneId)) {
+          runeIds.push(altRuneId);
+        }
+
+        const spellMatch = src.match(/summoner([a-zA-Z]+)/i);
+        if (spellMatch) {
+          const spellName = spellMatch[1];
+          const spellId = this.summonersDict[this.normalizeString(spellName)];
+          if (spellId && !summonerSpellIds.includes(spellId)) {
+            summonerSpellIds.push(spellId);
+          }
+        } else {
+          const spellNumMatch = src.match(/\/(\d+)\.png$/);
+          if (spellNumMatch) {
+            const id = parseInt(spellNumMatch[1]);
+            if (id > 0 && id <= 21 && !summonerSpellIds.includes(id) && id !== 8) {
+              summonerSpellIds.push(id);
+            }
+          }
+        }
+
+        const altSpellId = this.summonersDict[normAlt];
+        if (altSpellId && !summonerSpellIds.includes(altSpellId)) {
+          summonerSpellIds.push(altSpellId);
+        }
+      });
+
+      if (runeIds.length >= 6) {
+        if (!primaryStyleId) primaryStyleId = 8000;
+        if (!subStyleId) subStyleId = 8400;
+
+        rawRunes = {
+          name: championName,
+          primaryStyleId: primaryStyleId,
+          subStyleId: subStyleId,
+          selectedPerkIds: runeIds.slice(0, 9)
+        };
+
+        while (rawRunes.selectedPerkIds.length < 9) {
+          const defaults = [5005, 5008, 5002];
+          const nextDefault = defaults.find(d => !rawRunes.selectedPerkIds.includes(d));
+          if (nextDefault) {
+            rawRunes.selectedPerkIds.push(nextDefault);
+          } else {
+            rawRunes.selectedPerkIds.push(5002);
           }
         }
       }
 
-      // Match summoner spell names from alt text
-      const altSpellId = this.summonersDict[normAlt];
-      if (altSpellId && !summonerSpellIds.includes(altSpellId)) {
-        summonerSpellIds.push(altSpellId);
-      }
-    });
-
-    // Structure raw runes if we have enough matching IDs
-    // Standard setup requires exactly 6 perks (4 primary + 2 secondary) + 3 stat shards = 9 perk IDs
-    if (runeIds.length >= 6) {
-      // Guess styles if not resolved
-      if (!primaryStyleId) primaryStyleId = 8000; // Precision fallback
-      if (!subStyleId) subStyleId = 8400; // Resolve fallback
-
-      rawRunes = {
-        name: championName,
-        primaryStyleId: primaryStyleId,
-        subStyleId: subStyleId,
-        // Make sure we have 9 unique IDs. If we have fewer, pad with typical stat shards
-        selectedPerkIds: runeIds.slice(0, 9)
-      };
-
-      // Pad stat shards if missing (AS, Adaptive, Armor are standard defaults)
-      while (rawRunes.selectedPerkIds.length < 9) {
-        // Adding default shards: 5005 (Attack Speed), 5008 (Adaptive Force), 5002 (Armor)
-        const defaults = [5005, 5008, 5002];
-        const nextDefault = defaults.find(d => !rawRunes.selectedPerkIds.includes(d));
-        if (nextDefault) {
-          rawRunes.selectedPerkIds.push(nextDefault);
-        } else {
-          rawRunes.selectedPerkIds.push(5002);
-        }
+      if (summonerSpellIds.length >= 2) {
+        rawSummoners = {
+          spell1Id: summonerSpellIds[0],
+          spell2Id: summonerSpellIds[1]
+        };
       }
     }
 
-    if (summonerSpellIds.length >= 2) {
+    // HEURISTIC 4: Fallbacks
+    if (!rawRunes) {
+      console.log('[SCRAPER] [FALLBACK GLOBAL] Cargando runas por defecto...');
+      rawRunes = this.getDefaultRunes(championName);
+    }
+    if (!rawSummoners) {
+      console.log('[SCRAPER] [FALLBACK GLOBAL] Cargando hechizos por defecto...');
       rawSummoners = {
-        spell1Id: summonerSpellIds[0],
-        spell2Id: summonerSpellIds[1]
-      };
-    } else {
-      // Defaults: Flash (4) and Teleport (12) or Ignite (14)
-      rawSummoners = {
-        spell1Id: 4,
-        spell2Id: 14 // Ignite
+        spell1Id: 4,  // Destello
+        spell2Id: 14  // Prender
       };
     }
 
     return {
       champion: championName,
-      runes: rawRunes || this.getDefaultRunes(championName),
+      runes: rawRunes,
       summoners: rawSummoners
     };
   }
@@ -673,7 +1192,7 @@ class OnetricksScraper {
           id,
           name: perkInfo.name,
           icon: perkInfo.icon,
-          desc: index === 0 ? 'Runa Clave' : 'Runa Mayor',
+          desc: perkInfo.description || (index === 0 ? 'Runa Clave' : 'Runa Mayor'),
           isShard: false
         };
       }

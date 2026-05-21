@@ -54,17 +54,21 @@ class LcuConnector {
 
     this.updateStatus('scanning');
 
-    // Try to auto-detect using PowerShell process query first
-    const pathFromProcess = await this.detectPathFromProcess();
-    
     let possiblePaths = [];
-    if (pathFromProcess) {
-      possiblePaths.push(path.join(pathFromProcess, 'lockfile'));
-    }
     if (this.customPath) {
       possiblePaths.push(path.join(this.customPath, 'lockfile'));
       possiblePaths.push(this.customPath); // if they selected lockfile itself
     }
+
+    // Try to auto-detect using PowerShell process query first
+    const pathFromProcess = await this.detectPathFromProcess();
+    if (pathFromProcess) {
+      possiblePaths.push(path.join(pathFromProcess, 'lockfile'));
+    }
+    
+    // Auto-detect mock LCU in workspace folder
+    possiblePaths.push(path.join(__dirname, 'lockfile'));
+
     // Standard default paths on multiple drives
     possiblePaths.push('C:\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('D:\\Riot Games\\League of Legends\\lockfile');
@@ -76,6 +80,7 @@ class LcuConnector {
 
     for (const p of possiblePaths) {
       if (fs.existsSync(p) && fs.lstatSync(p).isFile()) {
+        console.log(`[CONNECTOR] Lockfile encontrado en: ${p}`);
         try {
           const contents = fs.readFileSync(p, 'utf8');
           const parts = contents.split(':');
@@ -85,9 +90,12 @@ class LcuConnector {
             this.protocol = parts[4];
             this.lockfilePath = p;
             
+            console.log(`[CONNECTOR] Intentando conectar a puerto: ${this.port}...`);
             // Validate connection before asserting success
             const ok = await this.testConnection();
+            console.log(`[CONNECTOR] Resultado de testConnection: ${ok}`);
             if (ok) {
+              console.log(`[CONNECTOR] ¡Conexión con LCU establecida con éxito!`);
               this.stopScan();
               this.updateStatus('connected');
               this.connectWs();
@@ -95,7 +103,7 @@ class LcuConnector {
             }
           }
         } catch (e) {
-          // ignore read errors
+          console.error(`[CONNECTOR] Error leyendo lockfile o testeando conexión:`, e);
         }
       }
     }
@@ -273,7 +281,7 @@ class LcuConnector {
       await this.request('PUT', `/lol-perks/v1/pages/${editablePage.id}`, payload);
       
       // Secondary fallback to guarantee active page update
-      await this.request('PUT', '/lol-perks/v1/activepage', editablePage.id);
+      await this.request('PUT', '/lol-perks/v1/currentpage', editablePage.id);
       
       console.log(`Applied runes for ${runes.name} successfully.`);
       return true;

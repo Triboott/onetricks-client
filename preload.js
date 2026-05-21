@@ -10,9 +10,11 @@ contextBridge.exposeInMainWorld('api', {
   
   // Triggers from Renderer Process (UI) to Main Process (Node.js)
   applyBuild: (buildData) => ipcRenderer.send('apply-build', buildData),
+  changeRole: (role) => ipcRenderer.send('change-role', role),
   toggleAutoApply: (settings) => ipcRenderer.send('toggle-auto-apply', settings),
   saveCustomPath: (path) => ipcRenderer.send('save-custom-path', path),
   getInitialState: () => ipcRenderer.invoke('get-initial-state'),
+  simulateChampion: (championId) => ipcRenderer.send('simulate-champion', { id: championId }),
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   closeWindow: () => ipcRenderer.send('window-close')
 });

@@ -1,0 +1,578 @@
+{
+  "keystone": {
+    "8005": {
+      "name": "Ataque intensificado",
+      "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+      "key": "PressTheAttack"
+    },
+    "8008": {
+      "name": "Compás letal",
+      "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+      "key": "LethalTempo"
+    },
+    "8010": {
+      "name": "Conquistador",
+      "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png",
+      "key": "Conqueror"
+    },
+    "8021": {
+      "name": "Pies veloces",
+      "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+      "key": "FleetFootwork"
+    },
+    "8112": {
+      "name": "Electrocutar",
+      "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+      "key": "Electrocute"
+    },
+    "8128": {
+      "name": "Cosecha oscura",
+      "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+      "key": "DarkHarvest"
+    },
+    "8214": {
+      "name": "Invocar a Aery",
+      "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+      "key": "SummonAery"
+    },
+    "8229": {
+      "name": "Cometa arcano",
+      "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+      "key": "ArcaneComet"
+    },
+    "8230": {
+      "name": "Tensión del saqueador de tormentas",
+      "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
+      "key": "PhaseRush"
+    },
+    "8351": {
+      "name": "Mejora glacial",
+      "icon": "perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+      "key": "GlacialAugment"
+    },
+    "8360": {
+      "name": "Libro de hechizos",
+      "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+      "key": "UnsealedSpellbook"
+    },
+    "8369": {
+      "name": "Primer golpe",
+      "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+      "key": "FirstStrike"
+    },
+    "8437": {
+      "name": "Garras del inmortal",
+      "icon": "perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+      "key": "GraspOfTheUndying"
+    },
+    "8439": {
+      "name": "Reverberacción",
+      "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+      "key": "Aftershock"
+    },
+    "8465": {
+      "name": "Protector",
+      "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png",
+      "key": "Guardian"
+    },
+    "8992": {
+      "name": "Toque de muerte ígnea",
+      "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
+      "key": "DeathfireTouch"
+    },
+    "9923": {
+      "name": "Lluvia de cuchillas",
+      "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+      "key": "HailOfBlades"
+    }
+  },
+  "subStyle": {
+    "8000": {
+      "name": "Precisión",
+      "icon": "perk-images/Styles/7201_Precision.png",
+      "key": "Precision",
+      "slots": [
+        {
+          "runes": [
+            {
+              "id": 8005,
+              "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+              "key": "PressTheAttack",
+              "name": "Ataque intensificado"
+            },
+            {
+              "id": 8008,
+              "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+              "key": "LethalTempo",
+              "name": "Compás letal"
+            },
+            {
+              "id": 8021,
+              "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+              "key": "FleetFootwork",
+              "name": "Pies veloces"
+            },
+            {
+              "id": 8010,
+              "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png",
+              "key": "Conqueror",
+              "name": "Conquistador"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 9101,
+              "icon": "perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
+              "key": "AbsorbLife",
+              "name": "Absorber vida"
+            },
+            {
+              "id": 9111,
+              "icon": "perk-images/Styles/Precision/Triumph.png",
+              "key": "Triumph",
+              "name": "Triunfo"
+            },
+            {
+              "id": 8009,
+              "icon": "perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png",
+              "key": "PresenceOfMind",
+              "name": "Claridad mental"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 9104,
+              "icon": "perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png",
+              "key": "LegendAlacrity",
+              "name": "Leyenda: Presteza"
+            },
+            {
+              "id": 9105,
+              "icon": "perk-images/Styles/Precision/LegendHaste/LegendHaste.png",
+              "key": "LegendHaste",
+              "name": "Leyenda: Velocidad"
+            },
+            {
+              "id": 9103,
+              "icon": "perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png",
+              "key": "LegendBloodline",
+              "name": "Leyenda: Linaje"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8014,
+              "icon": "perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png",
+              "key": "CoupDeGrace",
+              "name": "Golpe de gracia"
+            },
+            {
+              "id": 8017,
+              "icon": "perk-images/Styles/Precision/CutDown/CutDown.png",
+              "key": "CutDown",
+              "name": "Derribado"
+            },
+            {
+              "id": 8299,
+              "icon": "perk-images/Styles/Sorcery/LastStand/LastStand.png",
+              "key": "LastStand",
+              "name": "Último esfuerzo"
+            }
+          ]
+        }
+      ]
+    },
+    "8100": {
+      "name": "Dominación",
+      "icon": "perk-images/Styles/7200_Domination.png",
+      "key": "Domination",
+      "slots": [
+        {
+          "runes": [
+            {
+              "id": 8112,
+              "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+              "key": "Electrocute",
+              "name": "Electrocutar"
+            },
+            {
+              "id": 8128,
+              "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+              "key": "DarkHarvest",
+              "name": "Cosecha oscura"
+            },
+            {
+              "id": 9923,
+              "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+              "key": "HailOfBlades",
+              "name": "Lluvia de cuchillas"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8126,
+              "icon": "perk-images/Styles/Domination/CheapShot/CheapShot.png",
+              "key": "CheapShot",
+              "name": "Golpe bajo"
+            },
+            {
+              "id": 8139,
+              "icon": "perk-images/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.png",
+              "key": "TasteOfBlood",
+              "name": "Sabor a sangre"
+            },
+            {
+              "id": 8143,
+              "icon": "perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png",
+              "key": "SuddenImpact",
+              "name": "Impacto repentino"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8137,
+              "icon": "perk-images/Styles/Domination/SixthSense/SixthSense.png",
+              "key": "SixthSense",
+              "name": "Sexto sentido"
+            },
+            {
+              "id": 8140,
+              "icon": "perk-images/Styles/Domination/GrislyMementos/GrislyMementos.png",
+              "key": "GrislyMementos",
+              "name": "Recuerdo macabro"
+            },
+            {
+              "id": 8141,
+              "icon": "perk-images/Styles/Domination/DeepWard/DeepWard.png",
+              "key": "DeepWard",
+              "name": "Guardián de profundidad"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8135,
+              "icon": "perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png",
+              "key": "TreasureHunter",
+              "name": "Cazador de tesoros"
+            },
+            {
+              "id": 8105,
+              "icon": "perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
+              "key": "RelentlessHunter",
+              "name": "Cazador incesante"
+            },
+            {
+              "id": 8106,
+              "icon": "perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
+              "key": "UltimateHunter",
+              "name": "Cazador definitivo"
+            }
+          ]
+        }
+      ]
+    },
+    "8200": {
+      "name": "Brujería",
+      "icon": "perk-images/Styles/7202_Sorcery.png",
+      "key": "Sorcery",
+      "slots": [
+        {
+          "runes": [
+            {
+              "id": 8214,
+              "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+              "key": "SummonAery",
+              "name": "Invocar a Aery"
+            },
+            {
+              "id": 8229,
+              "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+              "key": "ArcaneComet",
+              "name": "Cometa arcano"
+            },
+            {
+              "id": 8230,
+              "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
+              "key": "PhaseRush",
+              "name": "Tensión del saqueador de tormentas"
+            },
+            {
+              "id": 8992,
+              "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
+              "key": "DeathfireTouch",
+              "name": "Toque de muerte ígnea"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8224,
+              "icon": "perk-images/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png",
+              "key": "NullifyingOrb",
+              "name": "Arcanólogo axiomático"
+            },
+            {
+              "id": 8226,
+              "icon": "perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png",
+              "key": "ManaflowBand",
+              "name": "Banda de maná"
+            },
+            {
+              "id": 8275,
+              "icon": "perk-images/Styles/Sorcery/NimbusCloak/6361.png",
+              "key": "NimbusCloak",
+              "name": "Capa del nimbo"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8210,
+              "icon": "perk-images/Styles/Sorcery/Transcendence/Transcendence.png",
+              "key": "Transcendence",
+              "name": "Trascendencia"
+            },
+            {
+              "id": 8234,
+              "icon": "perk-images/Styles/Sorcery/Celerity/CelerityTemp.png",
+              "key": "Celerity",
+              "name": "Celeridad"
+            },
+            {
+              "id": 8233,
+              "icon": "perk-images/Styles/Sorcery/AbsoluteFocus/AbsoluteFocus.png",
+              "key": "AbsoluteFocus",
+              "name": "Concentración absoluta"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8237,
+              "icon": "perk-images/Styles/Sorcery/Scorch/Scorch.png",
+              "key": "Scorch",
+              "name": "Piroláser"
+            },
+            {
+              "id": 8232,
+              "icon": "perk-images/Styles/Sorcery/Waterwalking/Waterwalking.png",
+              "key": "Waterwalking",
+              "name": "Caminar sobre agua"
+            },
+            {
+              "id": 8236,
+              "icon": "perk-images/Styles/Sorcery/GatheringStorm/GatheringStorm.png",
+              "key": "GatheringStorm",
+              "name": "Se avecina tormenta"
+            }
+          ]
+        }
+      ]
+    },
+    "8300": {
+      "name": "Inspiración",
+      "icon": "perk-images/Styles/7203_Whimsy.png",
+      "key": "Inspiration",
+      "slots": [
+        {
+          "runes": [
+            {
+              "id": 8351,
+              "icon": "perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+              "key": "GlacialAugment",
+              "name": "Mejora glacial"
+            },
+            {
+              "id": 8360,
+              "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+              "key": "UnsealedSpellbook",
+              "name": "Libro de hechizos"
+            },
+            {
+              "id": 8369,
+              "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+              "key": "FirstStrike",
+              "name": "Primer golpe"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8306,
+              "icon": "perk-images/Styles/Inspiration/HextechFlashtraption/HextechFlashtraption.png",
+              "key": "HextechFlashtraption",
+              "name": "Destello hextech"
+            },
+            {
+              "id": 8304,
+              "icon": "perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png",
+              "key": "MagicalFootwear",
+              "name": "Calzado mágico"
+            },
+            {
+              "id": 8321,
+              "icon": "perk-images/Styles/Inspiration/CashBack/CashBack2.png",
+              "key": "CashBack",
+              "name": "Reembolso"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8313,
+              "icon": "perk-images/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png",
+              "key": "PerfectTiming",
+              "name": "Tónico triple"
+            },
+            {
+              "id": 8352,
+              "icon": "perk-images/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png",
+              "key": "TimeWarpTonic",
+              "name": "Tónico de distorsión temporal"
+            },
+            {
+              "id": 8345,
+              "icon": "perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png",
+              "key": "BiscuitDelivery",
+              "name": "Entrega de galletas"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8347,
+              "icon": "perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png",
+              "key": "CosmicInsight",
+              "name": "Perspicacia cósmica"
+            },
+            {
+              "id": 8410,
+              "icon": "perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png",
+              "key": "ApproachVelocity",
+              "name": "Velocidad de acercamiento"
+            },
+            {
+              "id": 8316,
+              "icon": "perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png",
+              "key": "JackOfAllTrades",
+              "name": "Manitas"
+            }
+          ]
+        }
+      ]
+    },
+    "8400": {
+      "name": "Valor",
+      "icon": "perk-images/Styles/7204_Resolve.png",
+      "key": "Resolve",
+      "slots": [
+        {
+          "runes": [
+            {
+              "id": 8437,
+              "icon": "perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+              "key": "GraspOfTheUndying",
+              "name": "Garras del inmortal"
+            },
+            {
+              "id": 8439,
+              "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+              "key": "Aftershock",
+              "name": "Reverberacción"
+            },
+            {
+              "id": 8465,
+              "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png",
+              "key": "Guardian",
+              "name": "Protector"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8446,
+              "icon": "perk-images/Styles/Resolve/Demolish/Demolish.png",
+              "key": "Demolish",
+              "name": "Demoler"
+            },
+            {
+              "id": 8463,
+              "icon": "perk-images/Styles/Resolve/FontOfLife/FontOfLife.png",
+              "key": "FontOfLife",
+              "name": "Fuente de vida"
+            },
+            {
+              "id": 8401,
+              "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png",
+              "key": "ShieldBash",
+              "name": "Golpe de escudo"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8429,
+              "icon": "perk-images/Styles/Resolve/Conditioning/Conditioning.png",
+              "key": "Conditioning",
+              "name": "Condicionamiento"
+            },
+            {
+              "id": 8444,
+              "icon": "perk-images/Styles/Resolve/SecondWind/SecondWind.png",
+              "key": "SecondWind",
+              "name": "Fuerzas renovadas"
+            },
+            {
+              "id": 8473,
+              "icon": "perk-images/Styles/Resolve/BonePlating/BonePlating.png",
+              "key": "BonePlating",
+              "name": "Revestimiento de huesos"
+            }
+          ]
+        },
+        {
+          "runes": [
+            {
+              "id": 8451,
+              "icon": "perk-images/Styles/Resolve/Overgrowth/Overgrowth.png",
+              "key": "Overgrowth",
+              "name": "Sobrecrecimiento"
+            },
+            {
+              "id": 8453,
+              "icon": "perk-images/Styles/Resolve/Revitalize/Revitalize.png",
+              "key": "Revitalize",
+              "name": "Revitalizar"
+            },
+            {
+              "id": 8242,
+              "icon": "perk-images/Styles/Sorcery/Unflinching/Unflinching.png",
+              "key": "Unflinching",
+              "name": "Inquebrantable"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

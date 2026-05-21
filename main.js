@@ -12,7 +12,7 @@ let scraper = null;
 let config = {
   autoApplyRunes: true,
   autoApplySpells: true,
-  customLoLPath: '',
+  customLoLPath: '',//miguel angel doblado galveeez
 };
 
 // Global application state
@@ -30,9 +30,12 @@ const configPath = path.join(app.getPath('userData'), 'config.json');
 if (fs.existsSync(configPath)) {
   try {
     config = { ...config, ...JSON.parse(fs.readFileSync(configPath, 'utf8')) };
+    console.log('[MAIN] Config loaded successfully from:', configPath, config);
   } catch (e) {
     console.error('Failed to load config:', e);
   }
+} else {
+  console.log('[MAIN] No config file found at:', configPath, '. Using default config:', config);
 }
 
 function saveConfig() {
@@ -115,6 +118,7 @@ async function handleChampSelectUpdate(session) {
       appState.activeChampionId = 0;
       appState.activeChampionName = '';
       appState.activeChampionImage = '';
+      appState.activeRole = 'default';
       appState.scrapedData = null;
       sendToRenderer('champ-select-update', { active: false });
     }
@@ -144,6 +148,7 @@ async function handleChampSelectUpdate(session) {
     if (selectedChampId === 0) {
       appState.activeChampionName = '';
       appState.activeChampionImage = '';
+      appState.activeRole = 'default';
       appState.scrapedData = null;
       sendToRenderer('champ-select-update', { active: true, championId: 0 });
       return;
@@ -154,19 +159,32 @@ async function handleChampSelectUpdate(session) {
     appState.activeChampionName = champInfo.name;
     appState.activeChampionImage = champInfo.image;
 
+    // Detect assigned position from LCU and map to onetricks roles
+    const positionMap = {
+      'top': 'top',
+      'jungle': 'jungle',
+      'middle': 'mid',
+      'bottom': 'bot',
+      'utility': 'support'
+    };
+    const assignedPosition = (player && player.assignedPosition) ? player.assignedPosition.toLowerCase() : '';
+    const detectedRole = positionMap[assignedPosition] || 'default';
+    appState.activeRole = detectedRole;
+
     sendToRenderer('champ-select-update', {
       active: true,
       championId: selectedChampId,
       championName: champInfo.name,
       championDisplayName: champInfo.displayName,
-      championImage: champInfo.image
+      championImage: champInfo.image,
+      activeRole: detectedRole
     });
 
-    // Start scraping runes & summoners
+    // Start scraping runes & summoners for the detected role
     sendToRenderer('scrape-progress', { status: 'fetching', message: `Obteniendo datos de Onetricks para ${champInfo.displayName}...` });
 
     try {
-      const scraped = await scraper.scrapeRunesAndSummoners(champInfo.name);
+      const scraped = await scraper.scrapeRunesAndSummoners(champInfo.name, detectedRole);
       appState.scrapedData = scraped;
       sendToRenderer('scrape-success', scraped);
 
@@ -188,8 +206,60 @@ async function handleChampSelectUpdate(session) {
 ipcMain.handle('get-initial-state', () => {
   return {
     appState,
-    config
+    config,
+    champions: scraper ? scraper.championsDict : {}
   };
+});
+
+ipcMain.on('simulate-champion', async (event, { id }) => {
+  // Force active champion selection simulated
+  appState.activeChampionId = id;
+  const champInfo = scraper.resolveChampionId(id);
+  appState.activeChampionName = champInfo.name;
+  appState.activeChampionImage = champInfo.image;
+  appState.activeRole = 'default';
+  appState.scrapedData = null;
+
+  console.log(`[MAIN] [SIMULACIÓN] Iniciada simulación para: ${champInfo.displayName} (ID: ${id})`);
+
+  sendToRenderer('champ-select-update', {
+    active: true,
+    championId: id,
+    championName: champInfo.name,
+    championDisplayName: champInfo.displayName,
+    championImage: champInfo.image,
+    activeRole: 'default'
+  });
+
+  sendToRenderer('scrape-progress', { 
+    status: 'fetching', 
+    message: `[Simulación] Obteniendo datos de Onetricks para ${champInfo.displayName}...` 
+  });
+
+  try {
+    const scraped = await scraper.scrapeRunesAndSummoners(champInfo.name, 'default');
+    appState.scrapedData = scraped;
+    sendToRenderer('scrape-success', scraped);
+
+    // Auto-apply if configured
+    if (config.autoApplyRunes && scraped.runes) {
+      try {
+        await connector.applyRunes(scraped.runes.raw);
+      } catch (e) {
+        console.error('[MAIN] [SIMULACIÓN] Error al auto-aplicar runas:', e.message);
+      }
+    }
+    if (config.autoApplySpells && scraped.summoners) {
+      try {
+        await connector.applySummonerSpells(scraped.summoners.raw);
+      } catch (e) {
+        console.error('[MAIN] [SIMULACIÓN] Error al auto-aplicar hechizos:', e.message);
+      }
+    }
+  } catch (err) {
+    console.error('[MAIN] [SIMULACIÓN] Error de scraping:', err);
+    sendToRenderer('scrape-error', { message: 'No se pudieron obtener las runas automáticamente para el campeón simulado.' });
+  }
 });
 
 ipcMain.on('apply-build', async (event, data) => {
@@ -203,6 +273,30 @@ ipcMain.on('apply-build', async (event, data) => {
     }
   } catch (err) {
     console.error('Manual apply error:', err);
+  }
+});
+
+ipcMain.on('change-role', async (event, role) => {
+  if (appState.activeChampionId === 0) return;
+
+  appState.activeRole = role;
+  sendToRenderer('scrape-progress', { status: 'fetching', message: `Actualizando a rol ${role.toUpperCase()} en Onetricks...` });
+
+  try {
+    const scraped = await scraper.scrapeRunesAndSummoners(appState.activeChampionName, role);
+    appState.scrapedData = scraped;
+    sendToRenderer('scrape-success', scraped);
+
+    // Auto-apply if configured
+    if (config.autoApplyRunes && scraped.runes) {
+      await connector.applyRunes(scraped.runes.raw);
+    }
+    if (config.autoApplySpells && scraped.summoners) {
+      await connector.applySummonerSpells(scraped.summoners.raw);
+    }
+  } catch (err) {
+    console.error('Manual change-role scraping error:', err);
+    sendToRenderer('scrape-error', { message: 'No se pudieron obtener las runas para el rol seleccionado.' });
   }
 });
 

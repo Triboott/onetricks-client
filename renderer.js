@@ -5,6 +5,10 @@ const elLcuPill = document.getElementById('lcu-pill');
 
 const elScreenWelcome = document.getElementById('screen-welcome');
 const elScreenWorkspace = document.getElementById('screen-workspace');
+const elScreenDebug = document.getElementById('screen-debug');
+const elBtnDebugMode = document.getElementById('btn-debug-mode');
+const elDebugSearch = document.getElementById('debug-search');
+const elDebugChampGrid = document.getElementById('debug-champ-grid');
 
 const elCheckAutoRunesWelcome = document.getElementById('check-auto-runes-welcome');
 const elCheckAutoSpellsWelcome = document.getElementById('check-auto-spells-welcome');
@@ -14,7 +18,7 @@ const elCheckAutoSpells = document.getElementById('check-auto-spells');
 const elChampBgBanner = document.getElementById('champ-bg-banner');
 const elChampPortrait = document.getElementById('champ-portrait');
 const elChampName = document.getElementById('champ-name');
-const elChampRole = document.getElementById('champ-role');
+const elRoleSelector = document.getElementById('role-selector');
 
 const elLoadingOverlay = document.getElementById('loading-overlay');
 const elLoadingText = document.getElementById('loading-text');
@@ -54,6 +58,8 @@ let appConfig = {
   autoApplySpells: true,
   customLoLPath: ''
 };
+let allChampionsList = [];
+let currentScreenBeforeDebug = 'screen-welcome';
 
 // ==========================================================================
 // INITIAL STATE LOADING & BINDINGS
@@ -65,6 +71,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig = state.config;
     updateConfigUI(appConfig);
     updateLcuStatusUI(state.appState.lcuStatus);
+
+    // Populate champion list for the debug mode
+    const champions = state.champions || {};
+    allChampionsList = Object.keys(champions).map(id => ({
+      id: parseInt(id),
+      name: champions[id].name,
+      displayName: champions[id].displayName,
+      image: champions[id].image
+    })).sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+    renderChampionGrid(allChampionsList);
   } catch (err) {
     console.error('Failed to get initial state:', err);
   }
@@ -145,6 +162,61 @@ document.addEventListener('DOMContentLoaded', async () => {
       elActionStatusIndicator.classList.add('active');
     }
   });
+
+  // Bind role tabs manual selection clicks
+  const roleTabs = elRoleSelector.querySelectorAll('.role-tab');
+  roleTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const selectedRole = tab.getAttribute('data-role');
+      // Highlight visually
+      roleTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      // Request scraper change role
+      window.api.changeRole(selectedRole);
+    });
+  });
+
+  // 5. Bind MODO TEST toggle
+  elBtnDebugMode.addEventListener('click', () => {
+    const isDebugActive = elScreenDebug.classList.contains('active');
+    
+    if (isDebugActive) {
+      elScreenDebug.classList.remove('active');
+      elBtnDebugMode.classList.remove('active');
+      
+      // Determine which screen to return to
+      if (activeScrapedData) {
+        elScreenWorkspace.classList.add('active');
+      } else {
+        elScreenWelcome.classList.add('active');
+      }
+    } else {
+      // Record active screen before going into debug
+      if (elScreenWorkspace.classList.contains('active')) {
+        currentScreenBeforeDebug = 'screen-workspace';
+        elScreenWorkspace.classList.remove('active');
+      } else {
+        currentScreenBeforeDebug = 'screen-welcome';
+        elScreenWelcome.classList.remove('active');
+      }
+      
+      elScreenDebug.classList.add('active');
+      elBtnDebugMode.classList.add('active');
+      elDebugSearch.value = '';
+      renderChampionGrid(allChampionsList);
+      elDebugSearch.focus();
+    }
+  });
+
+  // 6. Bind debug search input for real-time filtering
+  elDebugSearch.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const filtered = allChampionsList.filter(champ => {
+      const normName = champ.displayName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normName.includes(query);
+    });
+    renderChampionGrid(filtered);
+  });
 });
 
 // Sync visual toggle checkbox states
@@ -200,7 +272,11 @@ window.api.onLcuStatus(({ status, config }) => {
 });
 
 // Champion selection changes listener
-window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage }) => {
+window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, activeRole }) => {
+  // Always close debug mode when champion select session details change
+  elScreenDebug.classList.remove('active');
+  elBtnDebugMode.classList.remove('active');
+
   if (!active) {
     // Screen welcome transition
     elScreenWorkspace.classList.remove('active');
@@ -215,13 +291,32 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
       elChampName.textContent = championDisplayName.toUpperCase();
       elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${championImage}`;
       elChampBgBanner.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_0.jpg')`;
-      elChampRole.textContent = 'ROL PRINCIPAL';
+      
+      // Update role selector tabs with the detected active role
+      const detectedRole = activeRole || 'default';
+      const roleTabs = elRoleSelector.querySelectorAll('.role-tab');
+      roleTabs.forEach(tab => {
+        if (tab.getAttribute('data-role') === detectedRole) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
     } else {
       // Hovering slot but no selection locked
       elChampName.textContent = 'SELECCIONANDO...';
       elChampPortrait.src = '';
       elChampBgBanner.style.backgroundImage = 'none';
-      elChampRole.textContent = '-';
+      
+      // Reset role selector tabs to AUTO (default)
+      const roleTabs = elRoleSelector.querySelectorAll('.role-tab');
+      roleTabs.forEach(tab => {
+        if (tab.getAttribute('data-role') === 'default') {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
     }
   }
 });
@@ -342,4 +437,37 @@ function createRuneRowHtml(perk, isKeystone) {
   row.appendChild(meta);
 
   return row;
+}
+
+// Render dynamic grid of champion cards inside MODO TEST
+function renderChampionGrid(list) {
+  elDebugChampGrid.innerHTML = '';
+  list.forEach(champ => {
+    const card = document.createElement('div');
+    card.className = 'debug-champ-card';
+    card.setAttribute('data-id', champ.id);
+    card.title = champ.displayName;
+
+    const portrait = document.createElement('div');
+    portrait.className = 'debug-champ-portrait';
+    const img = document.createElement('img');
+    img.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${champ.image}`;
+    img.alt = champ.displayName;
+    img.loading = "lazy";
+    portrait.appendChild(img);
+
+    const name = document.createElement('div');
+    name.className = 'debug-champ-name';
+    name.textContent = champ.displayName;
+
+    card.appendChild(portrait);
+    card.appendChild(name);
+
+    // Simulated click handler
+    card.addEventListener('click', () => {
+      window.api.simulateChampion(champ.id);
+    });
+
+    elDebugChampGrid.appendChild(card);
+  });
 }

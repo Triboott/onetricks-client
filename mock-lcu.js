@@ -27,6 +27,7 @@ const lockfilePath = path.join(workspaceDir, 'lockfile');
 // Simulated Game State
 let isChampSelect = false;
 let selectedChampionId = 0; // 0 = none, 266 = Aatrox, 81 = Ezreal
+let mockAssignedPosition = '';
 let mockEditableRunePage = {
   id: 4567,
   name: 'Runas Preestablecidas',
@@ -104,7 +105,7 @@ const server = https.createServer(httpsOptions, (req, res) => {
     return;
   }
 
-  if (req.method === 'PUT' && url.pathname === '/lol-perks/v1/activepage') {
+  if (req.method === 'PUT' && (url.pathname === '/lol-perks/v1/activepage' || url.pathname === '/lol-perks/v1/currentpage')) {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
@@ -174,7 +175,7 @@ function getChampSelectSessionPayload() {
       { cellId: 1, championId: 0, hoveredChampionId: 0, summonerId: 102 },
       { cellId: 2, championId: 0, hoveredChampionId: 0, summonerId: 103 },
       { cellId: 3, championId: 0, hoveredChampionId: 0, summonerId: 104 },
-      { cellId: 4, championId: selectedChampionId, hoveredChampionId: selectedChampionId, summonerId: 12345678 }
+      { cellId: 4, championId: selectedChampionId, hoveredChampionId: selectedChampionId, summonerId: 12345678, assignedPosition: mockAssignedPosition }
     ],
     actions: [
       [
@@ -219,8 +220,9 @@ function showCLI() {
   console.log('CONTROLES DEL SIMULADOR DE LEAGUE (LCU)');
   console.log('=======================================');
   console.log('[1] Entrar a Champ Select (Ninguno seleccionado)');
-  console.log('[2] Hover Aatrox (ID 266) - Generará scraping de Onetricks');
-  console.log('[3] Hover Ezreal (ID 81) - Generará scraping de Onetricks');
+  console.log('[2] Hover Aatrox Top (ID 266) - Generará scraping de Onetricks (Top)');
+  console.log('[3] Hover Ezreal ADC (ID 81) - Generará scraping de Onetricks (Bot)');
+  console.log('[5] Hover Ezreal Mid (ID 81) - Generará scraping de Onetricks (Mid)');
   console.log('[4] Salir de Champ Select / Partida iniciada');
   console.log('[q] Apagar simulador y borrar lockfile');
   console.log('Elija una opción: ');
@@ -230,21 +232,31 @@ function showCLI() {
     if (option === '1') {
       isChampSelect = true;
       selectedChampionId = 0;
+      mockAssignedPosition = '';
       console.log('\n[MOCK LCU] Entrando a Champ Select...');
       broadcastEvent('/lol-champ-select/v1/session', 'Create', getChampSelectSessionPayload());
     } else if (option === '2') {
       if (!isChampSelect) isChampSelect = true;
       selectedChampionId = 266;
-      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Aatrox (266)');
+      mockAssignedPosition = 'top';
+      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Aatrox (266) - Posición: TOP');
       broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === '3') {
       if (!isChampSelect) isChampSelect = true;
       selectedChampionId = 81;
-      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Ezreal (81)');
+      mockAssignedPosition = 'bottom';
+      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Ezreal (81) - Posición: BOTTOM (ADC)');
+      broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+    } else if (option === '5') {
+      if (!isChampSelect) isChampSelect = true;
+      selectedChampionId = 81;
+      mockAssignedPosition = 'middle';
+      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Ezreal (81) - Posición: MIDDLE (MID)');
       broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === '4') {
       isChampSelect = false;
       selectedChampionId = 0;
+      mockAssignedPosition = '';
       console.log('\n[MOCK LCU] Champ Select cerrado.');
       broadcastEvent('/lol-champ-select/v1/session', 'Delete', null);
     } else if (option === 'q') {

@@ -22,6 +22,9 @@
         <span class="status-dot" id="status-dot"></span>
         <span class="status-text" id="status-text">DESCONECTADO</span>
       </div>
+      <button class="btn-debug-mode" id="btn-debug-mode" title="Modo Test de Campeones">
+        MODO TEST
+      </button>
       <button class="icon-btn" id="btn-settings" title="Ajustes">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
@@ -99,7 +102,14 @@
               <img src="" alt="Champion" id="champ-portrait" class="champ-portrait">
             </div>
             <h2 id="champ-name">CAMPEÓN</h2>
-            <div class="role-badge" id="champ-role">ROL PRINCIPAL</div>
+            <div class="role-selector-tabs" id="role-selector">
+              <button class="role-tab active" data-role="default">AUTO</button>
+              <button class="role-tab" data-role="top">TOP</button>
+              <button class="role-tab" data-role="jungle">JNG</button>
+              <button class="role-tab" data-role="mid">MID</button>
+              <button class="role-tab" data-role="bot">ADC</button>
+              <button class="role-tab" data-role="support">SUP</button>
+            </div>
             <span class="champ-source-label">Datos de onetricks.gg</span>
           </div>
         </div>
@@ -186,6 +196,24 @@
             <button class="btn btn-apply neon-glow" id="btn-manual-apply">APLICAR EN EL JUEGO</button>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <!-- STATE 3: DEBUG CHAMPION SELECTOR -->
+    <section class="screen" id="screen-debug">
+      <div class="debug-container">
+        <div class="debug-header">
+          <h2>Simulador Onetricks: Selección de Campeón</h2>
+          <div class="debug-search-group">
+            <input type="text" id="debug-search" class="debug-search-input" placeholder="Buscar campeón... (ej. Teemo)" autocomplete="off">
+          </div>
+        </div>
+        
+        <div class="debug-champ-grid-container scrollable">
+          <div class="debug-champ-grid" id="debug-champ-grid">
+            <!-- Dynanically populated champion cards -->
+          </div>
         </div>
       </div>
     </section>
