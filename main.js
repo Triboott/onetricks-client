@@ -13,7 +13,8 @@ let config = {
   autoApplyRunes: true,
   autoApplySpells: true,
   customLoLPath: '',
-  flashOnD: false
+  flashOnD: false,
+  pinnedRole: 'default'
 };
 
 // Global application state
@@ -194,9 +195,12 @@ async function handleChampSelectUpdate(session) {
       return;
     }
 
-    // Auto-detect role from LCU session
+    // Auto-detect role from LCU session, but respect pinnedRole first
     let assignedRole = 'default';
-    if (player && player.assignedPosition) {
+    if (config.pinnedRole && config.pinnedRole !== 'default') {
+      assignedRole = config.pinnedRole;
+      console.log(`[CLIENT] Overriding LCU role with pinned role: ${assignedRole}`);
+    } else if (player && player.assignedPosition) {
       const pos = player.assignedPosition.toLowerCase();
       if (pos === 'middle') assignedRole = 'mid';
       else if (pos === 'bottom') assignedRole = 'bot';
@@ -249,6 +253,12 @@ async function triggerScrape(championName, role) {
     }
 
     appState.scrapedData = scraped;
+    
+    // Dynamically update activeRole to the champion's most popular role if it was default
+    if (role === 'default' && scraped.role) {
+      appState.activeRole = scraped.role;
+    }
+
     sendToRenderer('scrape-success', scraped);
 
     // Auto-apply if configured
@@ -322,6 +332,12 @@ ipcMain.on('save-custom-path', (event, pathStr) => {
   if (connector) {
     connector.setCustomPath(pathStr);
   }
+});
+
+ipcMain.on('pin-role', (event, pinnedRole) => {
+  config.pinnedRole = pinnedRole;
+  saveConfig();
+  console.log(`[CONFIG] Pinned role set to: ${pinnedRole}`);
 });
 
 // Custom window frames handlers

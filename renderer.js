@@ -173,6 +173,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   }
+
+  // 6. Bind pin role button
+  const elBtnPinRole = document.getElementById('btn-pin-role');
+  if (elBtnPinRole) {
+    elBtnPinRole.addEventListener('click', () => {
+      const activeBtn = elRoleSelector.querySelector('.role-btn.active');
+      const activeRole = activeBtn ? activeBtn.getAttribute('data-role') : 'default';
+
+      if (appConfig.pinnedRole && appConfig.pinnedRole !== 'default') {
+        if (appConfig.pinnedRole === activeRole) {
+          // If clicking while looking at the pinned role, unpin it
+          appConfig.pinnedRole = 'default';
+          window.api.pinRole('default');
+          updatePinnedRoleUI('default');
+        } else {
+          // If looking at a different role, pin this new role instead!
+          if (activeRole && activeRole !== 'default') {
+            appConfig.pinnedRole = activeRole;
+            window.api.pinRole(activeRole);
+            updatePinnedRoleUI(activeRole);
+          }
+        }
+      } else {
+        // Pin the active role
+        if (activeRole && activeRole !== 'default') {
+          appConfig.pinnedRole = activeRole;
+          window.api.pinRole(activeRole);
+          updatePinnedRoleUI(activeRole);
+        }
+      }
+    });
+  }
 });
 
 // Sync visual toggle checkbox states
@@ -185,6 +217,34 @@ function updateConfigUI(config) {
   elSettingsCheckSpells.checked = config.autoApplySpells;
   elSettingsCheckFlashD.checked = !!config.flashOnD;
   elInputLolPath.value = config.customLoLPath || '';
+
+  updatePinnedRoleUI(config.pinnedRole);
+}
+
+// Update the visual representation of the pinned role button
+function updatePinnedRoleUI(pinnedRole) {
+  const elBtnPinRole = document.getElementById('btn-pin-role');
+  const elPinRoleText = document.getElementById('pin-role-text');
+  if (!elBtnPinRole || !elPinRoleText) return;
+
+  const roleLabels = {
+    'default': 'default',
+    'top': 'TOP',
+    'jungle': 'JUG',
+    'mid': 'MID',
+    'bot': 'BOT',
+    'support': 'SUP'
+  };
+
+  if (pinnedRole && pinnedRole !== 'default') {
+    elBtnPinRole.classList.add('pinned');
+    elPinRoleText.textContent = `Fijado: ${roleLabels[pinnedRole] || pinnedRole.toUpperCase()}`;
+    elBtnPinRole.title = `Rol ${pinnedRole.toUpperCase()} fijado. Haz clic para desanclar.`;
+  } else {
+    elBtnPinRole.classList.remove('pinned');
+    elPinRoleText.textContent = 'Fijar Rol';
+    elBtnPinRole.title = 'Fijar rol seleccionado para que se aplique siempre';
+  }
 }
 
 // Update connection pill visual styles in header
@@ -289,6 +349,9 @@ window.api.onScrapeSuccess((data) => {
   elLoadingOverlay.classList.remove('active');
   activeScrapedData = data;
   renderBuildDetails(data);
+  if (data.role) {
+    updateActiveRoleUI(data.role);
+  }
 });
 
 // ==========================================================================

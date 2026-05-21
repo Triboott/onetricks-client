@@ -461,6 +461,7 @@ class OnetricksScraper {
 
   // Parse scraped details
   parseScrapedData(championName, { nextData, images }, role = '') {
+    const scrapedRole = (nextData && nextData.props && nextData.props.pageProps && nextData.props.pageProps.role) || role || 'default';
     let rawRunes = null;
     let rawSummoners = null;
     let rawItems = null;
@@ -527,52 +528,8 @@ class OnetricksScraper {
         }
 
         if (bestPatchData) {
-          // Find the most popular keystone to extract its specific rune configurations
-          let mostPopularKeystone = null;
-          if (bestPatchData.popKeystone && bestPatchData.popKeystone.length > 0) {
-            let maxKeystonePlayrate = -1;
-            for (const entry of bestPatchData.popKeystone) {
-              if (entry && entry[0] && typeof entry[1] === 'number') {
-                if (entry[1] > maxKeystonePlayrate) {
-                  maxKeystonePlayrate = entry[1];
-                  mostPopularKeystone = entry[0].toString();
-                }
-              }
-            }
-          }
-
-          let runesExtracted = false;
-          if (mostPopularKeystone && bestPatchData.popRunes && bestPatchData.popRunes[mostPopularKeystone] && bestPatchData.popRunes[mostPopularKeystone].length > 0) {
-            const builds = bestPatchData.popRunes[mostPopularKeystone];
-            for (const build of builds.slice(0, 4)) {
-              const runesList = build[0];
-              const playratePercentRaw = build[1];
-              const treeInfo = build[2] || [];
-              const primaryStyleId = treeInfo[0] || 8100;
-              const subStyleId = treeInfo[1] || 8200;
-
-              const statShards = bestPatchData.popStat || [5005, 5008, 5002];
-
-              let playratePercent = playratePercentRaw;
-              if (playratePercent > 0 && playratePercent <= 1.0) {
-                playratePercent = playratePercent * 100;
-              }
-              playratePercent = Math.round(playratePercent * 10) / 10;
-
-              rawRuneSets.push({
-                name: championName,
-                primaryStyleId,
-                subStyleId,
-                selectedPerkIds: [...runesList, ...statShards],
-                _playrate: playratePercent
-              });
-            }
-            runesExtracted = true;
-            console.log(`[SCRAPER] Extracted ${rawRuneSets.length} rune sets for most popular keystone: ${mostPopularKeystone}`);
-          }
-
-          // Fallback to popTree if above fails
-          if (!runesExtracted && bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+          // Bypassed mostPopularKeystone to always fetch all 4 main sets from popTree
+          if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
             // Compute total playrates/games sum first to determine if we need to convert to percentages
             let sumPlayrates = 0;
             bestPatchData.popTree.forEach(entry => {
@@ -883,6 +840,7 @@ class OnetricksScraper {
 
     return {
       champion: championName,
+      role: scrapedRole,
       runes: rawRunes || this.getDefaultRunes(championName),
       rawRuneSets: rawRuneSets.length > 0 ? rawRuneSets : null,
       summoners: rawSummoners,
@@ -1025,6 +983,7 @@ class OnetricksScraper {
 
     return {
       champion: scraped.champion,
+      role: scraped.role,
       runes: runeSets[0],   // backward-compat: first set = most popular
       runeSets,             // all sets ordered by playrate
       summoners: {

@@ -1229,3 +1229,48 @@ input:checked + .slider::before {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+
+/* ==========================================================================
+   ROLE LOCK/PIN BUTTON STYLING
+   ========================================================================== */
+.pin-role-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-top: 6px;
+  margin-bottom: 8px;
+  outline: none;
+}
+
+.pin-role-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.pin-role-btn.pinned {
+  background: rgba(138, 43, 226, 0.2);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple-light);
+  box-shadow: 0 0 12px var(--accent-purple-glow);
+}
+
+.pin-role-btn svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.pin-role-btn.pinned svg {
+  transform: rotate(45deg);
+}

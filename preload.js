@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   
   // Triggers from Renderer Process (UI) to Main Process (Node.js)
   changeRole: (role) => ipcRenderer.send('change-role', role),
+  pinRole: (role) => ipcRenderer.send('pin-role', role),
   applyBuild: (buildData) => ipcRenderer.send('apply-build', buildData),
   toggleAutoApply: (settings) => ipcRenderer.send('toggle-auto-apply', settings),
   saveCustomPath: (path) => ipcRenderer.send('save-custom-path', path),
