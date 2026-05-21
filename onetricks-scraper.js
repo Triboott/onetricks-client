@@ -482,15 +482,107 @@ class OnetricksScraper {
         for (const key of sortedKeys) {
           const pData = pp.firstItemStats[key];
           if (pData && pData.all && pData.all.popTree && pData.all.popRunes && Object.keys(pData.all.popRunes).length > 0) {
-            bestPatchData = pData.all;
-            console.log(`[SCRAPER] Found optimal patch data in key: '${key}'`);
+            // Find default first item key based on the absolute most popular classical build path
+            let defaultItemKey = null;
+            let maxPathPlayrate = -1;
+            if (pData.all.popClassicPath && Array.isArray(pData.all.popClassicPath)) {
+              for (const group of pData.all.popClassicPath) {
+                if (Array.isArray(group)) {
+                  for (const entry of group) {
+                    if (entry && Array.isArray(entry[0]) && typeof entry[1] === 'number') {
+                      if (entry[1] > maxPathPlayrate) {
+                        maxPathPlayrate = entry[1];
+                        if (entry[0].length > 0) {
+                          defaultItemKey = entry[0][0].toString();
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            // Fallback: pick the first item key with the highest playrate if no path or item stats found
+            if (!defaultItemKey || !pData[defaultItemKey] || !pData[defaultItemKey].popTree || !pData[defaultItemKey].popRunes || Object.keys(pData[defaultItemKey].popRunes).length === 0) {
+              let maxPlayrate = -1;
+              for (const itemKey of Object.keys(pData)) {
+                if (itemKey !== 'all' && itemKey !== 'top' && pData[itemKey] && pData[itemKey].popTree && pData[itemKey].popRunes && Object.keys(pData[itemKey].popRunes).length > 0 && typeof pData[itemKey].playrate === 'number') {
+                  if (pData[itemKey].playrate > maxPlayrate) {
+                    maxPlayrate = pData[itemKey].playrate;
+                    defaultItemKey = itemKey;
+                  }
+                }
+              }
+            }
+
+            // Ultimate fallback to 'all'
+            if (!defaultItemKey || !pData[defaultItemKey]) {
+              defaultItemKey = 'all';
+            }
+
+            bestPatchData = pData[defaultItemKey];
+            console.log(`[SCRAPER] Found optimal patch data in key: '${key}', item: '${defaultItemKey}'`);
             break;
           }
         }
 
         if (bestPatchData) {
-          // Extract ALL rune sets from popTree, ordered by playrate (same order as web: left→right)
-          if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+          // Find the most popular keystone to extract its specific rune configurations
+          let mostPopularKeystone = null;
+          if (bestPatchData.popKeystone && bestPatchData.popKeystone.length > 0) {
+            let maxKeystonePlayrate = -1;
+            for (const entry of bestPatchData.popKeystone) {
+              if (entry && entry[0] && typeof entry[1] === 'number') {
+                if (entry[1] > maxKeystonePlayrate) {
+                  maxKeystonePlayrate = entry[1];
+                  mostPopularKeystone = entry[0].toString();
+                }
+              }
+            }
+          }
+
+          let runesExtracted = false;
+          if (mostPopularKeystone && bestPatchData.popRunes && bestPatchData.popRunes[mostPopularKeystone] && bestPatchData.popRunes[mostPopularKeystone].length > 0) {
+            const builds = bestPatchData.popRunes[mostPopularKeystone];
+            for (const build of builds.slice(0, 4)) {
+              const runesList = build[0];
+              const playratePercentRaw = build[1];
+              const treeInfo = build[2] || [];
+              const primaryStyleId = treeInfo[0] || 8100;
+              const subStyleId = treeInfo[1] || 8200;
+
+              const statShards = bestPatchData.popStat || [5005, 5008, 5002];
+
+              let playratePercent = playratePercentRaw;
+              if (playratePercent > 0 && playratePercent <= 1.0) {
+                playratePercent = playratePercent * 100;
+              }
+              playratePercent = Math.round(playratePercent * 10) / 10;
+
+              rawRuneSets.push({
+                name: championName,
+                primaryStyleId,
+                subStyleId,
+                selectedPerkIds: [...runesList, ...statShards],
+                _playrate: playratePercent
+              });
+            }
+            runesExtracted = true;
+            console.log(`[SCRAPER] Extracted ${rawRuneSets.length} rune sets for most popular keystone: ${mostPopularKeystone}`);
+          }
+
+          // Fallback to popTree if above fails
+          if (!runesExtracted && bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+            // Compute total playrates/games sum first to determine if we need to convert to percentages
+            let sumPlayrates = 0;
+            bestPatchData.popTree.forEach(entry => {
+              if (entry && typeof entry[3] === 'number') sumPlayrates += entry[3];
+            });
+
+            // If the sum is around 100, they are already percentages.
+            // If the sum is very large (e.g. total games), we convert entries to percentages.
+            const isDirectPercentage = sumPlayrates > 0 && sumPlayrates <= 105;
+
             // ── DEBUG: dump raw structure to understand playrate fields ──────────
             console.log('[SCRAPER] RAW popTree:', JSON.stringify(bestPatchData.popTree));
             const firstKey = Object.keys(bestPatchData.popRunes)[0];
@@ -504,14 +596,13 @@ class OnetricksScraper {
               const keystoneBuilds = bestPatchData.popRunes[keystoneId];
               if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
-              // Find the build whose secondary runes (positions 4-5) match the expected subStyleId.
+              // Find the build that has at least 2 runes belonging to the expected subStyleId.
               let chosenBuild = keystoneBuilds[0]; // fallback
               for (const build of keystoneBuilds) {
                 const runes = build[0];
                 if (!runes || runes.length < 6) continue;
-                const sec1Style = this.perksMap[runes[4]]?.styleId;
-                const sec2Style = this.perksMap[runes[5]]?.styleId;
-                if (sec1Style === subStyleId && sec2Style === subStyleId) {
+                const matchingSecondaryRunes = runes.filter(runeId => this.perksMap[runeId]?.styleId === subStyleId);
+                if (matchingSecondaryRunes.length >= 2) {
                   chosenBuild = build;
                   break;
                 }
@@ -525,15 +616,26 @@ class OnetricksScraper {
                                   : typeof chosenBuild[1] === 'number' ? chosenBuild[1]
                                   : 0;
 
-              console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, treeEntry[3]=${treeEntry[3]}, build[1]=${chosenBuild[1]}, playrateCount=${playrateCount}`);
-              console.log(`[SCRAPER]   Secondary styles: ${this.perksMap[runesList[4]]?.styleId}, ${this.perksMap[runesList[5]]?.styleId} (expected: ${subStyleId})`);
+              let playratePercent = playrateCount;
+              if (!isDirectPercentage && sumPlayrates > 0) {
+                playratePercent = (playrateCount / sumPlayrates) * 100;
+              }
+              // If it's a decimal fraction (e.g. 0.1045), multiply by 100 to get percentage
+              if (playratePercent > 0 && playratePercent <= 1.0) {
+                playratePercent = playratePercent * 100;
+              }
+              playratePercent = Math.round(playratePercent * 10) / 10;
+
+              const actualSecondaryRunes = runesList.filter(runeId => this.perksMap[runeId]?.styleId === subStyleId);
+              console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, treeEntry[3]=${treeEntry[3]}, build[1]=${chosenBuild[1]}, playratePercent=${playratePercent}`);
+              console.log(`[SCRAPER]   Secondary runes found: ${actualSecondaryRunes.join(', ')} (expected subStyleId: ${subStyleId})`);
 
               rawRuneSets.push({
                 name: championName,
                 primaryStyleId,
                 subStyleId,
                 selectedPerkIds: [...runesList, ...statShards],
-                _playrate: playrateCount
+                _playrate: playratePercent
               });
             }
           }
@@ -586,12 +688,37 @@ class OnetricksScraper {
             const startingIds = startingBuild.map(i => i.id);
             const bootsIds = popularBoots.map(i => i.id);
             
-            const filteredItems = bestPatchData.popularItems.filter(item => {
+            // Try to extract from popClassicPath or popCore to get the purchase order sequence
+            let sequentialIds = [];
+            if (bestPatchData.popClassicPath && bestPatchData.popClassicPath.length > 0 && bestPatchData.popClassicPath[0][0]) {
+              const pathEntry = bestPatchData.popClassicPath[0][0];
+              if (Array.isArray(pathEntry[0])) {
+                sequentialIds = pathEntry[0].map(id => id.toString());
+              } else {
+                sequentialIds = pathEntry.map(id => id.toString());
+              }
+            } else if (bestPatchData.popCore && bestPatchData.popCore.length > 0 && bestPatchData.popCore[0][0]) {
+              sequentialIds = bestPatchData.popCore[0][0].map(id => id.toString());
+            }
+
+            // Filter out starting items and boots from the sequential list
+            const cleanSequentialIds = sequentialIds.filter(id => !startingIds.includes(id) && !bootsIds.includes(id));
+
+            // Map them to rich item objects
+            const seqItems = cleanSequentialIds.map(id => ({
+              id,
+              name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+              gold: itemData[id] ? itemData[id].gold : 0
+            }));
+
+            // Filter out starting, boots, and already added sequential items from popularItems list
+            const filteredPopularItems = bestPatchData.popularItems.filter(item => {
               const id = item[0].toString();
-              return !startingIds.includes(id) && !bootsIds.includes(id);
+              return !startingIds.includes(id) && !bootsIds.includes(id) && !cleanSequentialIds.includes(id);
             });
 
-            coreItems = filteredItems.slice(0, 6).map(item => {
+            // Map extra items
+            const extraItems = filteredPopularItems.map(item => {
               const id = item[0].toString();
               return {
                 id,
@@ -599,6 +726,8 @@ class OnetricksScraper {
                 gold: itemData[id] ? itemData[id].gold : 0
               };
             });
+
+            coreItems = [...seqItems, ...extraItems].slice(0, 6);
           }
 
           rawItems = {
@@ -857,7 +986,8 @@ class OnetricksScraper {
       subStyleIcon:     subStyle.icon,
       primaryPerks,
       secondaryPerks,
-      shardsPerks
+      shardsPerks,
+      playrate:         rawRunes._playrate
     };
   }
 

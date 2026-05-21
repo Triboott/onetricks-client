@@ -300,6 +300,14 @@ function renderBuildDetails(data) {
 
   // 1. Reset tab state and render tab selector
   activeRuneSetIndex = 0;
+  
+  // Sort the runeSets descending by playrate defensively
+  if (data.runeSets && data.runeSets.length > 0) {
+    data.runeSets.sort((a, b) => (b.playrate || 0) - (a.playrate || 0));
+    // Make sure data.runes points to the most popular set
+    data.runes = data.runeSets[0];
+  }
+
   renderRuneSetTabs(data.runeSets || [data.runes]);
 
   // 2. Render the first (most popular) rune set
@@ -414,6 +422,15 @@ function renderRuneSetTabs(runeSets) {
 
     labelDiv.appendChild(mainLabel);
     labelDiv.appendChild(subLabel);
+
+    // Inyectar el badge de playrate
+    if (set.playrate) {
+      const playrateBadge = document.createElement('div');
+      playrateBadge.className = 'tab-playrate';
+      playrateBadge.textContent = `${set.playrate}% PR`;
+      labelDiv.appendChild(playrateBadge);
+    }
+
     tab.appendChild(labelDiv);
 
     tab.addEventListener('click', () => switchRuneSet(index));
