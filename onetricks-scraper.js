@@ -3,6 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 
+// ─── DEBUG ────────────────────────────────────────────────────────────────────
+// Ponlo a true para ver la ventana del navegador y las DevTools durante el scraping.
+const DEBUG_BROWSER = true;
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Local quick lookup map of Champion IDs to onetricks URL names (Data Dragon IDs)
 const CHAMPION_MAP = {
   266: { name: 'Aatrox', displayName: 'Aatrox', image: 'Aatrox.png' },
@@ -373,15 +378,20 @@ class OnetricksScraper {
       }
       
       const tempWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        show: false, // head-less (offscreen)
+        width: 1280,
+        height: 900,
+        show: DEBUG_BROWSER,
+        title: `[DEBUG] Scraping: ${championName}`,
         webPreferences: {
-          offscreen: true,
-          images: false, // speed up loading
+          offscreen: !DEBUG_BROWSER,
+          images: true,
           webSecurity: false
         }
       });
+
+      if (DEBUG_BROWSER) {
+        tempWindow.webContents.openDevTools({ mode: 'bottom' });
+      }
 
       // Clear cookies/cache to avoid state bugs
       tempWindow.webContents.session.clearStorageData();
@@ -454,6 +464,7 @@ class OnetricksScraper {
     let rawRunes = null;
     let rawSummoners = null;
     let rawItems = null;
+    let rawRuneSets = [];
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
@@ -478,37 +489,59 @@ class OnetricksScraper {
         }
 
         if (bestPatchData) {
-          // 1. Get the most popular tree/keystone from popTree
-          const firstTree = bestPatchData.popTree[0];
-          if (firstTree) {
-            const primaryStyleId = firstTree[0];
-            const subStyleId = firstTree[1];
-            const keystoneId = firstTree[2];
+          // Extract ALL rune sets from popTree, ordered by playrate (same order as web: left→right)
+          if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+            // ── DEBUG: dump raw structure to understand playrate fields ──────────
+            console.log('[SCRAPER] RAW popTree:', JSON.stringify(bestPatchData.popTree));
+            const firstKey = Object.keys(bestPatchData.popRunes)[0];
+            console.log('[SCRAPER] RAW popRunes[firstKey][0]:', JSON.stringify(bestPatchData.popRunes[firstKey]?.[0]));
+            // ─────────────────────────────────────────────────────────────────────
+            for (const treeEntry of bestPatchData.popTree.slice(0, 4)) {
+              const primaryStyleId = treeEntry[0];
+              const subStyleId     = treeEntry[1];
+              const keystoneId     = treeEntry[2];
 
-            console.log(`[SCRAPER] Selected Tree from JSON: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}`);
+              const keystoneBuilds = bestPatchData.popRunes[keystoneId];
+              if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
-            // 2. Get the runes for this keystone
-            const keystoneBuilds = bestPatchData.popRunes[keystoneId];
-            if (keystoneBuilds && keystoneBuilds.length > 0) {
-              const firstBuild = keystoneBuilds[0];
-              const runesList = firstBuild[0];
-              console.log('[SCRAPER] Runes list parsed:', runesList);
+              // Find the build whose secondary runes (positions 4-5) match the expected subStyleId.
+              let chosenBuild = keystoneBuilds[0]; // fallback
+              for (const build of keystoneBuilds) {
+                const runes = build[0];
+                if (!runes || runes.length < 6) continue;
+                const sec1Style = this.perksMap[runes[4]]?.styleId;
+                const sec2Style = this.perksMap[runes[5]]?.styleId;
+                if (sec1Style === subStyleId && sec2Style === subStyleId) {
+                  chosenBuild = build;
+                  break;
+                }
+              }
 
-              // 3. Get stat shards
+              const runesList  = chosenBuild[0];
               const statShards = bestPatchData.popStat || [5005, 5008, 5002];
-              console.log('[SCRAPER] Stat shards parsed:', statShards);
 
-              // 4. Combine
-              const selectedPerkIds = [...runesList, ...statShards];
+              // Determine playrate count: try treeEntry[3] first, then chosenBuild[1]
+              const playrateCount = typeof treeEntry[3] === 'number' ? treeEntry[3]
+                                  : typeof chosenBuild[1] === 'number' ? chosenBuild[1]
+                                  : 0;
 
-              rawRunes = {
+              console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, treeEntry[3]=${treeEntry[3]}, build[1]=${chosenBuild[1]}, playrateCount=${playrateCount}`);
+              console.log(`[SCRAPER]   Secondary styles: ${this.perksMap[runesList[4]]?.styleId}, ${this.perksMap[runesList[5]]?.styleId} (expected: ${subStyleId})`);
+
+              rawRuneSets.push({
                 name: championName,
                 primaryStyleId,
                 subStyleId,
-                selectedPerkIds
-              };
+                selectedPerkIds: [...runesList, ...statShards],
+                _playrate: playrateCount
+              });
             }
           }
+
+          // Sort by playrate descending so leftmost tab = most played (matches web order)
+          rawRuneSets.sort((a, b) => b._playrate - a._playrate);
+          rawRunes = rawRuneSets[0] || null;
+
 
           // 5. Get summoners from JSON
           if (bestPatchData.sSpells && bestPatchData.sSpells.length > 0) {
@@ -722,6 +755,7 @@ class OnetricksScraper {
     return {
       champion: championName,
       runes: rawRunes || this.getDefaultRunes(championName),
+      rawRuneSets: rawRuneSets.length > 0 ? rawRuneSets : null,
       summoners: rawSummoners,
       items: rawItems || this.getDefaultItems(championName)
     };
@@ -778,83 +812,34 @@ class OnetricksScraper {
     };
   }
 
-  // Resolve raw build IDs to rich objects (names, icons, descriptions) for easy drawing
-  resolveBuildDetails(scraped) {
-    if (!scraped) return null;
+  // Private helper: resolves one raw rune set object into a display-ready format
+  _resolveRuneSet(rawRunes, styleMeta, shardMeta) {
+    const primaryStyle = styleMeta[rawRunes.primaryStyleId] || { name: 'Primaria', icon: '' };
+    const subStyle     = styleMeta[rawRunes.subStyleId]     || { name: 'Secundaria', icon: '' };
 
-    const runes = scraped.runes;
-    const summoners = scraped.summoners;
-
-    // Resolve Style Paths
-    const styleMeta = {
-      8000: { name: 'Precisión', icon: 'perk-images/Styles/7201_Precision.png' },
-      8100: { name: 'Dominación', icon: 'perk-images/Styles/7200_Domination.png' },
-      8200: { name: 'Brujería', icon: 'perk-images/Styles/7202_Sorcery.png' },
-      8300: { name: 'Inspiración', icon: 'perk-images/Styles/7204_Inspiration.png' },
-      8400: { name: 'Valor', icon: 'perk-images/Styles/7203_Resolve.png' }
-    };
-
-    const primaryStyle = styleMeta[runes.primaryStyleId] || { name: 'Primaria', icon: '' };
-    const subStyle = styleMeta[runes.subStyleId] || { name: 'Secundaria', icon: '' };
-
-    // Resolve Perks (Runes + Shards)
-    const resolvedPerks = runes.selectedPerkIds.map((id, index) => {
-      // Check for Stat Shards (StatMods)
-      const shardMeta = {
-        5001: { name: 'Vida Escalar', icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
-        5002: { name: 'Armadura', icon: 'perk-images/StatMods/StatModsArmorIcon.png', desc: 'Defensa' },
-        5003: { name: 'Resistencia Mágica', icon: 'perk-images/StatMods/StatModsMagicResIcon.png', desc: 'Defensa' },
-        5005: { name: 'Velocidad de Ataque', icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png', desc: 'Ataque' },
-        5007: { name: 'Aceleración de Habilidad', icon: 'perk-images/StatMods/StatModsCDRIcon.png', desc: 'Flexibilidad' },
-        5008: { name: 'Fuerza Adaptable', icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' }
-      };
-
+    const resolvedPerks = rawRunes.selectedPerkIds.map((id) => {
       if (shardMeta[id]) {
-        return {
-          id,
-          name: shardMeta[id].name,
-          icon: shardMeta[id].icon,
-          desc: shardMeta[id].desc,
-          isShard: true
-        };
+        return { id, name: shardMeta[id].name, icon: shardMeta[id].icon, desc: shardMeta[id].desc, isShard: true };
       }
-
-      // Check perk in runesReforged dictionary map
       const perkInfo = this.perksMap[id];
       if (perkInfo) {
-        return {
-          id,
-          name: perkInfo.name,
-          icon: perkInfo.icon,
-          desc: perkInfo.isKeystone ? 'Runa Clave' : 'Runa Mayor',
-          isShard: false
-        };
+        return { id, name: perkInfo.name, icon: perkInfo.icon, desc: perkInfo.isKeystone ? 'Runa Clave' : 'Runa Mayor', isShard: false };
       }
-
-      // Safe Generic Fallback
-      return {
-        id,
-        name: `Runa ${id}`,
-        icon: '',
-        desc: 'Desconocido',
-        isShard: false
-      };
+      return { id, name: `Runa ${id}`, icon: '', desc: 'Desconocido', isShard: false };
     });
 
-    // Group runes by style dynamically
-    const allRunes = resolvedPerks.filter(p => !p.isShard);
+    const allRunes   = resolvedPerks.filter(p => !p.isShard);
     const shardsPerks = resolvedPerks.filter(p => p.isShard);
 
-    let primaryPerks = allRunes.filter(p => this.perksMap[p.id] && this.perksMap[p.id].styleId === runes.primaryStyleId);
-    let secondaryPerks = allRunes.filter(p => this.perksMap[p.id] && this.perksMap[p.id].styleId === runes.subStyleId);
+    let primaryPerks   = allRunes.filter(p => this.perksMap[p.id]?.styleId === rawRunes.primaryStyleId);
+    let secondaryPerks = allRunes.filter(p => this.perksMap[p.id]?.styleId === rawRunes.subStyleId);
 
-    // Resilient fallback if dynamic filtering is incomplete
     if (primaryPerks.length !== 4 || secondaryPerks.length !== 2) {
       console.log(`[SCRAPER] Dynamic grouping incomplete (Primary: ${primaryPerks.length}, Secondary: ${secondaryPerks.length}). Using index-based fallback.`);
-      primaryPerks = allRunes.slice(0, 4);
+      primaryPerks   = allRunes.slice(0, 4);
       secondaryPerks = allRunes.slice(4, 6);
     } else {
-      // Sort primary tree so Keystone is always first
+      // Ensure keystone is always first in primary list
       primaryPerks.sort((a, b) => {
         const aKey = this.perksMap[a.id]?.isKeystone ? 1 : 0;
         const bKey = this.perksMap[b.id]?.isKeystone ? 1 : 0;
@@ -862,24 +847,56 @@ class OnetricksScraper {
       });
     }
 
+    return {
+      raw: rawRunes,
+      primaryStyleId:   rawRunes.primaryStyleId,
+      primaryStyleName: primaryStyle.name,
+      primaryStyleIcon: primaryStyle.icon,
+      subStyleId:       rawRunes.subStyleId,
+      subStyleName:     subStyle.name,
+      subStyleIcon:     subStyle.icon,
+      primaryPerks,
+      secondaryPerks,
+      shardsPerks
+    };
+  }
+
+  // Resolve raw build IDs to rich objects (names, icons, descriptions) for easy drawing
+  resolveBuildDetails(scraped) {
+    if (!scraped) return null;
+
+    const styleMeta = {
+      8000: { name: 'Precisión',  icon: 'perk-images/Styles/7201_Precision.png' },
+      8100: { name: 'Dominación', icon: 'perk-images/Styles/7200_Domination.png' },
+      8200: { name: 'Brujería',   icon: 'perk-images/Styles/7202_Sorcery.png' },
+      8300: { name: 'Inspiración',icon: 'perk-images/Styles/7204_Inspiration.png' },
+      8400: { name: 'Valor',      icon: 'perk-images/Styles/7203_Resolve.png' }
+    };
+
+    const shardMeta = {
+      5001: { name: 'Vida Escalar',           icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
+      5002: { name: 'Armadura',               icon: 'perk-images/StatMods/StatModsArmorIcon.png',         desc: 'Defensa' },
+      5003: { name: 'Resistencia Mágica',     icon: 'perk-images/StatMods/StatModsMagicResIcon.png',      desc: 'Defensa' },
+      5005: { name: 'Velocidad de Ataque',    icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png',   desc: 'Ataque' },
+      5007: { name: 'Aceleración de Habilidad',icon: 'perk-images/StatMods/StatModsCDRIcon.png',          desc: 'Flexibilidad' },
+      5008: { name: 'Fuerza Adaptable',       icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' }
+    };
+
+    // Resolve every rune set (all popTree entries) in playrate order
+    const rawSetsToResolve = (scraped.rawRuneSets && scraped.rawRuneSets.length > 0)
+      ? scraped.rawRuneSets
+      : [scraped.runes];
+    const runeSets = rawSetsToResolve.map(r => this._resolveRuneSet(r, styleMeta, shardMeta));
+
     // Resolve Summoner Spells
+    const summoners = scraped.summoners;
     const spell1 = this.spellsMap[summoners.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
-    const spell2 = this.spellsMap[summoners.spell2Id] || { name: 'Prender', icon: 'summonerIgnite.png' };
+    const spell2 = this.spellsMap[summoners.spell2Id] || { name: 'Prender',  icon: 'summonerIgnite.png' };
 
     return {
       champion: scraped.champion,
-      runes: {
-        raw: runes,
-        primaryStyleId: runes.primaryStyleId,
-        primaryStyleName: primaryStyle.name,
-        primaryStyleIcon: primaryStyle.icon,
-        subStyleId: runes.subStyleId,
-        subStyleName: subStyle.name,
-        subStyleIcon: subStyle.icon,
-        primaryPerks,
-        secondaryPerks,
-        shardsPerks
-      },
+      runes: runeSets[0],   // backward-compat: first set = most popular
+      runeSets,             // all sets ordered by playrate
       summoners: {
         raw: summoners,
         spell1: { id: summoners.spell1Id, name: spell1.name, icon: spell1.icon },
