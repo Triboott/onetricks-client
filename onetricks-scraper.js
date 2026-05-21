@@ -363,9 +363,12 @@ class OnetricksScraper {
   }
 
   // Load Champion page in offscreen browser window to easily pass Cloudflare
-  scrapeRunesAndSummoners(championName) {
+  scrapeRunesAndSummoners(championName, role = '') {
     return new Promise((resolve, reject) => {
-      const url = `https://www.onetricks.gg/es/champions/${championName}`;
+      let url = `https://www.onetricks.gg/es/champions/builds/${championName}`;
+      if (role && role !== 'default') {
+        url += `?role=${role}`;
+      }
       
       const tempWindow = new BrowserWindow({
         width: 1200,
@@ -422,7 +425,7 @@ class OnetricksScraper {
           clearTimeout(timeout);
 
           // Parse scraped results using our heuristics
-          const data = this.parseScrapedData(championName, scrapingResult);
+          const data = this.parseScrapedData(championName, scrapingResult, role);
           resolve(this.resolveBuildDetails(data));
         } catch (err) {
           tempWindow.destroy();
@@ -445,143 +448,218 @@ class OnetricksScraper {
   }
 
   // Parse scraped details
-  parseScrapedData(championName, { nextData, images }) {
+  parseScrapedData(championName, { nextData, images }, role = '') {
     let rawRunes = null;
     let rawSummoners = null;
 
-    // HEURISTIC 1: Check Next.js state data
+    // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
-      // Recursively search Next.js pageProps for rune selections
+      const pp = nextData.props.pageProps;
+      if (pp.firstItemStats) {
+        let bestPatchData = null;
+        const patchKeys = Object.keys(pp.firstItemStats || {});
+        // Sort patchKeys so that specific versions (e.g. "16.10") are checked first, then major versions ("16"), then "all"
+        const sortedKeys = patchKeys.sort((a, b) => {
+          if (a === 'all') return 1;
+          if (b === 'all') return -1;
+          return b.localeCompare(a, undefined, { numeric: true });
+        });
+
+        for (const key of sortedKeys) {
+          const pData = pp.firstItemStats[key];
+          if (pData && pData.all && pData.all.popTree && pData.all.popRunes && Object.keys(pData.all.popRunes).length > 0) {
+            bestPatchData = pData.all;
+            console.log(`[SCRAPER] Found optimal patch data in key: '${key}'`);
+            break;
+          }
+        }
+
+        if (bestPatchData) {
+          // 1. Get the most popular tree/keystone from popTree
+          const firstTree = bestPatchData.popTree[0];
+          if (firstTree) {
+            const primaryStyleId = firstTree[0];
+            const subStyleId = firstTree[1];
+            const keystoneId = firstTree[2];
+
+            console.log(`[SCRAPER] Selected Tree from JSON: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}`);
+
+            // 2. Get the runes for this keystone
+            const keystoneBuilds = bestPatchData.popRunes[keystoneId];
+            if (keystoneBuilds && keystoneBuilds.length > 0) {
+              const firstBuild = keystoneBuilds[0];
+              const runesList = firstBuild[0];
+              console.log('[SCRAPER] Runes list parsed:', runesList);
+
+              // 3. Get stat shards
+              const statShards = bestPatchData.popStat || [5005, 5008, 5002];
+              console.log('[SCRAPER] Stat shards parsed:', statShards);
+
+              // 4. Combine
+              const selectedPerkIds = [...runesList, ...statShards];
+
+              rawRunes = {
+                name: championName,
+                primaryStyleId,
+                subStyleId,
+                selectedPerkIds
+              };
+            }
+          }
+
+          // 5. Get summoners from JSON
+          if (bestPatchData.sSpells && bestPatchData.sSpells.length > 0) {
+            const spells = bestPatchData.sSpells[0][0];
+            console.log('[SCRAPER] Summoner spells parsed:', spells);
+            rawSummoners = {
+              spell1Id: parseInt(spells[0]),
+              spell2Id: parseInt(spells[1])
+            };
+          }
+        }
+      }
+    }
+
+    // HEURISTIC 2: Fallback to recursive pageProps search if primary failed
+    if (!rawRunes && nextData && nextData.props && nextData.props.pageProps) {
+      console.log('[SCRAPER] Primary heuristic failed. Falling back to recursive pageProps search...');
       const pageProps = nextData.props.pageProps;
       const foundRunes = this.searchNextPropsForRunes(pageProps);
       if (foundRunes) {
         rawRunes = foundRunes;
+        console.log('[SCRAPER] Runes found via recursive search:', foundRunes);
       }
     }
 
-    // HEURISTIC 2: Fallback to scanning page images (DOM heuristic)
-    // We scan images for IDs in sources or names in alt texts
-    const runeIds = [];
-    let primaryStyleId = null;
-    let subStyleId = null;
-    const summonerSpellIds = [];
+    // HEURISTIC 3: Fallback to scanning page images (DOM heuristic) if both JSON heuristics failed
+    if (!rawRunes) {
+      console.log('[SCRAPER] JSON heuristics failed. Falling back to image/DOM scanning...');
+      const runeIds = [];
+      let primaryStyleId = null;
+      let subStyleId = null;
+      const summonerSpellIds = [];
 
-    // Let's filter image paths containing perk IDs
-    images.forEach(img => {
-      const src = img.src || '';
-      const alt = img.alt || '';
+      images.forEach(img => {
+        const src = img.src || '';
+        const alt = img.alt || '';
 
-      // Check for Stat Shards (StatMod)
-      // Standard IDs: 5001 (Health), 5002 (Armor), 5003 (MR), 5005 (AS), 5007 (Ability Haste), 5008 (Adaptive Force)
-      const statShardMatch = src.match(/500[123578]/);
-      if (statShardMatch) {
-        const id = parseInt(statShardMatch[0]);
-        if (!runeIds.includes(id)) {
-          runeIds.push(id);
-        }
-        return;
-      }
-
-      // Check if URL has a 4-digit number that matches a known rune in our dictionary
-      const fourDigitMatch = src.match(/\b(8[0-4]\d{2}|9[12]\d{2})\b/);
-      if (fourDigitMatch) {
-        const id = parseInt(fourDigitMatch[1]);
-        if (!runeIds.includes(id) && id !== 8000 && id !== 8100 && id !== 8200 && id !== 8300 && id !== 8400) {
-          runeIds.push(id);
-        }
-        return;
-      }
-
-      // Try matching by image alt text or filename from URL
-      const filename = path.basename(src, '.png');
-      const normAlt = this.normalizeString(alt);
-      const normFile = this.normalizeString(filename);
-
-      // Match rune style trees
-      Object.keys(this.stylesDict).forEach(styleName => {
-        const normStyle = this.normalizeString(styleName);
-        if (normAlt === normStyle || normFile.includes(normStyle)) {
-          const styleId = this.stylesDict[styleName];
-          if (!primaryStyleId) {
-            primaryStyleId = styleId;
-          } else if (subStyleId === null && styleId !== primaryStyleId) {
-            subStyleId = styleId;
+        // Check for Stat Shards (StatMod)
+        const statShardMatch = src.match(/500[123578]/);
+        if (statShardMatch) {
+          const id = parseInt(statShardMatch[0]);
+          if (!runeIds.includes(id)) {
+            runeIds.push(id);
           }
+          return;
+        }
+
+        // Check if URL has a 4-digit number matching a known rune
+        const fourDigitMatch = src.match(/\b(8[0-4]\d{2}|9[12]\d{2})\b/);
+        if (fourDigitMatch) {
+          const id = parseInt(fourDigitMatch[1]);
+          if (!runeIds.includes(id) && id !== 8000 && id !== 8100 && id !== 8200 && id !== 8300 && id !== 8400) {
+            runeIds.push(id);
+          }
+          return;
+        }
+
+        // Try matching by image alt text or filename from URL
+        const filename = path.basename(src, '.png');
+        const normAlt = this.normalizeString(alt);
+        const normFile = this.normalizeString(filename);
+
+        // Match rune style trees
+        Object.keys(this.stylesDict).forEach(styleName => {
+          const normStyle = this.normalizeString(styleName);
+          if (normAlt === normStyle || normFile.includes(normStyle)) {
+            const styleId = this.stylesDict[styleName];
+            if (!primaryStyleId) {
+              primaryStyleId = styleId;
+            } else if (subStyleId === null && styleId !== primaryStyleId) {
+              subStyleId = styleId;
+            }
+          }
+        });
+
+        // Match runes
+        const altRuneId = this.runesDict[normAlt] || this.runesDict[normFile];
+        if (altRuneId && !runeIds.includes(altRuneId)) {
+          runeIds.push(altRuneId);
+        }
+
+        // Match summoner spells
+        const spellMatch = src.match(/summoner([a-zA-Z]+)/i);
+        if (spellMatch) {
+          const spellName = spellMatch[1];
+          const spellId = this.summonersDict[this.normalizeString(spellName)];
+          if (spellId && !summonerSpellIds.includes(spellId)) {
+            summonerSpellIds.push(spellId);
+          }
+        } else {
+          const spellNumMatch = src.match(/\/(\d+)\.png$/);
+          if (spellNumMatch) {
+            const id = parseInt(spellNumMatch[1]);
+            if (id > 0 && id <= 21 && !summonerSpellIds.includes(id) && id !== 8) {
+              summonerSpellIds.push(id);
+            }
+          }
+        }
+
+        // Match summoner spell names from alt text
+        const altSpellId = this.summonersDict[normAlt];
+        if (altSpellId && !summonerSpellIds.includes(altSpellId)) {
+          summonerSpellIds.push(altSpellId);
         }
       });
 
-      // Match runes
-      const altRuneId = this.runesDict[normAlt] || this.runesDict[normFile];
-      if (altRuneId && !runeIds.includes(altRuneId)) {
-        runeIds.push(altRuneId);
-      }
+      // Structure raw runes if we have enough matching IDs
+      if (runeIds.length >= 6) {
+        if (!primaryStyleId) primaryStyleId = 8000;
+        if (!subStyleId) subStyleId = 8400;
 
-      // Match summoner spells
-      // Check standard IDs in image filenames: summonerFlash (4), summonerIgnite (14), summonerSmite (11), summonerTeleport (12), summonerExhaust (3), summonerBarrier (21), summonerHeal (7), summonerCleanse (1)
-      const spellMatch = src.match(/summoner([a-zA-Z]+)/i);
-      if (spellMatch) {
-        const spellName = spellMatch[1];
-        const spellId = this.summonersDict[this.normalizeString(spellName)];
-        if (spellId && !summonerSpellIds.includes(spellId)) {
-          summonerSpellIds.push(spellId);
-        }
-      } else {
-        const spellNumMatch = src.match(/\/(\d+)\.png$/); // e.g. .../4.png
-        if (spellNumMatch) {
-          const id = parseInt(spellNumMatch[1]);
-          // Standard summoner IDs are 1-21
-          if (id > 0 && id <= 21 && !summonerSpellIds.includes(id) && id !== 8) { // 8 is poro-snax or something
-            summonerSpellIds.push(id);
+        rawRunes = {
+          name: championName,
+          primaryStyleId: primaryStyleId,
+          subStyleId: subStyleId,
+          selectedPerkIds: runeIds.slice(0, 9)
+        };
+
+        // Pad stat shards if missing
+        while (rawRunes.selectedPerkIds.length < 9) {
+          const defaults = [5005, 5008, 5002];
+          const nextDefault = defaults.find(d => !rawRunes.selectedPerkIds.includes(d));
+          if (nextDefault) {
+            rawRunes.selectedPerkIds.push(nextDefault);
+          } else {
+            rawRunes.selectedPerkIds.push(5002);
           }
         }
       }
 
-      // Match summoner spell names from alt text
-      const altSpellId = this.summonersDict[normAlt];
-      if (altSpellId && !summonerSpellIds.includes(altSpellId)) {
-        summonerSpellIds.push(altSpellId);
-      }
-    });
-
-    // Structure raw runes if we have enough matching IDs
-    // Standard setup requires exactly 6 perks (4 primary + 2 secondary) + 3 stat shards = 9 perk IDs
-    if (runeIds.length >= 6) {
-      // Guess styles if not resolved
-      if (!primaryStyleId) primaryStyleId = 8000; // Precision fallback
-      if (!subStyleId) subStyleId = 8400; // Resolve fallback
-
-      rawRunes = {
-        name: championName,
-        primaryStyleId: primaryStyleId,
-        subStyleId: subStyleId,
-        // Make sure we have 9 unique IDs. If we have fewer, pad with typical stat shards
-        selectedPerkIds: runeIds.slice(0, 9)
-      };
-
-      // Pad stat shards if missing (AS, Adaptive, Armor are standard defaults)
-      while (rawRunes.selectedPerkIds.length < 9) {
-        // Adding default shards: 5005 (Attack Speed), 5008 (Adaptive Force), 5002 (Armor)
-        const defaults = [5005, 5008, 5002];
-        const nextDefault = defaults.find(d => !rawRunes.selectedPerkIds.includes(d));
-        if (nextDefault) {
-          rawRunes.selectedPerkIds.push(nextDefault);
-        } else {
-          rawRunes.selectedPerkIds.push(5002);
-        }
+      if (summonerSpellIds.length >= 2) {
+        rawSummoners = {
+          spell1Id: summonerSpellIds[0],
+          spell2Id: summonerSpellIds[1]
+        };
       }
     }
 
-    if (summonerSpellIds.length >= 2) {
-      rawSummoners = {
-        spell1Id: summonerSpellIds[0],
-        spell2Id: summonerSpellIds[1]
-      };
-    } else {
-      // Defaults: Flash (4) and Teleport (12) or Ignite (14)
-      rawSummoners = {
-        spell1Id: 4,
-        spell2Id: 14 // Ignite
-      };
+    // Role-based smart fallback for Summoner Spells if we still don't have them
+    if (!rawSummoners) {
+      const isJungle = role === 'jungle' || (role === 'default' && ['jungle'].includes((championName || '').toLowerCase()));
+      if (isJungle) {
+        console.log('[SCRAPER] Using smart fallback summoner spells for Jungle: Smite (11) and Flash (4)');
+        rawSummoners = {
+          spell1Id: 11, // Smite
+          spell2Id: 4   // Flash
+        };
+      } else {
+        console.log('[SCRAPER] Using smart fallback summoner spells for Lane: Ignite (14) and Flash (4)');
+        rawSummoners = {
+          spell1Id: 14, // Ignite
+          spell2Id: 4   // Flash
+        };
+      }
     }
 
     return {

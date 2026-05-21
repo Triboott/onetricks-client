@@ -14,7 +14,7 @@ const elCheckAutoSpells = document.getElementById('check-auto-spells');
 const elChampBgBanner = document.getElementById('champ-bg-banner');
 const elChampPortrait = document.getElementById('champ-portrait');
 const elChampName = document.getElementById('champ-name');
-const elChampRole = document.getElementById('champ-role');
+const elRoleSelector = document.getElementById('role-selector');
 
 const elLoadingOverlay = document.getElementById('loading-overlay');
 const elLoadingText = document.getElementById('loading-text');
@@ -145,6 +145,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       elActionStatusIndicator.classList.add('active');
     }
   });
+
+  // 5. Bind role selector buttons click events
+  if (elRoleSelector) {
+    const buttons = elRoleSelector.querySelectorAll('.role-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const role = btn.getAttribute('data-role');
+        // Visually update immediately for responsiveness
+        updateActiveRoleUI(role);
+        // Trigger main thread change-role IPC
+        window.api.changeRole(role);
+      });
+    });
+  }
 });
 
 // Sync visual toggle checkbox states
@@ -200,7 +214,7 @@ window.api.onLcuStatus(({ status, config }) => {
 });
 
 // Champion selection changes listener
-window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage }) => {
+window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role }) => {
   if (!active) {
     // Screen welcome transition
     elScreenWorkspace.classList.remove('active');
@@ -215,16 +229,33 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
       elChampName.textContent = championDisplayName.toUpperCase();
       elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${championImage}`;
       elChampBgBanner.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_0.jpg')`;
-      elChampRole.textContent = 'ROL PRINCIPAL';
+      
+      // Update role selector active state
+      updateActiveRoleUI(role || 'default');
     } else {
       // Hovering slot but no selection locked
       elChampName.textContent = 'SELECCIONANDO...';
       elChampPortrait.src = '';
       elChampBgBanner.style.backgroundImage = 'none';
-      elChampRole.textContent = '-';
+      
+      // Reset role selector active state to default/ALL
+      updateActiveRoleUI('default');
     }
   }
 });
+
+// Helper to update active role button visual state
+function updateActiveRoleUI(activeRole) {
+  if (!elRoleSelector) return;
+  const buttons = elRoleSelector.querySelectorAll('.role-btn');
+  buttons.forEach(btn => {
+    if (btn.getAttribute('data-role') === activeRole) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
 
 // Scraping stages listeners
 window.api.onScrapeProgress(({ status, message }) => {

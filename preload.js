@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('api', {
   onScrapeError: (callback) => ipcRenderer.on('scrape-error', (event, data) => callback(data)),
   
   // Triggers from Renderer Process (UI) to Main Process (Node.js)
+  changeRole: (role) => ipcRenderer.send('change-role', role),
   applyBuild: (buildData) => ipcRenderer.send('apply-build', buildData),
   toggleAutoApply: (settings) => ipcRenderer.send('toggle-auto-apply', settings),
   saveCustomPath: (path) => ipcRenderer.send('save-custom-path', path),

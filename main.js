@@ -79,6 +79,7 @@ app.whenReady().then(() => {
   connector = new LcuConnector({
     customPath: config.customLoLPath,
     onStatusChange: (status) => {
+      console.log(`[CLIENT] LCU Status changed: ${status}`);
       appState.lcuStatus = status;
       sendToRenderer('lcu-status', { status, config });
     },
@@ -109,12 +110,14 @@ function sendToRenderer(channel, data) {
 
 // Logic to process champion selection in Champion Select
 async function handleChampSelectUpdate(session) {
+  console.log('[CLIENT] Champ Select session update:', session ? 'ACTIVE' : 'INACTIVE');
   if (!session) {
     // Reset state if no longer in champ select
     if (appState.activeChampionId !== 0) {
       appState.activeChampionId = 0;
       appState.activeChampionName = '';
       appState.activeChampionImage = '';
+      appState.activeRole = 'default';
       appState.scrapedData = null;
       sendToRenderer('champ-select-update', { active: false });
     }
@@ -144,10 +147,23 @@ async function handleChampSelectUpdate(session) {
     if (selectedChampId === 0) {
       appState.activeChampionName = '';
       appState.activeChampionImage = '';
+      appState.activeRole = 'default';
       appState.scrapedData = null;
       sendToRenderer('champ-select-update', { active: true, championId: 0 });
       return;
     }
+
+    // Auto-detect role from LCU session
+    let assignedRole = 'default';
+    if (player && player.assignedPosition) {
+      const pos = player.assignedPosition.toLowerCase();
+      if (pos === 'middle') assignedRole = 'mid';
+      else if (pos === 'bottom') assignedRole = 'bot';
+      else if (pos === 'utility') assignedRole = 'support';
+      else if (['top', 'jungle'].includes(pos)) assignedRole = pos;
+    }
+
+    appState.activeRole = assignedRole;
 
     // Resolve Champion ID to Champion Name
     const champInfo = scraper.resolveChampionId(selectedChampId);
@@ -159,28 +175,49 @@ async function handleChampSelectUpdate(session) {
       championId: selectedChampId,
       championName: champInfo.name,
       championDisplayName: champInfo.displayName,
-      championImage: champInfo.image
+      championImage: champInfo.image,
+      role: appState.activeRole
     });
 
     // Start scraping runes & summoners
-    sendToRenderer('scrape-progress', { status: 'fetching', message: `Obteniendo datos de Onetricks para ${champInfo.displayName}...` });
+    triggerScrape(champInfo.name, appState.activeRole);
+  }
+}
 
-    try {
-      const scraped = await scraper.scrapeRunesAndSummoners(champInfo.name);
-      appState.scrapedData = scraped;
-      sendToRenderer('scrape-success', scraped);
+// Scrape execution helper
+async function triggerScrape(championName, role) {
+  console.log(`[CLIENT] Triggering scrape for champion: ${championName}, role: ${role}`);
+  const champInfo = Object.values(scraper.championsDict).find(c => c.name === championName) || { displayName: championName };
+  const roleLabel = role !== 'default' ? ` (${role.toUpperCase()})` : '';
+  
+  sendToRenderer('scrape-progress', { 
+    status: 'fetching', 
+    message: `Obteniendo datos de Onetricks para ${champInfo.displayName}${roleLabel}...` 
+  });
 
-      // Auto-apply if configured
-      if (config.autoApplyRunes && scraped.runes) {
-        await connector.applyRunes(scraped.runes.raw);
-      }
-      if (config.autoApplySpells && scraped.summoners) {
-        await connector.applySummonerSpells(scraped.summoners.raw);
-      }
-    } catch (err) {
-      console.error('Scraping error:', err);
-      sendToRenderer('scrape-error', { message: 'No se pudieron obtener las runas automáticamente.' });
+  try {
+    const scraped = await scraper.scrapeRunesAndSummoners(championName, role);
+    
+    // Ensure we haven't switched champion/role during async wait
+    if (appState.activeChampionName !== championName || appState.activeRole !== role) {
+      return;
     }
+
+    appState.scrapedData = scraped;
+    sendToRenderer('scrape-success', scraped);
+
+    // Auto-apply if configured
+    if (config.autoApplyRunes && scraped.runes) {
+      await connector.applyRunes(scraped.runes.raw);
+    }
+    if (config.autoApplySpells && scraped.summoners) {
+      await connector.applySummonerSpells(scraped.summoners.raw);
+    }
+  } catch (err) {
+    console.error('Scraping error:', err);
+    sendToRenderer('scrape-error', { 
+      message: `No se pudieron obtener las runas para ${role !== 'default' ? role.toUpperCase() : 'el rol principal'}.` 
+    });
   }
 }
 
@@ -190,6 +227,13 @@ ipcMain.handle('get-initial-state', () => {
     appState,
     config
   };
+});
+
+ipcMain.on('change-role', async (event, newRole) => {
+  appState.activeRole = newRole;
+  if (appState.activeChampionId !== 0 && appState.activeChampionName) {
+    triggerScrape(appState.activeChampionName, newRole);
+  }
 });
 
 ipcMain.on('apply-build', async (event, data) => {

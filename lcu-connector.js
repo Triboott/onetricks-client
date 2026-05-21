@@ -65,6 +65,10 @@ class LcuConnector {
       possiblePaths.push(path.join(this.customPath, 'lockfile'));
       possiblePaths.push(this.customPath); // if they selected lockfile itself
     }
+    // Check workspace/current directory (for development & mock testing)
+    possiblePaths.push(path.join(__dirname, 'lockfile'));
+    possiblePaths.push(path.join(process.cwd(), 'lockfile'));
+    
     // Standard default paths on multiple drives
     possiblePaths.push('C:\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('D:\\Riot Games\\League of Legends\\lockfile');
@@ -186,6 +190,7 @@ class LcuConnector {
     this.disconnectWs();
 
     const wsUrl = `wss://127.0.0.1:${this.port}`;
+    console.log(`[LCU] Connecting to WS: ${wsUrl}`);
     this.ws = new WebSocket(wsUrl, {
       headers: {
         'Authorization': 'Basic ' + Buffer.from(`riot:${this.password}`).toString('base64')
@@ -194,6 +199,7 @@ class LcuConnector {
     });
 
     this.ws.on('open', () => {
+      console.log('[LCU] WS Connected successfully');
       // Subscribe to all API events
       this.ws.send(JSON.stringify([5, "OnJsonApiEvent"]));
       // Check immediately for current session
@@ -203,6 +209,7 @@ class LcuConnector {
     this.ws.on('message', (message) => {
       try {
         const [id, eventName, payload] = JSON.parse(message);
+        console.log(`[LCU] WS Message: eventName=${eventName}, uri=${payload.uri}, eventType=${payload.eventType}`);
         if (eventName === 'OnJsonApiEvent' && payload.uri === '/lol-champ-select/v1/session') {
           if (payload.eventType === 'Delete') {
             this.onChampSelectUpdate(null);
@@ -215,11 +222,13 @@ class LcuConnector {
       }
     });
 
-    this.ws.on('close', () => {
+    this.ws.on('close', (code, reason) => {
+      console.log(`[LCU] WS Closed: code=${code}, reason=${reason}`);
       this.handleDisconnect();
     });
 
-    this.ws.on('error', () => {
+    this.ws.on('error', (err) => {
+      console.error('[LCU] WS Error:', err);
       this.handleDisconnect();
     });
   }
@@ -258,8 +267,15 @@ class LcuConnector {
       
       // Find an editable page
       const editablePage = pages.find(p => p.isEditable);
-      if (!editablePage) {
-        throw new Error('No editable rune page found.');
+      
+      // If we have an editable page, delete it first to free up slot and ensure clean sync
+      if (editablePage) {
+        console.log(`[LCU] Deleting existing editable rune page: ID ${editablePage.id}`);
+        try {
+          await this.request('DELETE', `/lol-perks/v1/pages/${editablePage.id}`);
+        } catch (e) {
+          console.warn('[LCU] Failed to delete old rune page, proceeding to create anyway:', e);
+        }
       }
 
       const payload = {
@@ -270,10 +286,18 @@ class LcuConnector {
         current: true // automatically set active
       };
 
-      await this.request('PUT', `/lol-perks/v1/pages/${editablePage.id}`, payload);
+      console.log(`[LCU] Creating new rune page: "${payload.name}"`);
+      const newPage = await this.request('POST', '/lol-perks/v1/pages', payload);
       
-      // Secondary fallback to guarantee active page update
-      await this.request('PUT', '/lol-perks/v1/activepage', editablePage.id);
+      if (newPage && newPage.id) {
+        console.log(`[LCU] Rune page created successfully with ID: ${newPage.id}`);
+        try {
+          // Secondary fallback to guarantee active page update
+          await this.request('PUT', '/lol-perks/v1/activepage', newPage.id);
+        } catch (e) {
+          // ignore active page errors since current: true in POST usually handles it
+        }
+      }
       
       console.log(`Applied runes for ${runes.name} successfully.`);
       return true;

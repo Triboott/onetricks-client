@@ -104,6 +104,35 @@ const server = https.createServer(httpsOptions, (req, res) => {
     return;
   }
 
+  if (req.method === 'DELETE' && url.pathname.startsWith('/lol-perks/v1/pages/')) {
+    console.log(`[MOCK LCU] 🗑️ Página de Runas Eliminada: ID ${url.pathname.split('/').pop()}`);
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/lol-perks/v1/pages') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        mockEditableRunePage = {
+          id: Math.floor(Math.random() * 10000000) + 1000,
+          isEditable: true,
+          ...payload
+        };
+        console.log(`[MOCK LCU] 🎯 Página de Runas Creada: "${payload.name}"`, payload.selectedPerkIds);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(mockEditableRunePage));
+      } catch(e) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+    return;
+  }
+
   if (req.method === 'PUT' && url.pathname === '/lol-perks/v1/activepage') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -174,7 +203,7 @@ function getChampSelectSessionPayload() {
       { cellId: 1, championId: 0, hoveredChampionId: 0, summonerId: 102 },
       { cellId: 2, championId: 0, hoveredChampionId: 0, summonerId: 103 },
       { cellId: 3, championId: 0, hoveredChampionId: 0, summonerId: 104 },
-      { cellId: 4, championId: selectedChampionId, hoveredChampionId: selectedChampionId, summonerId: 12345678 }
+      { cellId: 4, championId: selectedChampionId, hoveredChampionId: selectedChampionId, summonerId: 12345678, assignedPosition: selectedChampionId === 81 ? 'bottom' : 'top' }
     ],
     actions: [
       [
