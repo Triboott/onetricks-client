@@ -230,6 +230,29 @@ const elWorkspaceProfileContainer = document.getElementById('workspace-profile-c
 
 const elScreenWelcome = document.getElementById('screen-welcome');
 const elScreenWorkspace = document.getElementById('screen-workspace');
+const elScreenGame = document.getElementById('screen-game');
+
+const elBlueTeamPlayers = document.getElementById('blue-team-players');
+const elRedTeamPlayers = document.getElementById('red-team-players');
+const elBtnOpenMultiOpgg = document.getElementById('btn-open-multi-opgg');
+const elGameStatusLbl = document.getElementById('game-status-lbl');
+
+// Game active player champion build elements cache
+const elGameChampionBuild = document.getElementById('game-champion-build');
+const elGameBuildChampName = document.getElementById('game-build-champ-name');
+const elGameBuildPrimaryIcon = document.getElementById('game-build-primary-icon');
+const elGameBuildPrimaryName = document.getElementById('game-build-primary-name');
+const elGameBuildPrimaryRunes = document.getElementById('game-build-primary-runes');
+const elGameBuildSecondaryIcon = document.getElementById('game-build-secondary-icon');
+const elGameBuildSecondaryName = document.getElementById('game-build-secondary-name');
+const elGameBuildSecondaryRunes = document.getElementById('game-build-secondary-runes');
+const elGameBuildShards = document.getElementById('game-build-shards');
+const elGameBuildSpells = document.getElementById('game-build-spells');
+const elGameBuildSkills = document.getElementById('game-build-skills');
+const elGameBuildStartingItems = document.getElementById('game-build-starting-items');
+const elGameBuildBootsItems = document.getElementById('game-build-boots-items');
+const elGameBuildCoreItems = document.getElementById('game-build-core-items');
+const elGameBuildRecommendedItems = document.getElementById('game-build-recommended-items');
 
 const elCheckAutoRunesWelcome = document.getElementById('check-auto-runes-welcome');
 const elCheckAutoSpellsWelcome = document.getElementById('check-auto-spells-welcome');
@@ -335,6 +358,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       updatePlayerProfileUI(state.playerInfo);
     } else {
       updatePlayerProfileUI(null);
+    }
+
+    if (state.appState && state.appState.activeGame) {
+      console.log('[RENDERER] Active game detected at startup. Rendering...');
+      elScreenWelcome.classList.remove('active');
+      elScreenWorkspace.classList.remove('active');
+      elScreenGame.classList.add('active');
+      renderActiveGame(state.appState.activeGame);
+      if (state.appState.scrapedData) {
+        renderGameChampionBuild(state.appState.scrapedData);
+      }
     }
   } catch (err) {
     console.error('Failed to get initial state:', err);
@@ -852,7 +886,7 @@ function setBannerBackground(championName, skinNumber) {
   currentLoadingChamp = championName;
   currentLoadingSkin = skinNumber;
 
-  const url = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_${skinNumber}.jpg`;
+  const url = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${championName}_${skinNumber}.jpg`;
   const img = new Image();
   img.onload = () => {
     if (currentLoadingChamp === championName && currentLoadingSkin === skinNumber && activeChampionName === championName) {
@@ -869,7 +903,7 @@ function setBannerBackground(championName, skinNumber) {
 }
 
 // Champion selection changes listener
-window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role, skinId, ddragonVersion: newVersion }) => {
+window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role, skinId, resolvedSkinNumber, ddragonVersion: newVersion }) => {
   if (newVersion) {
     ddragonVersion = newVersion;
   }
@@ -896,7 +930,7 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
       elChampName.textContent = championDisplayName.toUpperCase();
       elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${championImage}`;
       
-      const skinNumber = skinId ? (skinId % 1000) : 0;
+      const skinNumber = resolvedSkinNumber !== undefined ? resolvedSkinNumber : (skinId ? (skinId % 1000) : 0);
       setBannerBackground(championName, skinNumber);
 
       // Update role selector active state
@@ -915,11 +949,221 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
 });
 
 // Skin selection changes listener
-window.api.onSkinUpdate(({ skinId }) => {
+window.api.onSkinUpdate(({ skinId, resolvedSkinNumber }) => {
   if (activeChampionName) {
-    const skinNumber = skinId ? (skinId % 1000) : 0;
+    const skinNumber = resolvedSkinNumber !== undefined ? resolvedSkinNumber : (skinId ? (skinId % 1000) : 0);
     setBannerBackground(activeChampionName, skinNumber);
   }
+});
+
+// Format dynamic OP.GG URL helper supporting Riot IDs
+function getOpggUrl(player) {
+  let gameName = (player.gameName || '').trim();
+  let tagLine = (player.tagLine || '').trim();
+  const displayName = (player.displayName || '').trim();
+
+  // Robust parsing: if gameName or tagLine is missing but displayName contains '#', extract them
+  if ((!gameName || !tagLine) && displayName.includes('#')) {
+    const parts = displayName.split('#');
+    gameName = parts[0].trim();
+    tagLine = parts[1].trim();
+  }
+
+  if (gameName && tagLine) {
+    return `https://op.gg/es/lol/summoners/euw/${encodeURIComponent(gameName)}-${encodeURIComponent(tagLine)}`;
+  } else {
+    return `https://op.gg/es/lol/summoners/search?q=${encodeURIComponent(displayName || gameName)}&region=euw`;
+  }
+}
+
+// Render dynamic players info in dashboard
+function renderActiveGame(gameData) {
+  if (!gameData) return;
+
+  if (elGameStatusLbl) {
+    elGameStatusLbl.textContent = 'Partida activa - Visualizando estadísticas de Solo/DuoQ';
+  }
+
+  if (elBlueTeamPlayers) elBlueTeamPlayers.innerHTML = '';
+  if (elRedTeamPlayers) elRedTeamPlayers.innerHTML = '';
+
+  const getTierClass = (tier) => {
+    if (!tier) return 'unranked';
+    return tier.toLowerCase();
+  };
+
+  const getTierLabel = (tier, division) => {
+    if (!tier || tier === 'UNRANKED') return 'UNRANKED';
+    const cleanTier = tier.toUpperCase();
+    if (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(cleanTier)) {
+      return cleanTier;
+    }
+    return `${cleanTier} ${division || ''}`.trim();
+  };
+
+  const getWinrateClass = (winrate, wins, losses) => {
+    if (wins + losses === 0) return 'wr-none';
+    if (winrate >= 55) return 'wr-high';
+    if (winrate >= 50) return 'wr-medium';
+    return 'wr-low';
+  };
+
+  const renderPlayerList = (players, container) => {
+    if (!container || !players) return;
+    
+    players.forEach(p => {
+      const tierClass = getTierClass(p.tier);
+      const tierLabel = getTierLabel(p.tier, p.division);
+      const winrateClass = getWinrateClass(p.winrate, p.wins, p.losses);
+      const totalGames = p.wins + p.losses;
+      
+      const opggUrl = getOpggUrl(p);
+      
+      // Smart Fallback: if we fetched a real summoner profile icon, use it. Otherwise, show their champion icon!
+      const isRealSummonerIcon = p.profileIconId !== null && p.profileIconId !== undefined;
+      const summonerIconImg = isRealSummonerIcon
+        ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${p.profileIconId}.png`
+        : `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${p.championImage || 'Aurora.png'}`;
+        
+      const card = document.createElement('div');
+      card.className = `game-player-card rank-${tierClass}`;
+      card.setAttribute('title', `Ver perfil de ${p.displayName} en OP.GG`);
+      
+      // Smart Name/Redundancy: if the player name matches the champion name (due to LCU privacy anonymization)
+      const isAnonymized = !p.gameName || p.gameName.toLowerCase() === (p.championDisplayName || '').toLowerCase();
+      let nameSpan = `<span class="player-name">${isAnonymized ? (p.championDisplayName || 'Desconocido') : p.gameName}</span>`;
+      let tagSpan = (!isAnonymized && p.tagLine) ? `<span class="player-tag">#${p.tagLine}</span>` : '';
+      let champNameSpan = isAnonymized 
+        ? '' 
+        : `<span class="player-champ-name">${p.championDisplayName || 'Desconocido'}</span>`;
+ 
+      card.innerHTML = `
+        <div class="player-champion-area">
+          <div class="champion-icon-wrapper">
+            <img class="player-champ-icon" src="${summonerIconImg}" alt="${p.displayName}" onerror="this.onerror=null; this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/29.png';">
+            <span class="player-level">${p.summonerLevel}</span>
+          </div>
+        </div>
+        <div class="player-identity">
+          <div class="player-riot-id">
+            ${nameSpan}
+            ${tagSpan}
+          </div>
+          ${champNameSpan}
+        </div>
+        <div class="player-stats">
+          <div class="player-rank">
+            <span class="rank-badge-text">${tierLabel}</span>
+            <span class="rank-lp">${p.lp} LP</span>
+          </div>
+          <div class="player-winrate ${winrateClass}">
+            <span class="wr-pct">${totalGames > 0 ? p.winrate + '%' : '-%'}</span>
+            <span class="wr-games">${p.wins}V / ${p.losses}D</span>
+          </div>
+        </div>
+      `;
+ 
+      card.addEventListener('click', () => {
+        sfx.playTick();
+        window.open(opggUrl, '_blank');
+      });
+ 
+      container.appendChild(card);
+    });
+  };
+
+  renderPlayerList(gameData.blueTeam, elBlueTeamPlayers);
+  renderPlayerList(gameData.redTeam, elRedTeamPlayers);
+
+  // Setup Multi OP.GG click action
+  if (elBtnOpenMultiOpgg) {
+    let userTeam = gameData.blueTeam; // default to blue
+    if (lastPlayerInfo) {
+      const myName = (lastPlayerInfo.gameName || '').toLowerCase().trim();
+      const myTag = (lastPlayerInfo.tagLine || '').toLowerCase().trim();
+      const userInRed = gameData.redTeam.some(p => {
+        const pName = (p.gameName || '').toLowerCase().trim();
+        const pTag = (p.tagLine || '').toLowerCase().trim();
+        if (myName && myTag && pName && pTag) {
+          return myName === pName && myTag === pTag;
+        }
+        return (p.displayName || '').toLowerCase().includes((lastPlayerInfo.displayName || '').toLowerCase());
+      });
+      
+      if (userInRed) {
+        userTeam = gameData.redTeam;
+      }
+    }
+
+    const summonersParam = userTeam.map(p => {
+      let name = (p.gameName || '').trim();
+      let tag = (p.tagLine || '').trim();
+      if (!name && p.displayName) {
+        const parts = p.displayName.split('#');
+        name = parts[0].trim();
+        tag = parts[1] ? parts[1].trim() : '';
+      }
+      return tag ? `${name}#${tag}` : name;
+    }).filter(Boolean).map(encodeURIComponent).join(',');
+
+    const multiOpggUrl = `https://www.op.gg/multisearch/euw?summoners=${summonersParam}`;
+    
+    // Remove old event listeners
+    const newBtn = elBtnOpenMultiOpgg.cloneNode(true);
+    elBtnOpenMultiOpgg.parentNode.replaceChild(newBtn, elBtnOpenMultiOpgg);
+    
+    const updatedBtn = document.getElementById('btn-open-multi-opgg');
+    updatedBtn.addEventListener('click', () => {
+      sfx.playSwitch();
+      window.open(multiOpggUrl, '_blank');
+    });
+  }
+}
+
+// Game started event listener
+window.api.onGameStarted((gameData) => {
+  console.log('[RENDERER] Game started event received:', gameData);
+  if (!gameData) return;
+
+  activeScrapedData = null; // Reset Champ select details
+
+  // Clear and reset the champion build recommended panel initially
+  if (elGameChampionBuild) elGameChampionBuild.style.display = 'block';
+  if (elGameBuildChampName) elGameBuildChampName.textContent = 'Cargando build para tu campeón...';
+  if (elGameBuildPrimaryIcon) elGameBuildPrimaryIcon.style.display = 'none';
+  if (elGameBuildSecondaryIcon) elGameBuildSecondaryIcon.style.display = 'none';
+  if (elGameBuildPrimaryRunes) elGameBuildPrimaryRunes.innerHTML = '';
+  if (elGameBuildSecondaryRunes) elGameBuildSecondaryRunes.innerHTML = '';
+  if (elGameBuildShards) elGameBuildShards.innerHTML = '';
+  if (elGameBuildSpells) elGameBuildSpells.innerHTML = '';
+  if (elGameBuildSkills) elGameBuildSkills.innerHTML = '';
+  if (elGameBuildStartingItems) elGameBuildStartingItems.innerHTML = '';
+  if (elGameBuildBootsItems) elGameBuildBootsItems.innerHTML = '';
+  if (elGameBuildCoreItems) elGameBuildCoreItems.innerHTML = '';
+  if (elGameBuildRecommendedItems) elGameBuildRecommendedItems.innerHTML = '';
+
+  if (elScreenWelcome.classList.contains('active') || elScreenWorkspace.classList.contains('active')) {
+    sfx.playSwitch();
+  }
+  
+  elScreenWelcome.classList.remove('active');
+  elScreenWorkspace.classList.remove('active');
+  elScreenGame.classList.add('active');
+  
+  renderActiveGame(gameData);
+});
+
+// Game ended event listener
+window.api.onGameEnded(() => {
+  console.log('[RENDERER] Game ended event received');
+  if (elScreenGame.classList.contains('active')) {
+    sfx.playSwitch();
+  }
+  
+  if (elGameChampionBuild) elGameChampionBuild.style.display = 'none';
+
+  elScreenGame.classList.remove('active');
+  elScreenWelcome.classList.add('active');
 });
 
 // Helper to update active role button visual state
@@ -969,11 +1213,165 @@ window.api.onScrapeSuccess((data) => {
     ddragonVersion = data.ddragonVersion;
   }
   activeScrapedData = data;
-  renderBuildDetails(data);
-  if (data.role) {
-    updateActiveRoleUI(data.role);
+  if (elScreenGame.classList.contains('active')) {
+    renderGameChampionBuild(data);
+  } else {
+    renderBuildDetails(data);
+    if (data.role) {
+      updateActiveRoleUI(data.role);
+    }
   }
 });
+
+// Render the active player's champion build recommended panel inside the active game screen
+function renderGameChampionBuild(data) {
+  if (!data) return;
+
+  if (elGameChampionBuild) {
+    elGameChampionBuild.style.display = 'block';
+  }
+
+  const champName = data.champion || 'tu campeón';
+  if (elGameBuildChampName) {
+    const roleLabel = data.role && data.role !== 'default' ? ` (${data.role.toUpperCase()})` : '';
+    elGameBuildChampName.textContent = `Build Recomendada para ${champName}${roleLabel}`;
+  }
+
+  const primarySet = data.runes || (data.runeSets && data.runeSets[0]);
+  if (primarySet) {
+    // Primary Tree
+    if (elGameBuildPrimaryIcon) {
+      elGameBuildPrimaryIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${primarySet.primaryStyleIcon}`;
+      elGameBuildPrimaryIcon.style.display = 'block';
+    }
+    if (elGameBuildPrimaryName) {
+      elGameBuildPrimaryName.textContent = primarySet.primaryStyleName;
+    }
+    if (elGameBuildPrimaryRunes) {
+      elGameBuildPrimaryRunes.innerHTML = '';
+      primarySet.primaryPerks.forEach((rune, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `rune-grid-item style-${primarySet.primaryStyleId} active`;
+        if (index === 0) {
+          itemDiv.classList.add('keystone-pulse');
+        }
+        itemDiv.title = `${rune.name}: ${rune.shortDesc || ''}`;
+
+        const img = document.createElement('img');
+        img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
+        img.className = index === 0 ? 'keystone-img' : 'rune-img';
+        img.alt = rune.name;
+
+        itemDiv.appendChild(img);
+        elGameBuildPrimaryRunes.appendChild(itemDiv);
+      });
+    }
+
+    // Secondary Tree
+    if (elGameBuildSecondaryIcon) {
+      elGameBuildSecondaryIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${primarySet.subStyleIcon}`;
+      elGameBuildSecondaryIcon.style.display = 'block';
+    }
+    if (elGameBuildSecondaryName) {
+      elGameBuildSecondaryName.textContent = primarySet.subStyleName;
+    }
+    if (elGameBuildSecondaryRunes) {
+      elGameBuildSecondaryRunes.innerHTML = '';
+      primarySet.secondaryPerks.forEach(rune => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `rune-grid-item style-${primarySet.subStyleId} active`;
+        itemDiv.title = `${rune.name}: ${rune.shortDesc || ''}`;
+
+        const img = document.createElement('img');
+        img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
+        img.className = 'rune-img';
+        img.alt = rune.name;
+
+        itemDiv.appendChild(img);
+        elGameBuildSecondaryRunes.appendChild(itemDiv);
+      });
+    }
+
+    // Shards
+    if (elGameBuildShards) {
+      elGameBuildShards.innerHTML = '';
+      if (primarySet.shardsPerks) {
+        primarySet.shardsPerks.forEach(shard => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'rune-grid-item shard-item active';
+          itemDiv.title = shard.name;
+
+          const img = document.createElement('img');
+          img.src = `https://ddragon.leagueoflegends.com/cdn/img/${shard.icon}`;
+          img.className = 'shard-img';
+          img.alt = shard.name;
+
+          itemDiv.appendChild(img);
+          elGameBuildShards.appendChild(itemDiv);
+        });
+      }
+    }
+  }
+
+  // Summoner Spells
+  if (elGameBuildSpells) {
+    elGameBuildSpells.innerHTML = '';
+    const spells = data.summoners;
+    if (spells) {
+      const spellList = [spells.spell1, spells.spell2];
+      spellList.forEach(spell => {
+        if (!spell) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'item-wrapper';
+        wrapper.setAttribute('data-tooltip', spell.name);
+
+        const img = document.createElement('img');
+        img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${spell.icon}`;
+        img.className = 'item-icon';
+        img.alt = spell.name;
+
+        wrapper.appendChild(img);
+        elGameBuildSpells.appendChild(wrapper);
+      });
+    }
+  }
+
+  // Skill order maxing
+  if (elGameBuildSkills) {
+    elGameBuildSkills.innerHTML = '';
+    const items = data.items;
+    if (items && items.skillOrder && items.skillOrder.maxOrder) {
+      items.skillOrder.maxOrder.forEach((skill, index) => {
+        const badge = document.createElement('span');
+        badge.className = 'skill-badge';
+        badge.textContent = skill;
+        elGameBuildSkills.appendChild(badge);
+
+        if (index < items.skillOrder.maxOrder.length - 1) {
+          const arrow = document.createElement('span');
+          arrow.className = 'skill-arrow';
+          arrow.textContent = '→';
+          elGameBuildSkills.appendChild(arrow);
+        }
+      });
+      if (items.skillOrder.playrate) {
+        const playrateBadge = document.createElement('span');
+        playrateBadge.className = 'skill-playrate-badge';
+        playrateBadge.textContent = `${items.skillOrder.playrate}%`;
+        elGameBuildSkills.appendChild(playrateBadge);
+      }
+    } else {
+      elGameBuildSkills.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No disponible</span>';
+    }
+  }
+
+  // Items
+  const items = data.items || { startingBuild: [], popularBoots: [], coreItems: [], recommendedItems: [] };
+  renderItemGroup(elGameBuildStartingItems, items.startingBuild || [], true);
+  renderItemGroup(elGameBuildBootsItems, items.popularBoots || [], true);
+  renderItemGroup(elGameBuildCoreItems, items.coreBuild || items.coreItems || [], true);
+  renderItemGroup(elGameBuildRecommendedItems, items.recommendedItems || [], true);
+}
 
 // ==========================================================================
 // TEMPLATE ENGINE / RENDERING LOGIC

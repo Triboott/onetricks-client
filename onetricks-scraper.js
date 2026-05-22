@@ -365,6 +365,40 @@ class OnetricksScraper {
     return { name: 'Unknown', displayName: 'Campeón', image: '' };
   }
 
+  async resolveSkinNumber(championName, skinId) {
+    if (!skinId || !championName || championName === 'Unknown') {
+      return 0;
+    }
+
+    try {
+      const cacheFilename = `champion_${championName}.json`;
+      const data = await this.getDDragonJson(
+        `cdn/${this.ddragonVersion}/data/es_ES/champion/${championName}.json`,
+        cacheFilename
+      );
+
+      if (data && data.data && data.data[championName]) {
+        const skins = data.data[championName].skins;
+        if (Array.isArray(skins)) {
+          const targetSkin = skins.find(s => parseInt(s.id) === skinId);
+          if (targetSkin) {
+            // Si la skin tiene un parentSkin asociado (es un chroma), devolvemos el parentSkin
+            if (targetSkin.parentSkin !== undefined && targetSkin.parentSkin !== null) {
+              return targetSkin.parentSkin;
+            }
+            // De lo contrario, es la skin base/oficial, devolvemos su num
+            return targetSkin.num;
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`Error resolving skin number for ${championName} (skinId: ${skinId}):`, e);
+    }
+
+    // Fallback: usar el residuo habitual si no se encuentra en el mapeo
+    return skinId ? (skinId % 1000) : 0;
+  }
+
   normalizeString(str) {
     if (!str) return '';
     return str.toLowerCase()

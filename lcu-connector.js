@@ -55,20 +55,22 @@ class LcuConnector {
 
     this.updateStatus('scanning');
 
-    // Try to auto-detect using PowerShell process query first
-    const pathFromProcess = await this.detectPathFromProcess();
-    
     let possiblePaths = [];
-    if (pathFromProcess) {
-      possiblePaths.push(path.join(pathFromProcess, 'lockfile'));
-    }
+    
+    // Check workspace/current directory first (for development & mock testing)
+    possiblePaths.push(path.join(__dirname, 'lockfile'));
+    possiblePaths.push(path.join(process.cwd(), 'lockfile'));
+
     if (this.customPath) {
       possiblePaths.push(path.join(this.customPath, 'lockfile'));
       possiblePaths.push(this.customPath); // if they selected lockfile itself
     }
-    // Check workspace/current directory (for development & mock testing)
-    possiblePaths.push(path.join(__dirname, 'lockfile'));
-    possiblePaths.push(path.join(process.cwd(), 'lockfile'));
+
+    // Try to auto-detect using PowerShell process query
+    const pathFromProcess = await this.detectPathFromProcess();
+    if (pathFromProcess) {
+      possiblePaths.push(path.join(pathFromProcess, 'lockfile'));
+    }
     
     // Standard default paths on multiple drives
     possiblePaths.push('C:\\Riot Games\\League of Legends\\lockfile');
@@ -341,17 +343,32 @@ class LcuConnector {
   async applyItemSet(championId, championName, items) {
     try {
       console.log(`[LCU] Preparing item set for champion ID: ${championId} (${championName})`);
-      
+      console.log(`[LCU] Items data received:`, JSON.stringify({
+        startingBuild: items.startingBuild ? items.startingBuild.length : 0,
+        popularBoots: items.popularBoots ? items.popularBoots.length : 0,
+        coreItems: items.coreItems ? items.coreItems.length : 0,
+        recommendedItems: items.recommendedItems ? items.recommendedItems.length : 0
+      }));
+
       // 1. Get current summoner
       const summoner = await this.request('GET', '/lol-summoner/v1/current-summoner');
       if (!summoner || !summoner.summonerId) {
         throw new Error('Summoner ID not found');
       }
+      console.log(`[LCU] Got summoner: ${summoner.displayName || summoner.gameName} (ID: ${summoner.summonerId})`);
 
       const summonerId = summoner.summonerId;
 
       // 2. Get current item sets
-      let setsData = await this.request('GET', `/lol-item-sets/v1/item-sets/${summonerId}/sets`);
+      let setsData;
+      try {
+        setsData = await this.request('GET', `/lol-item-sets/v1/item-sets/${summonerId}/sets`);
+        console.log(`[LCU] Current item sets count: ${setsData && setsData.itemSets ? setsData.itemSets.length : 0}`);
+      } catch (getErr) {
+        console.warn('[LCU] Could not GET item sets, initializing empty:', getErr.message);
+        setsData = null;
+      }
+
       if (!setsData || typeof setsData !== 'object') {
         setsData = {
           accountId: summoner.accountId || 0,
@@ -359,16 +376,16 @@ class LcuConnector {
           itemSets: []
         };
       }
-      if (!setsData.itemSets) {
-        setsData.itemSets = [];
-      }
+      // Ensure required fields exist on setsData
+      if (!setsData.itemSets) setsData.itemSets = [];
+      if (!setsData.accountId) setsData.accountId = summoner.accountId || 0;
 
       // 3. Construct blocks from scraped items
       const blocks = [];
 
       if (items.startingBuild && items.startingBuild.length > 0) {
         blocks.push({
-          type: 'Objetos Iniciales',
+          type: 'Item Inicial',
           hideIfSummonerSpell: '',
           showIfSummonerSpell: '',
           items: items.startingBuild.map(it => ({ id: String(it.id), count: 1 }))
@@ -385,29 +402,27 @@ class LcuConnector {
       }
 
       if (items.coreItems && items.coreItems.length > 0) {
-        const firstThreeCore = items.coreItems.slice(0, 3);
-        if (firstThreeCore.length > 0) {
-          blocks.push({
-            type: 'Core Inicial (Primeros 3 Objetos)',
-            hideIfSummonerSpell: '',
-            showIfSummonerSpell: '',
-            items: firstThreeCore.map(it => ({ id: String(it.id), count: 1 }))
-          });
-        }
-
-        const remainingCore = items.coreItems.slice(3);
-        if (remainingCore.length > 0) {
-          blocks.push({
-            type: 'Objetos Situacionales / Siguientes',
-            hideIfSummonerSpell: '',
-            showIfSummonerSpell: '',
-            items: remainingCore.map(it => ({ id: String(it.id), count: 1 }))
-          });
-        }
+        blocks.push({
+          type: 'Items Core',
+          hideIfSummonerSpell: '',
+          showIfSummonerSpell: '',
+          items: items.coreItems.map(it => ({ id: String(it.id), count: 1 }))
+        });
       }
 
+      if (items.recommendedItems && items.recommendedItems.length > 0) {
+        blocks.push({
+          type: 'Items Recomendados',
+          hideIfSummonerSpell: '',
+          showIfSummonerSpell: '',
+          items: items.recommendedItems.map(it => ({ id: String(it.id), count: 1 }))
+        });
+      }
+
+      console.log(`[LCU] Built ${blocks.length} item blocks: ${blocks.map(b => b.type).join(', ')}`);
+
       if (blocks.length === 0) {
-        console.log('[LCU] No items to apply for item set.');
+        console.log('[LCU] No items to apply for item set. Skipping.');
         return false;
       }
 
@@ -427,22 +442,25 @@ class LcuConnector {
       };
 
       // 5. Remove existing set for this champion to prevent duplication
+      const beforeCount = setsData.itemSets.length;
       setsData.itemSets = setsData.itemSets.filter(set => {
         if (set.uid === newSet.uid || set.title === title) return false;
         if (set.associatedChampions && set.associatedChampions.includes(championId)) return false;
         return true;
       });
+      console.log(`[LCU] Removed ${beforeCount - setsData.itemSets.length} existing set(s) for ${championName}`);
 
       // 6. Add our new set
       setsData.itemSets.push(newSet);
       setsData.timestamp = Date.now();
 
       // 7. Push back to LCU
+      console.log(`[LCU] Pushing item set to LCU (total sets: ${setsData.itemSets.length})...`);
       await this.request('PUT', `/lol-item-sets/v1/item-sets/${summonerId}/sets`, setsData);
-      console.log(`[LCU] Successfully applied custom item set for ${championName}`);
+      console.log(`[LCU] ✅ Successfully applied custom item set for ${championName}`);
       return true;
     } catch (err) {
-      console.error('Failed to apply item set:', err);
+      console.error('[LCU] ❌ Failed to apply item set:', err.message || err);
       return false;
     }
   }

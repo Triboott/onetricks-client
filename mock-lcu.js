@@ -26,10 +26,75 @@ const lockfilePath = path.join(workspaceDir, 'lockfile');
 
 // Simulated Game State
 let isChampSelect = false;
+let isGameActive = false;
 let selectedChampionId = 0; // 0 = none, 266 = Aatrox, 81 = Ezreal
 let selectedSkinNumber = 0;
 let isMockBanning = false;
 let isMockBanCompleted = false;
+
+const mockBlueTeam = [
+  { puuid: 'puuid-blue-1', summonerId: 10001, summonerName: 'Faker OTP', championId: 266 }, // Aatrox
+  { puuid: 'puuid-blue-2', summonerId: 10002, summonerName: 'Hide on bush', championId: 81 }, // Ezreal
+  { puuid: 'puuid-blue-3', summonerId: 10003, summonerName: 'ShowMaker', championId: 103 }, // Ahri
+  { puuid: 'puuid-blue-4', summonerId: 10004, summonerName: 'Canyon SoloQ', championId: 64 }, // Lee Sin
+  { puuid: 'puuid-blue-5', summonerId: 12345678, summonerName: 'Teemo OTP', championId: 17 } // Teemo (the active user!)
+];
+
+const mockRedTeam = [
+  { puuid: 'puuid-red-1', summonerId: 20001, summonerName: 'Caps Mid', championId: 238 }, // Zed
+  { puuid: 'puuid-red-2', summonerId: 20002, summonerName: 'Rekkles ADC', championId: 22 }, // Ashe
+  { puuid: 'puuid-red-3', summonerId: 20003, summonerName: 'Mikyx Support', championId: 53 }, // Blitzcrank
+  { puuid: 'puuid-red-4', summonerId: 20004, summonerName: 'Jankos Sejuani', championId: 113 }, // Sejuani
+  { puuid: 'puuid-red-5', summonerId: 20005, summonerName: 'Wunder Gragas', championId: 79 } // Gragas
+];
+
+const mockSummonersByPuuid = {
+  'puuid-blue-1': { gameName: 'Faker OTP', tagLine: 'T1', profileIconId: 6, summonerLevel: 800 },
+  'puuid-blue-2': { gameName: 'Hide on bush', tagLine: 'KR1', profileIconId: 12, summonerLevel: 650 },
+  'puuid-blue-3': { gameName: 'ShowMaker', tagLine: 'DK', profileIconId: 35, summonerLevel: 550 },
+  'puuid-blue-4': { gameName: 'Canyon SoloQ', tagLine: 'GEN', profileIconId: 41, summonerLevel: 580 },
+  'puuid-blue-5': { gameName: 'Teemo OTP', tagLine: 'OTP', profileIconId: 7, summonerLevel: 150 }, // User
+  
+  'puuid-red-1': { gameName: 'Caps Mid', tagLine: 'G2', profileIconId: 88, summonerLevel: 620 },
+  'puuid-red-2': { gameName: 'Rekkles ADC', tagLine: 'T1D', profileIconId: 99, summonerLevel: 600 },
+  'puuid-red-3': { gameName: 'Mikyx Support', tagLine: 'G2', profileIconId: 2, summonerLevel: 590 },
+  'puuid-red-4': { gameName: 'Jankos Sejuani', tagLine: 'WIT', profileIconId: 4, summonerLevel: 570 },
+  'puuid-red-5': { gameName: 'Wunder Gragas', tagLine: 'KC', profileIconId: 11, summonerLevel: 560 }
+};
+
+const mockRankedStatsByPuuid = {
+  'puuid-blue-1': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'CHALLENGER', division: 'I', leaguePoints: 1250, wins: 290, losses: 210 }]
+  },
+  'puuid-blue-2': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'GRANDMASTER', division: 'I', leaguePoints: 850, wins: 180, losses: 140 }]
+  },
+  'puuid-blue-3': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'MASTER', division: 'I', leaguePoints: 320, wins: 130, losses: 110 }]
+  },
+  'puuid-blue-4': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'DIAMOND', division: 'I', leaguePoints: 45, wins: 95, losses: 85 }]
+  },
+  'puuid-blue-5': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'EMERALD', division: 'II', leaguePoints: 75, wins: 58, losses: 42 }]
+  },
+  
+  'puuid-red-1': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'PLATINUM', division: 'III', leaguePoints: 20, wins: 48, losses: 52 }]
+  },
+  'puuid-red-2': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'GOLD', division: 'I', leaguePoints: 15, wins: 70, losses: 73 }]
+  },
+  'puuid-red-3': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'SILVER', division: 'IV', leaguePoints: 90, wins: 51, losses: 49 }]
+  },
+  'puuid-red-4': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'BRONZE', division: 'II', leaguePoints: 50, wins: 36, losses: 44 }]
+  },
+  'puuid-red-5': {
+    queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'IRON', division: 'I', leaguePoints: 10, wins: 12, losses: 18 }]
+  }
+};
 let mockEditableRunePage = {
   id: 4567,
   name: 'Runas Preestablecidas',
@@ -63,6 +128,56 @@ const server = https.createServer(httpsOptions, (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host}`);
   console.log(`[MOCK LCU] HTTP Request: ${req.method} ${url.pathname}`);
 
+  if (req.method === 'GET' && url.pathname === '/lol-gameflow/v1/session') {
+    if (!isGameActive) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not in active game' }));
+    } else {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        gameData: {
+          gameId: 444555666,
+          teamOne: mockBlueTeam,
+          teamTwo: mockRedTeam
+        }
+      }));
+    }
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/lol-gameflow/v1/gameflow-phase') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(isGameActive ? 'InProgress' : (isChampSelect ? 'ChampSelect' : 'None')));
+    return;
+  }
+
+  if (req.method === 'GET' && (url.pathname.startsWith('/lol-summoner/v1/summoners-by-puuid/') || url.pathname.startsWith('/lol-summoner/v2/summoners/puuid/'))) {
+    const parts = url.pathname.split('/');
+    const puuid = parts[parts.length - 1];
+    const summ = mockSummonersByPuuid[puuid] || { gameName: 'Unknown', tagLine: 'NA1', profileIconId: 1, summonerLevel: 1 };
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      puuid,
+      summonerId: Math.floor(Math.random() * 100000),
+      displayName: `${summ.gameName}#${summ.tagLine}`,
+      gameName: summ.gameName,
+      tagLine: summ.tagLine,
+      profileIconId: summ.profileIconId,
+      summonerLevel: summ.summonerLevel
+    }));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname.startsWith('/lol-ranked/v1/ranked-stats/')) {
+    const puuid = url.pathname.split('/').pop();
+    const stats = mockRankedStatsByPuuid[puuid] || {
+      queues: [{ queueType: 'RANKED_SOLO_5x5', tier: 'UNRANKED', division: '', leaguePoints: 0, wins: 0, losses: 0 }]
+    };
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(stats));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/lol-login/v1/session') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ state: 'connected', summonerId: 12345678 }));
@@ -78,7 +193,8 @@ const server = https.createServer(httpsOptions, (req, res) => {
       gameName: 'Teemo OTP',
       tagLine: 'OTP',
       profileIconId: 7, 
-      summonerLevel: 150 
+      summonerLevel: 150,
+      puuid: 'puuid-blue-5'
     }));
     return;
   }
@@ -310,21 +426,31 @@ function showCLI() {
   console.log('\n=======================================');
   console.log('CONTROLES DEL SIMULADOR DE LEAGUE (LCU)');
   console.log('=======================================');
+  console.log('[0] Iniciar Partida de Prueba (InProgress)');
   console.log('[1] Entrar a Champ Select (Ninguno seleccionado)');
   console.log('[2] Hover Aatrox (ID 266) - Generará scraping de Onetricks');
   console.log('[3] Hover Ezreal (ID 81) - Generará scraping de Onetricks');
+  console.log('[a] Hover Caitlyn (ID 51) - NUEVO');
+  console.log('[b] Hover Aurora (ID 893) - NUEVO');
   console.log('[4] Salir de Champ Select / Partida iniciada');
   console.log('[5] Cambiar a Skin Default (Skin ID 0)');
-  console.log('[6] Cambiar a Skin index 1 (Frosted Ezreal / Justicar Aatrox)');
-  console.log('[7] Cambiar a Skin index 2 (Nottingham Ezreal / Mecha Aatrox)');
+  console.log('[6] Cambiar a Skin index 1 (Frosted Ezreal / Justicar Aatrox / Aurora Battle Bunny)');
+  console.log('[7] Cambiar a Skin index 2 (Nottingham Ezreal / Mecha Aatrox / Aurora Battle Bunny Chroma)');
+  console.log('[c] Cambiar a Caitlyn Pool Party Chroma (Skin 14) - NUEVO');
+  console.log('[d] Cambiar a Aurora Battle Bunny Chroma (Skin 2) - NUEVO');
   console.log('[8] Iniciar Fase de Baneo (Hover Aatrox para Banear)');
   console.log('[9] Confirmar Baneo (Lock Ban)');
   console.log('[q] Apagar simulador y borrar lockfile');
   console.log('Elija una opción: ');
 
   rl.question('> ', (opt) => {
-    const option = opt.trim();
-    if (option === '1') {
+    const option = opt.trim().toLowerCase();
+    if (option === '0') {
+      isChampSelect = false;
+      isGameActive = true;
+      console.log('\n[MOCK LCU] Partida de prueba iniciada (InProgress)...');
+      broadcastEvent('/lol-gameflow/v1/gameflow-phase', 'Update', 'InProgress');
+    } else if (option === '1') {
       isChampSelect = true;
       selectedChampionId = 0;
       selectedSkinNumber = 0;
@@ -346,14 +472,30 @@ function showCLI() {
       selectedChampionId = 81;
       console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Ezreal (81)');
       broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+    } else if (option === 'a') {
+      if (!isChampSelect) isChampSelect = true;
+      isMockBanning = false;
+      isMockBanCompleted = false;
+      selectedChampionId = 51;
+      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Caitlyn (51)');
+      broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+    } else if (option === 'b') {
+      if (!isChampSelect) isChampSelect = true;
+      isMockBanning = false;
+      isMockBanCompleted = false;
+      selectedChampionId = 893;
+      console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Aurora (893)');
+      broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === '4') {
       isChampSelect = false;
+      isGameActive = false;
       selectedChampionId = 0;
       selectedSkinNumber = 0;
       isMockBanning = false;
       isMockBanCompleted = false;
-      console.log('\n[MOCK LCU] Champ Select cerrado.');
+      console.log('\n[MOCK LCU] Partida/Champ Select cerrada.');
       broadcastEvent('/lol-champ-select/v1/session', 'Delete', null);
+      broadcastEvent('/lol-gameflow/v1/gameflow-phase', 'Update', 'None');
     } else if (option === '5') {
       selectedSkinNumber = 0;
       console.log('\n[MOCK LCU] Skin cambiada a Default (0)');
@@ -369,6 +511,18 @@ function showCLI() {
     } else if (option === '7') {
       selectedSkinNumber = 2;
       console.log('\n[MOCK LCU] Skin cambiada a Skin index 2');
+      if (isChampSelect) {
+        broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+      }
+    } else if (option === 'c') {
+      selectedSkinNumber = 14;
+      console.log('\n[MOCK LCU] Skin cambiada a Caitlyn Pool Party Chroma (14)');
+      if (isChampSelect) {
+        broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+      }
+    } else if (option === 'd') {
+      selectedSkinNumber = 2;
+      console.log('\n[MOCK LCU] Skin cambiada a Aurora Battle Bunny Chroma (2)');
       if (isChampSelect) {
         broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
       }

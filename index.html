@@ -298,6 +298,87 @@
       </div>
     </section>
 
+    <!-- STATE 3: LIVE GAME WORKSPACE -->
+    <section class="screen" id="screen-game">
+      <div class="game-container">
+        <!-- Encabezado de la partida en curso -->
+        <div class="game-header glass-card">
+          <div class="game-header-info">
+            <span class="game-mode-badge">CLASIFICATORIA SOLO/DUO</span>
+            <h2>PARTIDA EN CURSO</h2>
+            <p id="game-status-lbl">Obteniendo información en tiempo real...</p>
+          </div>
+          <div class="game-header-actions">
+            <button class="btn btn-primary compact" id="btn-open-multi-opgg" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; box-shadow: 0 4px 12px rgba(138,43,226,0.15); transition: var(--transition-smooth); cursor: pointer;">
+              Abrir Multi OP.GG
+            </button>
+          </div>
+        </div>
+
+        <!-- Rejilla de los dos equipos dividida en columnas -->
+        <div class="teams-split-grid">
+          <!-- Lado Azul (Aliados) -->
+          <div class="team-column blue-side glass-card">
+            <div class="team-header">
+              <span class="team-side-indicator">LADO AZUL</span>
+              <h3>EQUIPO ALIADO</h3>
+            </div>
+            <div class="players-list" id="blue-team-players">
+              <!-- Se rellena dinámicamente con renderer.js -->
+            </div>
+          </div>
+
+          <!-- Lado Rojo (Enemigos) -->
+          <div class="team-column red-side glass-card">
+            <div class="team-header">
+              <span class="team-side-indicator">LADO ROJO</span>
+              <h3>EQUIPO ENEMIGO</h3>
+            </div>
+            <div class="players-list" id="red-team-players">
+              <!-- Se rellena dinámicamente con renderer.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTENEDOR DE LA BUILD RECOMENDADA PARA EL JUGADOR ACTIVO -->
+        <div class="game-champion-build glass-card" id="game-champion-build" style="display: none; margin-top: 24px;">
+          <div class="game-build-header">
+            <div class="game-build-title-area">
+              <span class="game-build-badge">TU CONFIGURACIÓN RECOMENDADA EN PARTIDA</span>
+              <h3 id="game-build-champ-name">Cargando build para tu campeón...</h3>
+            </div>
+          </div>
+          <div class="game-build-body-simple">
+            <!-- Habilidades -->
+            <div class="game-item-group group-skills">
+              <span class="item-group-label">Habilidades</span>
+              <div class="game-build-skills-content" id="game-build-skills"></div>
+            </div>
+            <!-- Inicial -->
+            <div class="game-item-group group-starting">
+              <span class="item-group-label">Inicial</span>
+              <div class="game-items-flex" id="game-build-starting-items"></div>
+            </div>
+            <!-- Botas -->
+            <div class="game-item-group group-boots">
+              <span class="item-group-label">Botas</span>
+              <div class="game-items-flex" id="game-build-boots-items"></div>
+            </div>
+            <!-- Core -->
+            <div class="game-item-group group-core">
+              <span class="item-group-label">Core (1os 3)</span>
+              <div class="game-items-flex" id="game-build-core-items"></div>
+            </div>
+            <!-- Recomendados -->
+            <div class="game-item-group group-recommended">
+              <span class="item-group-label">Recomendados</span>
+              <div class="game-items-flex" id="game-build-recommended-items"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- MODAL: SETTINGS OVERLAY -->

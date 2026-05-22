@@ -32,7 +32,8 @@ let appState = {
   activeChampionName: '',
   activeChampionImage: '',
   activeRole: 'default', // e.g. 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'
-  scrapedData: null
+  scrapedData: null,
+  activeGame: null
 };
 
 // Load configuration
@@ -179,6 +180,137 @@ async function fetchPlayerInfo(retries = 3) {
   return null;
 }
 
+async function fetchActiveGamePlayersInfo() {
+  if (!connector || connector.status !== 'connected') return null;
+  
+  try {
+    const session = await connector.request('GET', '/lol-gameflow/v1/session');
+    if (!session || !session.gameData) {
+      console.log('[CLIENT] Active game session not found or gameData is missing');
+      return null;
+    }
+
+    const { teamOne, teamTwo } = session.gameData;
+    
+    const fetchTeamPlayers = async (team) => {
+      if (!team) return [];
+      const players = [];
+      for (const p of team) {
+        try {
+          const puuid = p.puuid;
+          if (!puuid && !p.summonerId) continue;
+          
+          // Fetch summoner details (to get gameName, tagLine, level, and profileIconId)
+          let gameName = p.summonerName || '';
+          let tagLine = '';
+          let profileIconId = null;
+          let summonerLevel = 1;
+          let fetchedSummoner = null;
+          
+          if (puuid) {
+            try {
+              fetchedSummoner = await connector.request('GET', `/lol-summoner/v2/summoners/puuid/${puuid}`);
+            } catch (e) {
+              console.warn(`[CLIENT] Failed to fetch summoner by PUUID ${puuid}:`, e.message);
+            }
+          }
+          
+          if (!fetchedSummoner && p.summonerId) {
+            try {
+              fetchedSummoner = await connector.request('GET', `/lol-summoner/v1/summoners/${p.summonerId}`);
+            } catch (e) {
+              console.warn(`[CLIENT] Failed to fetch summoner by ID ${p.summonerId}:`, e.message);
+            }
+          }
+          
+          if (fetchedSummoner) {
+            gameName = fetchedSummoner.gameName || fetchedSummoner.displayName || p.summonerName || '';
+            tagLine = fetchedSummoner.tagLine || '';
+            profileIconId = fetchedSummoner.profileIconId || 1;
+            summonerLevel = fetchedSummoner.summonerLevel || 1;
+          }
+          
+          // Fetch ranked stats
+          let tier = 'UNRANKED';
+          let division = '';
+          let lp = 0;
+          let wins = 0;
+          let losses = 0;
+          let winrate = 0;
+          
+          const statsLookupPuuid = puuid || (fetchedSummoner && fetchedSummoner.puuid);
+          if (statsLookupPuuid) {
+            try {
+              const ranked = await connector.request('GET', `/lol-ranked/v1/ranked-stats/${statsLookupPuuid}`);
+              const soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+              if (soloQ) {
+                tier = soloQ.tier || 'UNRANKED';
+                division = soloQ.division || '';
+                lp = soloQ.leaguePoints || 0;
+                wins = soloQ.wins || 0;
+                losses = soloQ.losses || 0;
+                
+                const totalGames = wins + losses;
+                if (totalGames > 0) {
+                  winrate = Math.round((wins / totalGames) * 100);
+                }
+              }
+            } catch (e) {
+              console.warn(`[CLIENT] Failed to fetch ranked stats for PUUID ${statsLookupPuuid}:`, e.message);
+            }
+          }
+
+          // Resolve champion details
+          let champInfo = { name: 'Unknown', displayName: 'Desconocido', image: '' };
+          if (p.championId) {
+            champInfo = scraper.resolveChampionId(p.championId);
+          }
+
+          let displayName = gameName;
+          if (gameName && tagLine) {
+            displayName = `${gameName}#${tagLine}`;
+          }
+
+          players.push({
+            puuid: puuid || (fetchedSummoner && fetchedSummoner.puuid) || '',
+            summonerId: p.summonerId,
+            displayName,
+            gameName,
+            tagLine,
+            profileIconId,
+            summonerLevel,
+            championId: p.championId,
+            championName: champInfo.name,
+            championDisplayName: champInfo.displayName,
+            championImage: champInfo.image,
+            tier,
+            division,
+            lp,
+            wins,
+            losses,
+            winrate
+          });
+        } catch (err) {
+          console.error('[CLIENT] Error building active game player profile:', err);
+        }
+      }
+      return players;
+    };
+
+    const blueTeam = await fetchTeamPlayers(teamOne);
+    const redTeam = await fetchTeamPlayers(teamTwo);
+
+    return {
+      gameId: session.gameData.gameId,
+      blueTeam,
+      redTeam
+    };
+  } catch (err) {
+    console.error('[CLIENT] Failed to fetch active game players info:', err);
+    return null;
+  }
+}
+
 function createWindow() {
   const shouldStartHidden = process.argv.includes('--hidden');
   mainWindow = new BrowserWindow({
@@ -322,6 +454,47 @@ function resetWorkspace() {
   }
 }
 
+async function checkAndTriggerActiveGameBuildScrape(activeGame) {
+  if (!activeGame || !connector || connector.status !== 'connected') return;
+  try {
+    const currentSummoner = await connector.getCurrentSummoner();
+    if (!currentSummoner) return;
+    const myPuuid = currentSummoner.puuid;
+    const mySummonerId = currentSummoner.summonerId;
+    const myName = (currentSummoner.gameName || currentSummoner.displayName || '').toLowerCase().trim();
+
+    const me = activeGame.blueTeam.find(p => {
+      if (myPuuid && p.puuid === myPuuid) return true;
+      if (mySummonerId && p.summonerId === mySummonerId) return true;
+      if (myName) {
+        const pName = (p.gameName || p.displayName || '').toLowerCase().trim();
+        return pName.includes(myName) || myName.includes(pName);
+      }
+      return false;
+    }) || activeGame.redTeam.find(p => {
+      if (myPuuid && p.puuid === myPuuid) return true;
+      if (mySummonerId && p.summonerId === mySummonerId) return true;
+      if (myName) {
+        const pName = (p.gameName || p.displayName || '').toLowerCase().trim();
+        return pName.includes(myName) || myName.includes(pName);
+      }
+      return false;
+    });
+
+    if (me && me.championName && me.championName !== 'Unknown') {
+      console.log(`[CLIENT] Active player found in game playing ${me.championName}. Triggering automatic build scrape...`);
+      appState.activeChampionName = me.championName;
+      appState.activeChampionId = me.championId;
+      appState.activeRole = 'default';
+      triggerScrape(me.championName, 'default');
+    } else {
+      console.log('[CLIENT] Active player not found in current game team rosters or champion is unknown.');
+    }
+  } catch (err) {
+    console.error('[CLIENT] Failed to trigger build scrape for active player in game:', err);
+  }
+}
+
 // Handler for LCU Gameflow Phase updates
 function handleGameflowPhaseUpdate(phase) {
   console.log(`[CLIENT] LCU Gameflow Phase updated: ${phase}`);
@@ -330,7 +503,24 @@ function handleGameflowPhaseUpdate(phase) {
   // Reset workspace if gameflow returns to non-active phase (lobby, none, dodged, ended)
   const resetPhases = ['None', 'Lobby', 'Matchmaking', 'ReadyCheck', 'EndOfGame', 'WaitingForStats'];
   if (resetPhases.includes(phase)) {
+    appState.activeGame = null;
     resetWorkspace();
+    sendToRenderer('game-ended', {});
+  } else if (['GameStart', 'InProgress', 'Reconnect'].includes(phase)) {
+    console.log(`[CLIENT] Game active/started (Phase: ${phase}). Fetching players info...`);
+    // Wait a brief moment to ensure LCU game session is fully instantiated
+    setTimeout(async () => {
+      // Confirm that the phase hasn't changed back to a reset phase in the meantime
+      if (['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
+        const activeGame = await fetchActiveGamePlayersInfo();
+        if (activeGame) {
+          appState.activeGame = activeGame;
+          sendToRenderer('game-started', activeGame);
+          console.log(`[CLIENT] Compiled active game info and dispatched 'game-started' event to renderer. Allied players: ${activeGame.blueTeam.length}, Enemy players: ${activeGame.redTeam.length}`);
+          await checkAndTriggerActiveGameBuildScrape(activeGame);
+        }
+      }
+    }, 2000);
   }
 }
 
@@ -421,15 +611,32 @@ async function handleChampSelectUpdate(session) {
     appState.activeChampionName = champInfo.name;
     appState.activeChampionImage = champInfo.image;
 
-    sendToRenderer('champ-select-update', {
-      active: true,
-      championId: selectedChampId,
-      championName: champInfo.name,
-      championDisplayName: champInfo.displayName,
-      championImage: champInfo.image,
-      role: appState.activeRole,
-      skinId: selectedSkinId,
-      ddragonVersion: scraper.ddragonVersion
+    // Resolve skin number asynchronously to handle chromas mapping to parent skins
+    scraper.resolveSkinNumber(champInfo.name, selectedSkinId).then(resolvedSkinNumber => {
+      sendToRenderer('champ-select-update', {
+        active: true,
+        championId: selectedChampId,
+        championName: champInfo.name,
+        championDisplayName: champInfo.displayName,
+        championImage: champInfo.image,
+        role: appState.activeRole,
+        skinId: selectedSkinId,
+        resolvedSkinNumber: resolvedSkinNumber,
+        ddragonVersion: scraper.ddragonVersion
+      });
+    }).catch(err => {
+      console.error('Error resolving skin number:', err);
+      sendToRenderer('champ-select-update', {
+        active: true,
+        championId: selectedChampId,
+        championName: champInfo.name,
+        championDisplayName: champInfo.displayName,
+        championImage: champInfo.image,
+        role: appState.activeRole,
+        skinId: selectedSkinId,
+        resolvedSkinNumber: selectedSkinId ? (selectedSkinId % 1000) : 0,
+        ddragonVersion: scraper.ddragonVersion
+      });
     });
 
     // Start scraping runes & summoners
@@ -438,7 +645,13 @@ async function handleChampSelectUpdate(session) {
     // If the champion is identical but the skin changed
     appState.activeSkinId = selectedSkinId;
     console.log(`[CLIENT] Champion skin changed to ID: ${selectedSkinId}`);
-    sendToRenderer('skin-update', { skinId: selectedSkinId });
+    
+    scraper.resolveSkinNumber(appState.activeChampionName, selectedSkinId).then(resolvedSkinNumber => {
+      sendToRenderer('skin-update', { skinId: selectedSkinId, resolvedSkinNumber: resolvedSkinNumber });
+    }).catch(err => {
+      console.error('Error resolving skin number on change:', err);
+      sendToRenderer('skin-update', { skinId: selectedSkinId, resolvedSkinNumber: selectedSkinId ? (selectedSkinId % 1000) : 0 });
+    });
   }
 }
 
@@ -491,7 +704,10 @@ async function triggerScrape(championName, role) {
       await connector.applySummonerSpells(scraped.summoners.raw);
     }
     if (config.autoApplyItems && scraped.items) {
+      console.log(`[CLIENT] Auto-applying item set. startingBuild=${scraped.items.startingBuild?.length}, coreItems=${scraped.items.coreItems?.length}, recommendedItems=${scraped.items.recommendedItems?.length}`);
       await connector.applyItemSet(appState.activeChampionId, appState.activeChampionName, scraped.items);
+    } else {
+      console.log(`[CLIENT] Skipping item set. autoApplyItems=${config.autoApplyItems}, hasItems=${!!scraped.items}`);
     }
   } catch (err) {
     console.error('Scraping error:', err);
@@ -506,6 +722,13 @@ ipcMain.handle('get-initial-state', async () => {
   let playerInfo = null;
   if (connector && connector.status === 'connected') {
     playerInfo = await fetchPlayerInfo();
+    // If game is active, let's fetch in-game info too!
+    if (['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
+      appState.activeGame = await fetchActiveGamePlayersInfo();
+      if (appState.activeGame) {
+        checkAndTriggerActiveGameBuildScrape(appState.activeGame);
+      }
+    }
   }
   return {
     appState,
