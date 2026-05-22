@@ -321,6 +321,115 @@ class LcuConnector {
       throw err;
     }
   }
+
+  async applyItemSet(championId, championName, items) {
+    try {
+      console.log(`[LCU] Preparing item set for champion ID: ${championId} (${championName})`);
+      
+      // 1. Get current summoner
+      const summoner = await this.request('GET', '/lol-summoner/v1/current-summoner');
+      if (!summoner || !summoner.summonerId) {
+        throw new Error('Summoner ID not found');
+      }
+
+      const summonerId = summoner.summonerId;
+
+      // 2. Get current item sets
+      let setsData = await this.request('GET', `/lol-item-sets/v1/item-sets/${summonerId}/sets`);
+      if (!setsData || typeof setsData !== 'object') {
+        setsData = {
+          accountId: summoner.accountId || 0,
+          timestamp: Date.now(),
+          itemSets: []
+        };
+      }
+      if (!setsData.itemSets) {
+        setsData.itemSets = [];
+      }
+
+      // 3. Construct blocks from scraped items
+      const blocks = [];
+
+      if (items.startingBuild && items.startingBuild.length > 0) {
+        blocks.push({
+          type: 'Objetos Iniciales',
+          hideIfSummonerSpell: '',
+          showIfSummonerSpell: '',
+          items: items.startingBuild.map(it => ({ id: String(it.id), count: 1 }))
+        });
+      }
+
+      if (items.popularBoots && items.popularBoots.length > 0) {
+        blocks.push({
+          type: 'Botas',
+          hideIfSummonerSpell: '',
+          showIfSummonerSpell: '',
+          items: items.popularBoots.map(it => ({ id: String(it.id), count: 1 }))
+        });
+      }
+
+      if (items.coreItems && items.coreItems.length > 0) {
+        const firstThreeCore = items.coreItems.slice(0, 3);
+        if (firstThreeCore.length > 0) {
+          blocks.push({
+            type: 'Core Inicial (Primeros 3 Objetos)',
+            hideIfSummonerSpell: '',
+            showIfSummonerSpell: '',
+            items: firstThreeCore.map(it => ({ id: String(it.id), count: 1 }))
+          });
+        }
+
+        const remainingCore = items.coreItems.slice(3);
+        if (remainingCore.length > 0) {
+          blocks.push({
+            type: 'Objetos Situacionales / Siguientes',
+            hideIfSummonerSpell: '',
+            showIfSummonerSpell: '',
+            items: remainingCore.map(it => ({ id: String(it.id), count: 1 }))
+          });
+        }
+      }
+
+      if (blocks.length === 0) {
+        console.log('[LCU] No items to apply for item set.');
+        return false;
+      }
+
+      // 4. Create new item set object
+      const title = `OT: ${championName}`;
+      const newSet = {
+        title: title,
+        type: 'custom',
+        map: 'any',
+        mode: 'any',
+        priority: true,
+        sortrank: 0,
+        uid: `ot-set-${championId}`,
+        associatedChampions: [championId],
+        associatedMaps: [],
+        blocks: blocks
+      };
+
+      // 5. Remove existing set for this champion to prevent duplication
+      setsData.itemSets = setsData.itemSets.filter(set => {
+        if (set.uid === newSet.uid || set.title === title) return false;
+        if (set.associatedChampions && set.associatedChampions.includes(championId)) return false;
+        return true;
+      });
+
+      // 6. Add our new set
+      setsData.itemSets.push(newSet);
+      setsData.timestamp = Date.now();
+
+      // 7. Push back to LCU
+      await this.request('PUT', `/lol-item-sets/v1/item-sets/${summonerId}/sets`, setsData);
+      console.log(`[LCU] Successfully applied custom item set for ${championName}`);
+      return true;
+    } catch (err) {
+      console.error('Failed to apply item set:', err);
+      return false;
+    }
+  }
 }
 
 module.exports = LcuConnector;

@@ -66,6 +66,35 @@ const server = https.createServer(httpsOptions, (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/lol-summoner/v1/current-summoner') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ summonerId: 12345678, accountId: 87654321 }));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/lol-item-sets/v1/item-sets/12345678/sets') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ itemSets: [] }));
+    return;
+  }
+
+  if (req.method === 'PUT' && url.pathname === '/lol-item-sets/v1/item-sets/12345678/sets') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        console.log(`[MOCK LCU] 🛍️ Item Sets Guardados:`, JSON.stringify(payload, null, 2));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(payload));
+      } catch(e) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/lol-champ-select/v1/session') {
     if (!isChampSelect) {
       res.writeHead(404, { 'Content-Type': 'application/json' });

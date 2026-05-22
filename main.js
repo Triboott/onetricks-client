@@ -12,8 +12,10 @@ let scraper = null;
 let config = {
   autoApplyRunes: true,
   autoApplySpells: true,
+  autoApplyItems: true,
   customLoLPath: '',
   flashOnD: false,
+  debugBrowser: false,
   pinnedRole: 'default'
 };
 
@@ -221,7 +223,8 @@ async function handleChampSelectUpdate(session) {
       championName: champInfo.name,
       championDisplayName: champInfo.displayName,
       championImage: champInfo.image,
-      role: appState.activeRole
+      role: appState.activeRole,
+      ddragonVersion: scraper.ddragonVersion
     });
 
     // Start scraping runes & summoners
@@ -237,11 +240,11 @@ async function triggerScrape(championName, role) {
   
   sendToRenderer('scrape-progress', { 
     status: 'fetching', 
-    message: `Obteniendo datos de Onetricks para ${champInfo.displayName}${roleLabel}...` 
+    message: `Obteniendo datos de ${champInfo.displayName}${roleLabel}...` 
   });
 
   try {
-    const scraped = await scraper.scrapeRunesAndSummoners(championName, role);
+    const scraped = await scraper.scrapeRunesAndSummoners(championName, role, config.debugBrowser);
     
     // Ensure we haven't switched champion/role during async wait
     if (appState.activeChampionName !== championName || appState.activeRole !== role) {
@@ -259,6 +262,10 @@ async function triggerScrape(championName, role) {
       appState.activeRole = scraped.role;
     }
 
+    if (scraped && scraper) {
+      scraped.ddragonVersion = scraper.ddragonVersion;
+    }
+
     sendToRenderer('scrape-success', scraped);
 
     // Auto-apply if configured
@@ -267,6 +274,9 @@ async function triggerScrape(championName, role) {
     }
     if (config.autoApplySpells && scraped.summoners) {
       await connector.applySummonerSpells(scraped.summoners.raw);
+    }
+    if (config.autoApplyItems && scraped.items) {
+      await connector.applyItemSet(appState.activeChampionId, appState.activeChampionName, scraped.items);
     }
   } catch (err) {
     console.error('Scraping error:', err);
@@ -280,7 +290,8 @@ async function triggerScrape(championName, role) {
 ipcMain.handle('get-initial-state', () => {
   return {
     appState,
-    config
+    config,
+    ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
   };
 });
 
@@ -300,16 +311,25 @@ ipcMain.on('apply-build', async (event, data) => {
     if (data.summoners) {
       await connector.applySummonerSpells(data.summoners);
     }
+    if (data.items) {
+      await connector.applyItemSet(appState.activeChampionId, appState.activeChampionName, data.items);
+    }
   } catch (err) {
     console.error('Manual apply error:', err);
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, flashOnD }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser }) => {
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
+  if (autoApplyItems !== undefined) {
+    config.autoApplyItems = autoApplyItems;
+  }
   if (flashOnD !== undefined) {
     config.flashOnD = flashOnD;
+  }
+  if (debugBrowser !== undefined) {
+    config.debugBrowser = debugBrowser;
   }
   saveConfig();
 

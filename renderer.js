@@ -8,8 +8,10 @@ const elScreenWorkspace = document.getElementById('screen-workspace');
 
 const elCheckAutoRunesWelcome = document.getElementById('check-auto-runes-welcome');
 const elCheckAutoSpellsWelcome = document.getElementById('check-auto-spells-welcome');
+const elCheckAutoItemsWelcome = document.getElementById('check-auto-items-welcome');
 const elCheckAutoRunes = document.getElementById('check-auto-runes');
 const elCheckAutoSpells = document.getElementById('check-auto-spells');
+const elCheckAutoItems = document.getElementById('check-auto-items');
 
 const elChampBgBanner = document.getElementById('champ-bg-banner');
 const elChampPortrait = document.getElementById('champ-portrait');
@@ -38,7 +40,9 @@ const elBtnSettingsClose = document.getElementById('btn-settings-close');
 const elSettingsOverlay = document.getElementById('settings-overlay');
 const elSettingsCheckRunes = document.getElementById('settings-check-runes');
 const elSettingsCheckSpells = document.getElementById('settings-check-spells');
+const elSettingsCheckItems = document.getElementById('settings-check-items');
 const elSettingsCheckFlashD = document.getElementById('settings-check-flash-d');
+const elSettingsCheckDebugBrowser = document.getElementById('settings-check-debug-browser');
 const elListStartingItems = document.getElementById('list-starting-items');
 const elListBootsItems = document.getElementById('list-boots-items');
 const elListCoreItems = document.getElementById('list-core-items');
@@ -54,11 +58,15 @@ const elBtnClose = document.getElementById('btn-close');
 // Local visual state data memory
 let activeScrapedData = null;
 let activeRuneSetIndex = 0;
+let ddragonVersion = '14.10.1'; // Default fallback version
 let appConfig = {
   autoApplyRunes: true,
   autoApplySpells: true,
+  autoApplyItems: true,
   customLoLPath: '',
-  flashOnD: false
+  flashOnD: false,
+  debugBrowser: false,
+  pinnedRole: 'default'
 };
 
 // ==========================================================================
@@ -69,6 +77,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const state = await window.api.getInitialState();
     appConfig = state.config;
+    if (state.ddragonVersion) {
+      ddragonVersion = state.ddragonVersion;
+    }
     updateConfigUI(appConfig);
     updateLcuStatusUI(state.appState.lcuStatus);
   } catch (err) {
@@ -105,38 +116,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   const handleToggleChange = () => {
     appConfig.autoApplyRunes = elCheckAutoRunes.checked;
     appConfig.autoApplySpells = elCheckAutoSpells.checked;
+    appConfig.autoApplyItems = elCheckAutoItems.checked;
     appConfig.flashOnD = elSettingsCheckFlashD.checked;
+    appConfig.debugBrowser = elSettingsCheckDebugBrowser.checked;
     
     // Sync states
     elCheckAutoRunesWelcome.checked = appConfig.autoApplyRunes;
     elCheckAutoSpellsWelcome.checked = appConfig.autoApplySpells;
+    elCheckAutoItemsWelcome.checked = appConfig.autoApplyItems;
     elSettingsCheckRunes.checked = appConfig.autoApplyRunes;
     elSettingsCheckSpells.checked = appConfig.autoApplySpells;
+    elSettingsCheckItems.checked = appConfig.autoApplyItems;
 
     window.api.toggleAutoApply({
       autoApplyRunes: appConfig.autoApplyRunes,
       autoApplySpells: appConfig.autoApplySpells,
-      flashOnD: appConfig.flashOnD
+      autoApplyItems: appConfig.autoApplyItems,
+      flashOnD: appConfig.flashOnD,
+      debugBrowser: appConfig.debugBrowser
     });
 
     updateBottomActionLayout();
   };
 
   elSettingsCheckFlashD.addEventListener('change', handleToggleChange);
+  elSettingsCheckDebugBrowser.addEventListener('change', handleToggleChange);
 
-  [elCheckAutoRunesWelcome, elCheckAutoSpellsWelcome, elCheckAutoRunes, elCheckAutoSpells, elSettingsCheckRunes, elSettingsCheckSpells].forEach(box => {
+  [elCheckAutoRunesWelcome, elCheckAutoSpellsWelcome, elCheckAutoItemsWelcome, elCheckAutoRunes, elCheckAutoSpells, elCheckAutoItems, elSettingsCheckRunes, elSettingsCheckSpells, elSettingsCheckItems].forEach(box => {
     box.addEventListener('change', (e) => {
       // Sync identical checkboxes
       if (box === elCheckAutoRunesWelcome || box === elSettingsCheckRunes) {
         elCheckAutoRunes.checked = e.target.checked;
       } else if (box === elCheckAutoSpellsWelcome || box === elSettingsCheckSpells) {
         elCheckAutoSpells.checked = e.target.checked;
+      } else if (box === elCheckAutoItemsWelcome || box === elSettingsCheckItems) {
+        elCheckAutoItems.checked = e.target.checked;
       } else if (box === elCheckAutoRunes) {
         elCheckAutoRunesWelcome.checked = e.target.checked;
         elSettingsCheckRunes.checked = e.target.checked;
       } else if (box === elCheckAutoSpells) {
         elCheckAutoSpellsWelcome.checked = e.target.checked;
         elSettingsCheckSpells.checked = e.target.checked;
+      } else if (box === elCheckAutoItems) {
+        elCheckAutoItemsWelcome.checked = e.target.checked;
+        elSettingsCheckItems.checked = e.target.checked;
       }
       handleToggleChange();
     });
@@ -145,13 +168,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Manual applying click handler
   elBtnManualApply.addEventListener('click', () => {
     if (activeScrapedData) {
-      // Use the currently selected rune set tab, not just the first set
-      const runeSet = (activeScrapedData.runeSets && activeScrapedData.runeSets[activeRuneSetIndex])
+      // Pick first/selected rune set
+      const runeSet = activeScrapedData.runeSets
         ? activeScrapedData.runeSets[activeRuneSetIndex]
         : activeScrapedData.runes;
       window.api.applyBuild({
         runes: runeSet.raw,
-        summoners: activeScrapedData.summoners.raw
+        summoners: activeScrapedData.summoners.raw,
+        items: activeScrapedData.items
       });
 
       // Show temporary manual success indicator
@@ -211,11 +235,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 function updateConfigUI(config) {
   elCheckAutoRunesWelcome.checked = config.autoApplyRunes;
   elCheckAutoSpellsWelcome.checked = config.autoApplySpells;
+  elCheckAutoItemsWelcome.checked = config.autoApplyItems;
   elCheckAutoRunes.checked = config.autoApplyRunes;
   elCheckAutoSpells.checked = config.autoApplySpells;
+  elCheckAutoItems.checked = config.autoApplyItems;
   elSettingsCheckRunes.checked = config.autoApplyRunes;
   elSettingsCheckSpells.checked = config.autoApplySpells;
+  elSettingsCheckItems.checked = config.autoApplyItems;
   elSettingsCheckFlashD.checked = !!config.flashOnD;
+  elSettingsCheckDebugBrowser.checked = !!config.debugBrowser;
   elInputLolPath.value = config.customLoLPath || '';
 
   updatePinnedRoleUI(config.pinnedRole);
@@ -265,8 +293,8 @@ function updateLcuStatusUI(status) {
 
 // Update manual/auto layout of bottom actions footer
 function updateBottomActionLayout() {
-  if (appConfig.autoApplyRunes && appConfig.autoApplySpells) {
-    elActionStatusIndicator.innerHTML = '<span class="indicator-green-text">✅ Runas aplicadas automáticamente</span>';
+  if (appConfig.autoApplyRunes && appConfig.autoApplySpells && appConfig.autoApplyItems) {
+    elActionStatusIndicator.innerHTML = '';
     elActionStatusIndicator.classList.add('active');
     elBtnManualApply.style.display = 'none';
   } else {
@@ -289,7 +317,10 @@ window.api.onLcuStatus(({ status, config }) => {
 });
 
 // Champion selection changes listener
-window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role }) => {
+window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role, ddragonVersion: newVersion }) => {
+  if (newVersion) {
+    ddragonVersion = newVersion;
+  }
   if (!active) {
     // Screen welcome transition
     elScreenWorkspace.classList.remove('active');
@@ -302,7 +333,7 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
 
     if (championName && championImage) {
       elChampName.textContent = championDisplayName.toUpperCase();
-      elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${championImage}`;
+      elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${championImage}`;
       elChampBgBanner.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_0.jpg')`;
       
       // Update role selector active state
@@ -347,6 +378,9 @@ window.api.onScrapeError(({ message }) => {
 
 window.api.onScrapeSuccess((data) => {
   elLoadingOverlay.classList.remove('active');
+  if (data && data.ddragonVersion) {
+    ddragonVersion = data.ddragonVersion;
+  }
   activeScrapedData = data;
   renderBuildDetails(data);
   if (data.role) {
@@ -384,7 +418,7 @@ function renderBuildDetails(data) {
     container.title = spell.name;
 
     const img = document.createElement('img');
-    img.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/spell/${spell.icon}`;
+    img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${spell.icon}`;
     img.className = 'rune-img';
     img.alt = spell.name;
 
@@ -395,7 +429,7 @@ function renderBuildDetails(data) {
   // 4. Draw Recommended Items
   renderItemGroup(elListStartingItems, items.startingBuild);
   renderItemGroup(elListBootsItems, items.popularBoots);
-  renderItemGroup(elListCoreItems, items.coreItems);
+  renderItemGroup(elListCoreItems, items.coreItems.slice(0, 6));
 
   // 5. Update Footer Indicators
   updateBottomActionLayout();
@@ -538,13 +572,17 @@ function renderItemGroup(container, itemsList) {
     wrapper.title = `${item.name} (${item.gold} oro)`;
 
     const img = document.createElement('img');
-    img.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/item/${item.id}.png`;
+    img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${item.id}.png`;
     img.className = 'item-icon';
     img.alt = item.name;
     
-    // In case specific DDragon item ID fails to load, draw placeholder
+    // In case specific DDragon item ID fails to load, try Onetricks CDN, then fall back to placeholder
     img.onerror = () => {
-      img.src = 'https://ddragon.leagueoflegends.com/cdn/14.10.1/img/item/3601.png';
+      if (img.src.includes('ddragon.leagueoflegends.com')) {
+        img.src = `https://d3liizu15b1tmi.cloudfront.net/onetricks/16.9.1/img/item/${item.id}.png`;
+      } else {
+        img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/3601.png`;
+      }
     };
 
     wrapper.appendChild(img);

@@ -5,7 +5,7 @@ const https = require('https');
 
 // ─── DEBUG ────────────────────────────────────────────────────────────────────
 // Ponlo a true para ver la ventana del navegador y las DevTools durante el scraping.
-const DEBUG_BROWSER = true;
+const DEBUG_BROWSER = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Local quick lookup map of Champion IDs to onetricks URL names (Data Dragon IDs)
@@ -274,6 +274,7 @@ class OnetricksScraper {
                 name: rune.name,
                 icon: rune.icon,
                 styleId: style.id,
+                slot: slotIndex,
                 isKeystone: slotIndex === 0
               };
 
@@ -370,7 +371,7 @@ class OnetricksScraper {
   }
 
   // Load Champion page in offscreen browser window to easily pass Cloudflare
-  scrapeRunesAndSummoners(championName, role = '') {
+  scrapeRunesAndSummoners(championName, role = '', debugBrowser = false) {
     return new Promise((resolve, reject) => {
       let url = `https://www.onetricks.gg/es/champions/builds/${championName}`;
       if (role && role !== 'default') {
@@ -380,16 +381,16 @@ class OnetricksScraper {
       const tempWindow = new BrowserWindow({
         width: 1280,
         height: 900,
-        show: DEBUG_BROWSER,
+        show: debugBrowser,
         title: `[DEBUG] Scraping: ${championName}`,
         webPreferences: {
-          offscreen: !DEBUG_BROWSER,
+          offscreen: !debugBrowser,
           images: true,
           webSecurity: false
         }
       });
 
-      if (DEBUG_BROWSER) {
+      if (debugBrowser) {
         tempWindow.webContents.openDevTools({ mode: 'bottom' });
       }
 
@@ -469,9 +470,13 @@ class OnetricksScraper {
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
+      if (championName.toLowerCase() === 'veigar') {
+        fs.writeFileSync('veigar_nextData.json', JSON.stringify(nextData, null, 2), 'utf8');
+      }
       const pp = nextData.props.pageProps;
       if (pp.firstItemStats) {
         let bestPatchData = null;
+        let bestPatchStatsData = null;
         const patchKeys = Object.keys(pp.firstItemStats || {});
         // Sort patchKeys so that specific versions (e.g. "16.10") are checked first, then major versions ("16"), then "all"
         const sortedKeys = patchKeys.sort((a, b) => {
@@ -483,10 +488,21 @@ class OnetricksScraper {
         for (const key of sortedKeys) {
           const pData = pp.firstItemStats[key];
           if (pData && pData.all && pData.all.popTree && pData.all.popRunes && Object.keys(pData.all.popRunes).length > 0) {
-            // Find default first item key based on the absolute most popular classical build path
+            // Find default first item key based on the highest overall playrate
             let defaultItemKey = null;
-            let maxPathPlayrate = -1;
-            if (pData.all.popClassicPath && Array.isArray(pData.all.popClassicPath)) {
+            let maxPlayrate = -1;
+            for (const itemKey of Object.keys(pData)) {
+              if (itemKey !== 'all' && itemKey !== 'top' && pData[itemKey] && pData[itemKey].popTree && pData[itemKey].popRunes && Object.keys(pData[itemKey].popRunes).length > 0 && typeof pData[itemKey].playrate === 'number') {
+                if (pData[itemKey].playrate > maxPlayrate) {
+                  maxPlayrate = pData[itemKey].playrate;
+                  defaultItemKey = itemKey;
+                }
+              }
+            }
+
+            // Fallback: pick the first item key based on popClassicPath if no direct playrate found
+            if (!defaultItemKey && pData.all.popClassicPath && Array.isArray(pData.all.popClassicPath)) {
+              let maxPathPlayrate = -1;
               for (const group of pData.all.popClassicPath) {
                 if (Array.isArray(group)) {
                   for (const entry of group) {
@@ -503,25 +519,13 @@ class OnetricksScraper {
               }
             }
 
-            // Fallback: pick the first item key with the highest playrate if no path or item stats found
-            if (!defaultItemKey || !pData[defaultItemKey] || !pData[defaultItemKey].popTree || !pData[defaultItemKey].popRunes || Object.keys(pData[defaultItemKey].popRunes).length === 0) {
-              let maxPlayrate = -1;
-              for (const itemKey of Object.keys(pData)) {
-                if (itemKey !== 'all' && itemKey !== 'top' && pData[itemKey] && pData[itemKey].popTree && pData[itemKey].popRunes && Object.keys(pData[itemKey].popRunes).length > 0 && typeof pData[itemKey].playrate === 'number') {
-                  if (pData[itemKey].playrate > maxPlayrate) {
-                    maxPlayrate = pData[itemKey].playrate;
-                    defaultItemKey = itemKey;
-                  }
-                }
-              }
-            }
-
             // Ultimate fallback to 'all'
             if (!defaultItemKey || !pData[defaultItemKey]) {
               defaultItemKey = 'all';
             }
 
             bestPatchData = pData[defaultItemKey];
+            bestPatchStatsData = pData;
             console.log(`[SCRAPER] Found optimal patch data in key: '${key}', item: '${defaultItemKey}'`);
             break;
           }
@@ -542,10 +546,29 @@ class OnetricksScraper {
 
             // ── DEBUG: dump raw structure to understand playrate fields ──────────
             console.log('[SCRAPER] RAW popTree:', JSON.stringify(bestPatchData.popTree));
-            const firstKey = Object.keys(bestPatchData.popRunes)[0];
-            console.log('[SCRAPER] RAW popRunes[firstKey][0]:', JSON.stringify(bestPatchData.popRunes[firstKey]?.[0]));
             // ─────────────────────────────────────────────────────────────────────
-            for (const treeEntry of bestPatchData.popTree.slice(0, 4)) {
+            // Build the list of tree entries based on the popKeystone order (matching the website's tabs)
+            let treeEntries = [];
+            if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+              treeEntries = [...bestPatchData.popTree];
+              if (bestPatchData.popKeystone && Array.isArray(bestPatchData.popKeystone)) {
+                const keystoneOrder = bestPatchData.popKeystone.map(k => parseInt(k[0]));
+                treeEntries.sort((a, b) => {
+                  const idxA = keystoneOrder.indexOf(a[2]);
+                  const idxB = keystoneOrder.indexOf(b[2]);
+                  if (idxA !== -1 && idxB !== -1) {
+                    if (idxA !== idxB) return idxA - idxB;
+                    return (b[3] || 0) - (a[3] || 0); // fallback to popTree playrate
+                  }
+                  if (idxA !== -1) return -1;
+                  if (idxB !== -1) return 1;
+                  return (b[3] || 0) - (a[3] || 0);
+                });
+              }
+              treeEntries = treeEntries.slice(0, 4);
+            }
+
+            for (const treeEntry of treeEntries) {
               const primaryStyleId = treeEntry[0];
               const subStyleId     = treeEntry[1];
               const keystoneId     = treeEntry[2];
@@ -553,24 +576,71 @@ class OnetricksScraper {
               const keystoneBuilds = bestPatchData.popRunes[keystoneId];
               if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
-              // Find the build that has at least 2 runes belonging to the expected subStyleId.
-              let chosenBuild = keystoneBuilds[0]; // fallback
+              // Find the build that has the exact matching primary and secondary style
+              let chosenBuild = null;
               for (const build of keystoneBuilds) {
-                const runes = build[0];
-                if (!runes || runes.length < 6) continue;
-                const matchingSecondaryRunes = runes.filter(runeId => this.perksMap[runeId]?.styleId === subStyleId);
-                if (matchingSecondaryRunes.length >= 2) {
+                // build[2] contains [primaryStyleId, subStyleId, keystoneId]
+                if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
                   chosenBuild = build;
                   break;
                 }
               }
 
-              const runesList  = chosenBuild[0];
+              // Fallback 1: Search in pData.all.popRunes if we have it
+              if (!chosenBuild && bestPatchStatsData && bestPatchStatsData.all && bestPatchStatsData.all.popRunes && bestPatchStatsData.all.popRunes[keystoneId]) {
+                const globalKeystoneBuilds = bestPatchStatsData.all.popRunes[keystoneId];
+                for (const build of globalKeystoneBuilds) {
+                  if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                    chosenBuild = build;
+                    console.log(`[SCRAPER] Found matching build for primary=${primaryStyleId}, sub=${subStyleId} in global 'all' stats.`);
+                    break;
+                  }
+                }
+              }
+
+              // Fallback 2: Search in any other item keys under bestPatchStatsData
+              if (!chosenBuild && bestPatchStatsData) {
+                for (const pKey of Object.keys(bestPatchStatsData)) {
+                  if (pKey !== 'all' && pKey !== 'top' && bestPatchStatsData[pKey] && bestPatchStatsData[pKey].popRunes && bestPatchStatsData[pKey].popRunes[keystoneId]) {
+                    for (const build of bestPatchStatsData[pKey].popRunes[keystoneId]) {
+                      if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                        chosenBuild = build;
+                        console.log(`[SCRAPER] Found matching build for primary=${primaryStyleId}, sub=${subStyleId} in item '${pKey}' stats.`);
+                        break;
+                      }
+                    }
+                  }
+                  if (chosenBuild) break;
+                }
+              }
+              
+              if (!chosenBuild) chosenBuild = keystoneBuilds[0]; // final fallback
+
+              const runesList = chosenBuild[0];
               const statShards = bestPatchData.popStat || [5005, 5008, 5002];
 
-              // Determine playrate count: try treeEntry[3] first, then chosenBuild[1]
-              const playrateCount = typeof treeEntry[3] === 'number' ? treeEntry[3]
+              // Sort runes properly: Primary tree first (sorted by slot), then Secondary tree (sorted by slot)
+              const primaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === primaryStyleId);
+              const secondaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === subStyleId);
+              
+              primaryRunes.sort((a, b) => this.perksMap[a].slot - this.perksMap[b].slot);
+              secondaryRunes.sort((a, b) => this.perksMap[a].slot - this.perksMap[b].slot);
+              
+              const sortedPerks = [...primaryRunes, ...secondaryRunes, ...statShards];
+
+              // Try to find the keystone's overall playrate in popKeystone
+              let keystonePlayrate = null;
+              if (bestPatchData.popKeystone && Array.isArray(bestPatchData.popKeystone)) {
+                const kEntry = bestPatchData.popKeystone.find(x => parseInt(x[0]) === keystoneId);
+                if (kEntry && typeof kEntry[1] === 'number') {
+                  keystonePlayrate = kEntry[1];
+                }
+              }
+
+              // Determine playrate count: try treeEntry[3] first (specific tree playrate), then chosenBuild[1], then fallback to keystonePlayrate
+              let playrateCount = typeof treeEntry[3] === 'number' ? treeEntry[3]
                                   : typeof chosenBuild[1] === 'number' ? chosenBuild[1]
+                                  : keystonePlayrate !== null ? keystonePlayrate
                                   : 0;
 
               let playratePercent = playrateCount;
@@ -584,21 +654,20 @@ class OnetricksScraper {
               playratePercent = Math.round(playratePercent * 10) / 10;
 
               const actualSecondaryRunes = runesList.filter(runeId => this.perksMap[runeId]?.styleId === subStyleId);
-              console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, treeEntry[3]=${treeEntry[3]}, build[1]=${chosenBuild[1]}, playratePercent=${playratePercent}`);
+              console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, playratePercent=${playratePercent}`);
               console.log(`[SCRAPER]   Secondary runes found: ${actualSecondaryRunes.join(', ')} (expected subStyleId: ${subStyleId})`);
 
               rawRuneSets.push({
                 name: championName,
                 primaryStyleId,
                 subStyleId,
-                selectedPerkIds: [...runesList, ...statShards],
+                selectedPerkIds: sortedPerks,
                 _playrate: playratePercent
               });
             }
           }
 
-          // Sort by playrate descending so leftmost tab = most played (matches web order)
-          rawRuneSets.sort((a, b) => b._playrate - a._playrate);
+          // We preserve the order of popTree because it is already sorted by playrate on the server
           rawRunes = rawRuneSets[0] || null;
 
 
@@ -626,6 +695,21 @@ class OnetricksScraper {
                 gold: itemData[id] ? itemData[id].gold : 0
               };
             });
+          }
+
+          if (role === 'jungle' || scrapedRole === 'jungle') {
+            const jungleStarters = [
+              { id: '1101', name: 'Cachorro de Garraígnea', gold: 450 },
+              { id: '1103', name: 'Brote de Pisamusgo', gold: 450 },
+              { id: '1102', name: 'Cría de Caminavientos', gold: 450 }
+            ];
+            jungleStarters.forEach(item => {
+              if (itemData[item.id]) {
+                item.name = itemData[item.id].name;
+              }
+            });
+            const otherScraped = startingBuild.filter(it => !['1101', '1102', '1103'].includes(it.id));
+            startingBuild = [...jungleStarters, ...otherScraped];
           }
 
           let popularBoots = [];
@@ -684,7 +768,7 @@ class OnetricksScraper {
               };
             });
 
-            coreItems = [...seqItems, ...extraItems].slice(0, 6);
+            coreItems = [...seqItems, ...extraItems].slice(0, 12);
           }
 
           rawItems = {
@@ -957,17 +1041,21 @@ class OnetricksScraper {
       8000: { name: 'Precisión',  icon: 'perk-images/Styles/7201_Precision.png' },
       8100: { name: 'Dominación', icon: 'perk-images/Styles/7200_Domination.png' },
       8200: { name: 'Brujería',   icon: 'perk-images/Styles/7202_Sorcery.png' },
-      8300: { name: 'Inspiración',icon: 'perk-images/Styles/7204_Inspiration.png' },
-      8400: { name: 'Valor',      icon: 'perk-images/Styles/7203_Resolve.png' }
+      8300: { name: 'Inspiración',icon: 'perk-images/Styles/7203_Whimsy.png' },
+      8400: { name: 'Valor',      icon: 'perk-images/Styles/7204_Resolve.png' }
     };
 
     const shardMeta = {
-      5001: { name: 'Vida Escalar',           icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
+      5001: { name: 'Vida Escalar',           icon: 'perk-images/StatMods/StatModsHealthPlusIcon.png',    desc: 'Defensa' },
       5002: { name: 'Armadura',               icon: 'perk-images/StatMods/StatModsArmorIcon.png',         desc: 'Defensa' },
       5003: { name: 'Resistencia Mágica',     icon: 'perk-images/StatMods/StatModsMagicResIcon.png',      desc: 'Defensa' },
       5005: { name: 'Velocidad de Ataque',    icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png',   desc: 'Ataque' },
-      5007: { name: 'Aceleración de Habilidad',icon: 'perk-images/StatMods/StatModsCDRIcon.png',          desc: 'Flexibilidad' },
-      5008: { name: 'Fuerza Adaptable',       icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' }
+      5007: { name: 'Aceleración de Habilidad',icon: 'perk-images/StatMods/StatModsCDRScalingIcon.png',   desc: 'Flexibilidad' },
+      5008: { name: 'Fuerza Adaptable',       icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' },
+      5010: { name: 'Velocidad de Movimiento', icon: 'perk-images/StatMods/StatModsMovementSpeedIcon.png', desc: 'Defensa' },
+      5011: { name: 'Vida',                    icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
+      5012: { name: 'Resistencia Escalar',     icon: 'perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png', desc: 'Defensa' },
+      5013: { name: 'Tenacidad y Resistencia a Ralentizaciones', icon: 'perk-images/StatMods/StatModsTenacityIcon.png', desc: 'Defensa' }
     };
 
     // Resolve every rune set (all popTree entries) in playrate order
