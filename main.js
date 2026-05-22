@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const LcuConnector = require('./lcu-connector');
@@ -7,6 +7,8 @@ const OnetricksScraper = require('./onetricks-scraper');
 let mainWindow = null;
 let connector = null;
 let scraper = null;
+let tray = null;
+let isQuitting = false;
 
 // Default configuration settings
 let config = {
@@ -16,12 +18,14 @@ let config = {
   customLoLPath: '',
   flashOnD: false,
   debugBrowser: false,
-  pinnedRole: 'default'
+  pinnedRole: 'default',
+  startAtLogin: false
 };
 
 // Global application state
 let appState = {
   lcuStatus: 'disconnected', // 'disconnected', 'scanning', 'connected'
+  currentGameflowPhase: 'None',
   activeChampionId: 0,
   activeChampionName: '',
   activeChampionImage: '',
@@ -44,6 +48,20 @@ function saveConfig() {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
   } catch (e) {
     console.error('Failed to save config:', e);
+  }
+}
+
+function updateLoginItemSettings() {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!config.startAtLogin,
+      openAsHidden: true,
+      path: app.isPackaged ? process.execPath : undefined,
+      args: ['--hidden']
+    });
+    console.log(`[CONFIG] login item settings updated: openAtLogin = ${config.startAtLogin}`);
+  } catch (err) {
+    console.warn('[CONFIG] Failed to set login item settings:', err.message);
   }
 }
 
@@ -147,9 +165,12 @@ async function fetchPlayerInfo(retries = 3) {
 }
 
 function createWindow() {
+  const shouldStartHidden = process.argv.includes('--hidden');
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    show: !shouldStartHidden,
+    icon: path.join(__dirname, 'app_icon.png'), // Beautiful transparent vector rendering icon
     frame: false, // Borderless for premium custom header
     resizable: false,
     transparent: false,
@@ -163,6 +184,14 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
+  // Intercept window close event to hide window instead of destroying it
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -174,8 +203,47 @@ function createWindow() {
   });
 }
 
+// Create and configure System Tray icon and menu
+function createTray() {
+  const iconPath = path.join(__dirname, 'tray_icon.png');
+  tray = new Tray(iconPath);
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Mostrar Onetricks',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Salir',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('Onetricks Client');
+  tray.setContextMenu(contextMenu);
+
+  // Double click tray icon to restore application window
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 app.whenReady().then(() => {
   createWindow();
+  createTray();
+  updateLoginItemSettings();
 
   // Instantiate Modules
   scraper = new OnetricksScraper(mainWindow);
@@ -188,9 +256,15 @@ app.whenReady().then(() => {
       if (status === 'connected') {
         playerInfo = await fetchPlayerInfo();
       }
-      sendToRenderer('lcu-status', { status, config, playerInfo });
+      sendToRenderer('lcu-status', {
+        status,
+        config,
+        playerInfo,
+        ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
+      });
     },
-    onChampSelectUpdate: handleChampSelectUpdate
+    onChampSelectUpdate: handleChampSelectUpdate,
+    onGameflowPhaseUpdate: handleGameflowPhaseUpdate
   });
 
   // Start scanning for LoL
@@ -199,6 +273,10 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 app.on('window-all-closed', () => {
@@ -215,20 +293,57 @@ function sendToRenderer(channel, data) {
   }
 }
 
+// Reset workspace and notify the renderer to transition back to the Welcome screen
+function resetWorkspace() {
+  if (appState.activeChampionId !== 0) {
+    console.log('[CLIENT] Resetting workspace back to Welcome screen.');
+    appState.activeChampionId = 0;
+    appState.activeChampionName = '';
+    appState.activeChampionImage = '';
+    appState.activeRole = 'default';
+    appState.scrapedData = null;
+    sendToRenderer('champ-select-update', { active: false });
+  }
+}
+
+// Handler for LCU Gameflow Phase updates
+function handleGameflowPhaseUpdate(phase) {
+  console.log(`[CLIENT] LCU Gameflow Phase updated: ${phase}`);
+  appState.currentGameflowPhase = phase;
+
+  // Reset workspace if gameflow returns to non-active phase (lobby, none, dodged, ended)
+  const resetPhases = ['None', 'Lobby', 'Matchmaking', 'ReadyCheck', 'EndOfGame', 'WaitingForStats'];
+  if (resetPhases.includes(phase)) {
+    resetWorkspace();
+  }
+}
+
 // Logic to process champion selection in Champion Select
 async function handleChampSelectUpdate(session) {
   console.log('[CLIENT] Champ Select session update:', session ? 'ACTIVE' : 'INACTIVE');
   if (!session) {
-    // Reset state if no longer in champ select
-    if (appState.activeChampionId !== 0) {
-      appState.activeChampionId = 0;
-      appState.activeChampionName = '';
-      appState.activeChampionImage = '';
-      appState.activeRole = 'default';
-      appState.scrapedData = null;
-      sendToRenderer('champ-select-update', { active: false });
-    }
+    // Delay to let LCU phase update (resolves race condition when transitioning into game)
+    setTimeout(() => {
+      const resetPhases = ['None', 'Lobby', 'Matchmaking', 'ReadyCheck', 'EndOfGame', 'WaitingForStats'];
+      if (resetPhases.includes(appState.currentGameflowPhase)) {
+        console.log(`[CLIENT] Champ select ended and game is not active (Phase: ${appState.currentGameflowPhase}). Resetting workspace.`);
+        resetWorkspace();
+      } else {
+        console.log(`[CLIENT] Champ select ended but game is active/starting (Phase: ${appState.currentGameflowPhase}). Keeping build screen open.`);
+      }
+    }, 1500);
     return;
+  }
+
+  // Auto-restore and focus window when champion select is active
+  if (mainWindow) {
+    if (!mainWindow.isVisible()) {
+      mainWindow.show();
+    }
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
   }
 
   // Find current player cell ID
@@ -400,7 +515,7 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin }) => {
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
   if (autoApplyItems !== undefined) {
@@ -411,6 +526,10 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   }
   if (debugBrowser !== undefined) {
     config.debugBrowser = debugBrowser;
+  }
+  if (startAtLogin !== undefined) {
+    config.startAtLogin = startAtLogin;
+    updateLoginItemSettings();
   }
   saveConfig();
 

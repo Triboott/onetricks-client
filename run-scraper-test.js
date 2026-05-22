@@ -35,6 +35,7 @@ async function test() {
   console.log('Boots:', resolved.items.popularBoots);
   console.log('Core Build:', resolved.items.coreBuild);
   console.log('Recommended Items:', resolved.items.recommendedItems);
+  console.log('Summoner Options:', resolved.summonersOptions);
 }
 
 test().catch(console.error);

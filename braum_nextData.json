@@ -1,0 +1,2461 @@
+{
+  "props": {
+    "pageProps": {
+      "champion": "Braum",
+      "cTitle": "El Corazón de Freljord",
+      "championKeys": {
+        "1": "Annie",
+        "2": "Olaf",
+        "3": "Galio",
+        "4": "TwistedFate",
+        "5": "XinZhao",
+        "6": "Urgot",
+        "7": "Leblanc",
+        "8": "Vladimir",
+        "9": "Fiddlesticks",
+        "10": "Kayle",
+        "11": "MasterYi",
+        "12": "Alistar",
+        "13": "Ryze",
+        "14": "Sion",
+        "15": "Sivir",
+        "16": "Soraka",
+        "17": "Teemo",
+        "18": "Tristana",
+        "19": "Warwick",
+        "20": "Nunu",
+        "21": "MissFortune",
+        "22": "Ashe",
+        "23": "Tryndamere",
+        "24": "Jax",
+        "25": "Morgana",
+        "26": "Zilean",
+        "27": "Singed",
+        "28": "Evelynn",
+        "29": "Twitch",
+        "30": "Karthus",
+        "31": "Chogath",
+        "32": "Amumu",
+        "33": "Rammus",
+        "34": "Anivia",
+        "35": "Shaco",
+        "36": "DrMundo",
+        "37": "Sona",
+        "38": "Kassadin",
+        "39": "Irelia",
+        "40": "Janna",
+        "41": "Gangplank",
+        "42": "Corki",
+        "43": "Karma",
+        "44": "Taric",
+        "45": "Veigar",
+        "48": "Trundle",
+        "50": "Swain",
+        "51": "Caitlyn",
+        "53": "Blitzcrank",
+        "54": "Malphite",
+        "55": "Katarina",
+        "56": "Nocturne",
+        "57": "Maokai",
+        "58": "Renekton",
+        "59": "JarvanIV",
+        "60": "Elise",
+        "61": "Orianna",
+        "62": "MonkeyKing",
+        "63": "Brand",
+        "64": "LeeSin",
+        "67": "Vayne",
+        "68": "Rumble",
+        "69": "Cassiopeia",
+        "72": "Skarner",
+        "74": "Heimerdinger",
+        "75": "Nasus",
+        "76": "Nidalee",
+        "77": "Udyr",
+        "78": "Poppy",
+        "79": "Gragas",
+        "80": "Pantheon",
+        "81": "Ezreal",
+        "82": "Mordekaiser",
+        "83": "Yorick",
+        "84": "Akali",
+        "85": "Kennen",
+        "86": "Garen",
+        "89": "Leona",
+        "90": "Malzahar",
+        "91": "Talon",
+        "92": "Riven",
+        "96": "KogMaw",
+        "98": "Shen",
+        "99": "Lux",
+        "101": "Xerath",
+        "102": "Shyvana",
+        "103": "Ahri",
+        "104": "Graves",
+        "105": "Fizz",
+        "106": "Volibear",
+        "107": "Rengar",
+        "110": "Varus",
+        "111": "Nautilus",
+        "112": "Viktor",
+        "113": "Sejuani",
+        "114": "Fiora",
+        "115": "Ziggs",
+        "117": "Lulu",
+        "119": "Draven",
+        "120": "Hecarim",
+        "121": "Khazix",
+        "122": "Darius",
+        "126": "Jayce",
+        "127": "Lissandra",
+        "131": "Diana",
+        "133": "Quinn",
+        "134": "Syndra",
+        "136": "AurelionSol",
+        "141": "Kayn",
+        "142": "Zoe",
+        "143": "Zyra",
+        "145": "Kaisa",
+        "147": "Seraphine",
+        "150": "Gnar",
+        "154": "Zac",
+        "157": "Yasuo",
+        "161": "Velkoz",
+        "163": "Taliyah",
+        "164": "Camille",
+        "166": "Akshan",
+        "200": "Belveth",
+        "201": "Braum",
+        "202": "Jhin",
+        "203": "Kindred",
+        "221": "Zeri",
+        "222": "Jinx",
+        "223": "TahmKench",
+        "233": "Briar",
+        "234": "Viego",
+        "235": "Senna",
+        "236": "Lucian",
+        "238": "Zed",
+        "240": "Kled",
+        "245": "Ekko",
+        "246": "Qiyana",
+        "254": "Vi",
+        "266": "Aatrox",
+        "267": "Nami",
+        "268": "Azir",
+        "350": "Yuumi",
+        "360": "Samira",
+        "412": "Thresh",
+        "420": "Illaoi",
+        "421": "RekSai",
+        "427": "Ivern",
+        "429": "Kalista",
+        "432": "Bard",
+        "497": "Rakan",
+        "498": "Xayah",
+        "516": "Ornn",
+        "517": "Sylas",
+        "518": "Neeko",
+        "523": "Aphelios",
+        "526": "Rell",
+        "555": "Pyke",
+        "711": "Vex",
+        "777": "Yone",
+        "799": "Ambessa",
+        "800": "Mel",
+        "804": "Yunara",
+        "875": "Sett",
+        "876": "Lillia",
+        "887": "Gwen",
+        "888": "Renata",
+        "893": "Aurora",
+        "895": "Nilah",
+        "897": "KSante",
+        "901": "Smolder",
+        "902": "Milio",
+        "904": "Zaahen",
+        "910": "Hwei",
+        "950": "Naafiri"
+      },
+      "championData": {
+        "Aatrox": {
+          "image": "Aatrox.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 0,
+          "name": "Aatrox",
+          "key": "266"
+        },
+        "Ahri": {
+          "image": "Ahri.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 0,
+          "name": "Ahri",
+          "key": "103"
+        },
+        "Akali": {
+          "image": "Akali.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 0,
+          "name": "Akali",
+          "key": "84"
+        },
+        "Akshan": {
+          "image": "Akshan.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 0,
+          "name": "Akshan",
+          "key": "166"
+        },
+        "Alistar": {
+          "image": "Alistar.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 0,
+          "name": "Alistar",
+          "key": "12"
+        },
+        "Ambessa": {
+          "image": "Ambessa.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 0,
+          "name": "Ambessa",
+          "key": "799"
+        },
+        "Amumu": {
+          "image": "Amumu.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 0,
+          "name": "Amumu",
+          "key": "32"
+        },
+        "Anivia": {
+          "image": "Anivia.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 0,
+          "name": "Anivia",
+          "key": "34"
+        },
+        "Annie": {
+          "image": "Annie.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 0,
+          "name": "Annie",
+          "key": "1"
+        },
+        "Aphelios": {
+          "image": "Aphelios.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 0,
+          "name": "Aphelios",
+          "key": "523"
+        },
+        "Ashe": {
+          "image": "Ashe.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 48,
+          "name": "Ashe",
+          "key": "22"
+        },
+        "AurelionSol": {
+          "image": "AurelionSol.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 48,
+          "name": "Aurelion Sol",
+          "key": "136"
+        },
+        "Aurora": {
+          "image": "Aurora.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 48,
+          "name": "Aurora",
+          "key": "893"
+        },
+        "Azir": {
+          "image": "Azir.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 48,
+          "name": "Azir",
+          "key": "268"
+        },
+        "Bard": {
+          "image": "Bard.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 48,
+          "name": "Bardo",
+          "key": "432"
+        },
+        "Belveth": {
+          "image": "Belveth.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 48,
+          "name": "Bel'Veth",
+          "key": "200"
+        },
+        "Blitzcrank": {
+          "image": "Blitzcrank.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 48,
+          "name": "Blitzcrank",
+          "key": "53"
+        },
+        "Brand": {
+          "image": "Brand.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 48,
+          "name": "Brand",
+          "key": "63"
+        },
+        "Braum": {
+          "image": "Braum.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 48,
+          "name": "Braum",
+          "key": "201"
+        },
+        "Briar": {
+          "image": "Briar.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 48,
+          "name": "Briar",
+          "key": "233"
+        },
+        "Caitlyn": {
+          "image": "Caitlyn.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 96,
+          "name": "Caitlyn",
+          "key": "51"
+        },
+        "Camille": {
+          "image": "Camille.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 96,
+          "name": "Camille",
+          "key": "164"
+        },
+        "Cassiopeia": {
+          "image": "Cassiopeia.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 96,
+          "name": "Cassiopeia",
+          "key": "69"
+        },
+        "Chogath": {
+          "image": "Chogath.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 96,
+          "name": "Cho'Gath",
+          "key": "31"
+        },
+        "Corki": {
+          "image": "Corki.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 96,
+          "name": "Corki",
+          "key": "42"
+        },
+        "Darius": {
+          "image": "Darius.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 96,
+          "name": "Darius",
+          "key": "122"
+        },
+        "Diana": {
+          "image": "Diana.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 96,
+          "name": "Diana",
+          "key": "131"
+        },
+        "Draven": {
+          "image": "Draven.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 96,
+          "name": "Draven",
+          "key": "119"
+        },
+        "DrMundo": {
+          "image": "DrMundo.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 96,
+          "name": "Dr. Mundo",
+          "key": "36"
+        },
+        "Ekko": {
+          "image": "Ekko.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 96,
+          "name": "Ekko",
+          "key": "245"
+        },
+        "Elise": {
+          "image": "Elise.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 0,
+          "name": "Elise",
+          "key": "60"
+        },
+        "Evelynn": {
+          "image": "Evelynn.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 0,
+          "name": "Evelynn",
+          "key": "28"
+        },
+        "Ezreal": {
+          "image": "Ezreal.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 0,
+          "name": "Ezreal",
+          "key": "81"
+        },
+        "Fiddlesticks": {
+          "image": "Fiddlesticks.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 0,
+          "name": "Fiddlesticks",
+          "key": "9"
+        },
+        "Fiora": {
+          "image": "Fiora.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 0,
+          "name": "Fiora",
+          "key": "114"
+        },
+        "Fizz": {
+          "image": "Fizz.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 0,
+          "name": "Fizz",
+          "key": "105"
+        },
+        "Galio": {
+          "image": "Galio.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 0,
+          "name": "Galio",
+          "key": "3"
+        },
+        "Gangplank": {
+          "image": "Gangplank.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 0,
+          "name": "Gangplank",
+          "key": "41"
+        },
+        "Garen": {
+          "image": "Garen.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 0,
+          "name": "Garen",
+          "key": "86"
+        },
+        "Gnar": {
+          "image": "Gnar.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 0,
+          "name": "Gnar",
+          "key": "150"
+        },
+        "Gragas": {
+          "image": "Gragas.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 48,
+          "name": "Gragas",
+          "key": "79"
+        },
+        "Graves": {
+          "image": "Graves.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 48,
+          "name": "Graves",
+          "key": "104"
+        },
+        "Gwen": {
+          "image": "Gwen.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 48,
+          "name": "Gwen",
+          "key": "887"
+        },
+        "Hecarim": {
+          "image": "Hecarim.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 48,
+          "name": "Hecarim",
+          "key": "120"
+        },
+        "Heimerdinger": {
+          "image": "Heimerdinger.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 48,
+          "name": "Heimerdinger",
+          "key": "74"
+        },
+        "Hwei": {
+          "image": "Hwei.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 48,
+          "name": "Hwei",
+          "key": "910"
+        },
+        "Illaoi": {
+          "image": "Illaoi.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 48,
+          "name": "Illaoi",
+          "key": "420"
+        },
+        "Irelia": {
+          "image": "Irelia.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 48,
+          "name": "Irelia",
+          "key": "39"
+        },
+        "Ivern": {
+          "image": "Ivern.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 48,
+          "name": "Ivern",
+          "key": "427"
+        },
+        "Janna": {
+          "image": "Janna.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 48,
+          "name": "Janna",
+          "key": "40"
+        },
+        "JarvanIV": {
+          "image": "JarvanIV.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 96,
+          "name": "Jarvan IV",
+          "key": "59"
+        },
+        "Jax": {
+          "image": "Jax.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 96,
+          "name": "Jax",
+          "key": "24"
+        },
+        "Jayce": {
+          "image": "Jayce.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 96,
+          "name": "Jayce",
+          "key": "126"
+        },
+        "Jhin": {
+          "image": "Jhin.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 96,
+          "name": "Jhin",
+          "key": "202"
+        },
+        "Jinx": {
+          "image": "Jinx.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 96,
+          "name": "Jinx",
+          "key": "222"
+        },
+        "Kaisa": {
+          "image": "Kaisa.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 96,
+          "name": "Kai'Sa",
+          "key": "145"
+        },
+        "Kalista": {
+          "image": "Kalista.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 96,
+          "name": "Kalista",
+          "key": "429"
+        },
+        "Karma": {
+          "image": "Karma.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 96,
+          "name": "Karma",
+          "key": "43"
+        },
+        "Karthus": {
+          "image": "Karthus.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 96,
+          "name": "Karthus",
+          "key": "30"
+        },
+        "Kassadin": {
+          "image": "Kassadin.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 96,
+          "name": "Kassadin",
+          "key": "38"
+        },
+        "Katarina": {
+          "image": "Katarina.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 0,
+          "name": "Katarina",
+          "key": "55"
+        },
+        "Kayle": {
+          "image": "Kayle.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 0,
+          "name": "Kayle",
+          "key": "10"
+        },
+        "Kayn": {
+          "image": "Kayn.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 0,
+          "name": "Kayn",
+          "key": "141"
+        },
+        "Kennen": {
+          "image": "Kennen.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 0,
+          "name": "Kennen",
+          "key": "85"
+        },
+        "Khazix": {
+          "image": "Khazix.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 0,
+          "name": "Kha'Zix",
+          "key": "121"
+        },
+        "Kindred": {
+          "image": "Kindred.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 0,
+          "name": "Kindred",
+          "key": "203"
+        },
+        "Kled": {
+          "image": "Kled.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 0,
+          "name": "Kled",
+          "key": "240"
+        },
+        "KogMaw": {
+          "image": "KogMaw.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 0,
+          "name": "Kog'Maw",
+          "key": "96"
+        },
+        "KSante": {
+          "image": "KSante.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 0,
+          "name": "K'Sante",
+          "key": "897"
+        },
+        "Leblanc": {
+          "image": "Leblanc.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 0,
+          "name": "LeBlanc",
+          "key": "7"
+        },
+        "LeeSin": {
+          "image": "LeeSin.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 48,
+          "name": "Lee Sin",
+          "key": "64"
+        },
+        "Leona": {
+          "image": "Leona.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 48,
+          "name": "Leona",
+          "key": "89"
+        },
+        "Lillia": {
+          "image": "Lillia.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 48,
+          "name": "Lillia",
+          "key": "876"
+        },
+        "Lissandra": {
+          "image": "Lissandra.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 48,
+          "name": "Lissandra",
+          "key": "127"
+        },
+        "Lucian": {
+          "image": "Lucian.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 48,
+          "name": "Lucian",
+          "key": "236"
+        },
+        "Lulu": {
+          "image": "Lulu.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 48,
+          "name": "Lulu",
+          "key": "117"
+        },
+        "Lux": {
+          "image": "Lux.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 48,
+          "name": "Lux",
+          "key": "99"
+        },
+        "Malphite": {
+          "image": "Malphite.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 48,
+          "name": "Malphite",
+          "key": "54"
+        },
+        "Malzahar": {
+          "image": "Malzahar.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 48,
+          "name": "Malzahar",
+          "key": "90"
+        },
+        "Maokai": {
+          "image": "Maokai.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 48,
+          "name": "Maokai",
+          "key": "57"
+        },
+        "MasterYi": {
+          "image": "MasterYi.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 96,
+          "name": "Maestro Yi",
+          "key": "11"
+        },
+        "Mel": {
+          "image": "Mel.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 96,
+          "name": "Mel",
+          "key": "800"
+        },
+        "Milio": {
+          "image": "Milio.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 96,
+          "name": "Milio",
+          "key": "902"
+        },
+        "MissFortune": {
+          "image": "MissFortune.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 96,
+          "name": "Miss Fortune",
+          "key": "21"
+        },
+        "MonkeyKing": {
+          "image": "MonkeyKing.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 96,
+          "name": "Wukong",
+          "key": "62"
+        },
+        "Mordekaiser": {
+          "image": "Mordekaiser.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 96,
+          "name": "Mordekaiser",
+          "key": "82"
+        },
+        "Morgana": {
+          "image": "Morgana.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 96,
+          "name": "Morgana",
+          "key": "25"
+        },
+        "Naafiri": {
+          "image": "Naafiri.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 96,
+          "name": "Naafiri",
+          "key": "950"
+        },
+        "Nami": {
+          "image": "Nami.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 96,
+          "name": "Nami",
+          "key": "267"
+        },
+        "Nasus": {
+          "image": "Nasus.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 96,
+          "name": "Nasus",
+          "key": "75"
+        },
+        "Nautilus": {
+          "image": "Nautilus.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 0,
+          "name": "Nautilus",
+          "key": "111"
+        },
+        "Neeko": {
+          "image": "Neeko.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 0,
+          "name": "Neeko",
+          "key": "518"
+        },
+        "Nidalee": {
+          "image": "Nidalee.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 0,
+          "name": "Nidalee",
+          "key": "76"
+        },
+        "Nilah": {
+          "image": "Nilah.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 0,
+          "name": "Nilah",
+          "key": "895"
+        },
+        "Nocturne": {
+          "image": "Nocturne.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 0,
+          "name": "Nocturne",
+          "key": "56"
+        },
+        "Nunu": {
+          "image": "Nunu.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 0,
+          "name": "Nunu y Willump",
+          "key": "20"
+        },
+        "Olaf": {
+          "image": "Olaf.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 0,
+          "name": "Olaf",
+          "key": "2"
+        },
+        "Orianna": {
+          "image": "Orianna.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 0,
+          "name": "Orianna",
+          "key": "61"
+        },
+        "Ornn": {
+          "image": "Ornn.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 0,
+          "name": "Ornn",
+          "key": "516"
+        },
+        "Pantheon": {
+          "image": "Pantheon.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 0,
+          "name": "Pantheon",
+          "key": "80"
+        },
+        "Poppy": {
+          "image": "Poppy.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 48,
+          "name": "Poppy",
+          "key": "78"
+        },
+        "Pyke": {
+          "image": "Pyke.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 48,
+          "name": "Pyke",
+          "key": "555"
+        },
+        "Qiyana": {
+          "image": "Qiyana.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 48,
+          "name": "Qiyana",
+          "key": "246"
+        },
+        "Quinn": {
+          "image": "Quinn.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 48,
+          "name": "Quinn",
+          "key": "133"
+        },
+        "Rakan": {
+          "image": "Rakan.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 48,
+          "name": "Rakan",
+          "key": "497"
+        },
+        "Rammus": {
+          "image": "Rammus.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 48,
+          "name": "Rammus",
+          "key": "33"
+        },
+        "RekSai": {
+          "image": "RekSai.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 48,
+          "name": "Rek'Sai",
+          "key": "421"
+        },
+        "Rell": {
+          "image": "Rell.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 48,
+          "name": "Rell",
+          "key": "526"
+        },
+        "Renata": {
+          "image": "Renata.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 48,
+          "name": "Renata Glasc",
+          "key": "888"
+        },
+        "Renekton": {
+          "image": "Renekton.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 48,
+          "name": "Renekton",
+          "key": "58"
+        },
+        "Rengar": {
+          "image": "Rengar.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 96,
+          "name": "Rengar",
+          "key": "107"
+        },
+        "Riven": {
+          "image": "Riven.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 96,
+          "name": "Riven",
+          "key": "92"
+        },
+        "Rumble": {
+          "image": "Rumble.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 96,
+          "name": "Rumble",
+          "key": "68"
+        },
+        "Ryze": {
+          "image": "Ryze.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 96,
+          "name": "Ryze",
+          "key": "13"
+        },
+        "Samira": {
+          "image": "Samira.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 96,
+          "name": "Samira",
+          "key": "360"
+        },
+        "Sejuani": {
+          "image": "Sejuani.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 96,
+          "name": "Sejuani",
+          "key": "113"
+        },
+        "Senna": {
+          "image": "Senna.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 96,
+          "name": "Senna",
+          "key": "235"
+        },
+        "Seraphine": {
+          "image": "Seraphine.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 96,
+          "name": "Seraphine",
+          "key": "147"
+        },
+        "Sett": {
+          "image": "Sett.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 96,
+          "name": "Sett",
+          "key": "875"
+        },
+        "Shaco": {
+          "image": "Shaco.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 96,
+          "name": "Shaco",
+          "key": "35"
+        },
+        "Shen": {
+          "image": "Shen.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 0,
+          "name": "Shen",
+          "key": "98"
+        },
+        "Shyvana": {
+          "image": "Shyvana.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 0,
+          "name": "Shyvana",
+          "key": "102"
+        },
+        "Singed": {
+          "image": "Singed.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 0,
+          "name": "Singed",
+          "key": "27"
+        },
+        "Sion": {
+          "image": "Sion.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 0,
+          "name": "Sion",
+          "key": "14"
+        },
+        "Sivir": {
+          "image": "Sivir.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 0,
+          "name": "Sivir",
+          "key": "15"
+        },
+        "Skarner": {
+          "image": "Skarner.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 0,
+          "name": "Skarner",
+          "key": "72"
+        },
+        "Smolder": {
+          "image": "Smolder.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 0,
+          "name": "Smolder",
+          "key": "901"
+        },
+        "Sona": {
+          "image": "Sona.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 0,
+          "name": "Sona",
+          "key": "37"
+        },
+        "Soraka": {
+          "image": "Soraka.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 0,
+          "name": "Soraka",
+          "key": "16"
+        },
+        "Swain": {
+          "image": "Swain.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 0,
+          "name": "Swain",
+          "key": "50"
+        },
+        "Sylas": {
+          "image": "Sylas.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 48,
+          "name": "Sylas",
+          "key": "517"
+        },
+        "Syndra": {
+          "image": "Syndra.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 48,
+          "name": "Syndra",
+          "key": "134"
+        },
+        "TahmKench": {
+          "image": "TahmKench.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 48,
+          "name": "Tahm Kench",
+          "key": "223"
+        },
+        "Taliyah": {
+          "image": "Taliyah.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 48,
+          "name": "Taliyah",
+          "key": "163"
+        },
+        "Talon": {
+          "image": "Talon.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 48,
+          "name": "Talon",
+          "key": "91"
+        },
+        "Taric": {
+          "image": "Taric.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 48,
+          "name": "Taric",
+          "key": "44"
+        },
+        "Teemo": {
+          "image": "Teemo.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 48,
+          "name": "Teemo",
+          "key": "17"
+        },
+        "Thresh": {
+          "image": "Thresh.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 48,
+          "name": "Thresh",
+          "key": "412"
+        },
+        "Tristana": {
+          "image": "Tristana.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 48,
+          "name": "Tristana",
+          "key": "18"
+        },
+        "Trundle": {
+          "image": "Trundle.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 48,
+          "name": "Trundle",
+          "key": "48"
+        },
+        "Tryndamere": {
+          "image": "Tryndamere.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 96,
+          "name": "Tryndamere",
+          "key": "23"
+        },
+        "TwistedFate": {
+          "image": "TwistedFate.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 96,
+          "name": "Twisted Fate",
+          "key": "4"
+        },
+        "Twitch": {
+          "image": "Twitch.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 96,
+          "name": "Twitch",
+          "key": "29"
+        },
+        "Udyr": {
+          "image": "Udyr.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 96,
+          "name": "Udyr",
+          "key": "77"
+        },
+        "Urgot": {
+          "image": "Urgot.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 96,
+          "name": "Urgot",
+          "key": "6"
+        },
+        "Varus": {
+          "image": "Varus.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 96,
+          "name": "Varus",
+          "key": "110"
+        },
+        "Vayne": {
+          "image": "Vayne.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 96,
+          "name": "Vayne",
+          "key": "67"
+        },
+        "Veigar": {
+          "image": "Veigar.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 96,
+          "name": "Veigar",
+          "key": "45"
+        },
+        "Velkoz": {
+          "image": "Velkoz.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 96,
+          "name": "Vel'Koz",
+          "key": "161"
+        },
+        "Vex": {
+          "image": "Vex.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 96,
+          "name": "Vex",
+          "key": "711"
+        },
+        "Vi": {
+          "image": "Vi.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 0,
+          "name": "Vi",
+          "key": "254"
+        },
+        "Viego": {
+          "image": "Viego.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 0,
+          "name": "Viego",
+          "key": "234"
+        },
+        "Viktor": {
+          "image": "Viktor.png",
+          "sprite": "champion5",
+          "x": 96,
+          "y": 0,
+          "name": "Viktor",
+          "key": "112"
+        },
+        "Vladimir": {
+          "image": "Vladimir.png",
+          "sprite": "champion5",
+          "x": 144,
+          "y": 0,
+          "name": "Vladimir",
+          "key": "8"
+        },
+        "Volibear": {
+          "image": "Volibear.png",
+          "sprite": "champion5",
+          "x": 192,
+          "y": 0,
+          "name": "Volibear",
+          "key": "106"
+        },
+        "Warwick": {
+          "image": "Warwick.png",
+          "sprite": "champion5",
+          "x": 240,
+          "y": 0,
+          "name": "Warwick",
+          "key": "19"
+        },
+        "Xayah": {
+          "image": "Xayah.png",
+          "sprite": "champion5",
+          "x": 288,
+          "y": 0,
+          "name": "Xayah",
+          "key": "498"
+        },
+        "Xerath": {
+          "image": "Xerath.png",
+          "sprite": "champion5",
+          "x": 336,
+          "y": 0,
+          "name": "Xerath",
+          "key": "101"
+        },
+        "XinZhao": {
+          "image": "XinZhao.png",
+          "sprite": "champion5",
+          "x": 384,
+          "y": 0,
+          "name": "Xin Zhao",
+          "key": "5"
+        },
+        "Yasuo": {
+          "image": "Yasuo.png",
+          "sprite": "champion5",
+          "x": 432,
+          "y": 0,
+          "name": "Yasuo",
+          "key": "157"
+        },
+        "Yone": {
+          "image": "Yone.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 48,
+          "name": "Yone",
+          "key": "777"
+        },
+        "Yorick": {
+          "image": "Yorick.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 48,
+          "name": "Yorick",
+          "key": "83"
+        },
+        "Yunara": {
+          "image": "Yunara.png",
+          "sprite": "champion5",
+          "x": 96,
+          "y": 48,
+          "name": "Yunara",
+          "key": "804"
+        },
+        "Yuumi": {
+          "image": "Yuumi.png",
+          "sprite": "champion5",
+          "x": 144,
+          "y": 48,
+          "name": "Yuumi",
+          "key": "350"
+        },
+        "Zaahen": {
+          "image": "Zaahen.png",
+          "sprite": "champion5",
+          "x": 192,
+          "y": 48,
+          "name": "Zaahen",
+          "key": "904"
+        },
+        "Zac": {
+          "image": "Zac.png",
+          "sprite": "champion5",
+          "x": 240,
+          "y": 48,
+          "name": "Zac",
+          "key": "154"
+        },
+        "Zed": {
+          "image": "Zed.png",
+          "sprite": "champion5",
+          "x": 288,
+          "y": 48,
+          "name": "Zed",
+          "key": "238"
+        },
+        "Zeri": {
+          "image": "Zeri.png",
+          "sprite": "champion5",
+          "x": 336,
+          "y": 48,
+          "name": "Zeri",
+          "key": "221"
+        },
+        "Ziggs": {
+          "image": "Ziggs.png",
+          "sprite": "champion5",
+          "x": 384,
+          "y": 48,
+          "name": "Ziggs",
+          "key": "115"
+        },
+        "Zilean": {
+          "image": "Zilean.png",
+          "sprite": "champion5",
+          "x": 432,
+          "y": 48,
+          "name": "Zilean",
+          "key": "26"
+        },
+        "Zoe": {
+          "image": "Zoe.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 96,
+          "name": "Zoe",
+          "key": "142"
+        },
+        "Zyra": {
+          "image": "Zyra.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 96,
+          "name": "Zyra",
+          "key": "143"
+        }
+      },
+      "matchHistory": [],
+      "firstItemStats": {
+        "all": {
+          "all": {
+            "popularItems": [],
+            "boots": [],
+            "startingItems": [],
+            "componentBuildPaths": [],
+            "skillPaths": [],
+            "earlySkillPaths": [],
+            "evolvedSkillPaths": [],
+            "sSpells": [],
+            "popKeystone": [],
+            "popRunes": {},
+            "popTree": [],
+            "popStat": [],
+            "popCore": [],
+            "popPath": [],
+            "popClassicPath": [],
+            "firstTs": 0
+          },
+          "top": "all"
+        }
+      },
+      "patchList": [],
+      "patchStats": {
+        "all": 0
+      },
+      "championSpells": [
+        {
+          "id": "BraumQ",
+          "name": "Mordisco invernal",
+          "tooltip": "Braum lanza hielo de su escudo, lo que inflige <magicDamage>{{ totaldamage }} de daño mágico</magicDamage> al primer enemigo alcanzado y lo <status>ralentiza</status> un {{ initialslow }}% a lo largo de {{ slowduration }} s.<br /><br />Aplica una acumulación de <keywordMajor>Golpes conmocionantes</keywordMajor>. {{ spellmodifierdescriptionappend }}",
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "costBurn": "45/50/55/60/65",
+          "rangeBurn": "1000",
+          "image": "BraumQ.png",
+          "sprite": "spell2",
+          "x": 0,
+          "y": 48
+        },
+        {
+          "id": "BraumW",
+          "name": "Detrás de mí",
+          "tooltip": "Braum salta hacia un súbdito o campeón aliado. Al alcanzarlo, Braum otorga a su objetivo <scaleArmor>{{ grantedallyarmor }} de armadura</scaleArmor> y <scaleMR>{{ grantedallymr }} de resistencia mágica</scaleMR> durante {{ duration }} s. Braum obtiene <scaleArmor>{{ grantedbraumarmor }} de armadura</scaleArmor> y <scaleMR>{{ grantedbraummr }} de resistencia mágica</scaleMR> durante el mismo tiempo.{{ spellmodifierdescriptionappend }}",
+          "cooldownBurn": "12/11/10/9/8",
+          "costBurn": "40",
+          "rangeBurn": "650",
+          "image": "BraumW.png",
+          "sprite": "spell2",
+          "x": 48,
+          "y": 48
+        },
+        {
+          "id": "BraumE",
+          "name": "Inquebrantable",
+          "tooltip": "Braum alza su escudo durante {{ shieldholdduration }} s, lo que intercepta los proyectiles enemigos desde la dirección elegida y provoca que choquen contra Braum y se destruyan. El primer proyectil que Braum bloquee no inflige daño, y los siguientes infligen un {{ shieldfacingdramount }}% menos del daño.<br /><br />Braum obtiene un <speed>{{ movespeedpercent }}% de velocidad de movimiento</speed> mientras mantiene el escudo en alto.{{ spellmodifierdescriptionappend }}",
+          "cooldownBurn": "16/14/12/10/8",
+          "costBurn": "30/35/40/45/50",
+          "rangeBurn": "25000",
+          "image": "BraumE.png",
+          "sprite": "spell2",
+          "x": 96,
+          "y": 48
+        },
+        {
+          "id": "BraumRWrapper",
+          "name": "Fisura glacial",
+          "tooltip": "Braum golpea el suelo, lo que genera una fisura que <status>levanta por los aires</status> a los enemigos en su camino y cercanos a Braum e inflige <magicDamage>{{ totaldamage }} de daño mágico</magicDamage>. El primer objetivo queda <status>levantado en el aire</status> entre {{ minknockup }} y {{ maxknockup }} s, en función de la distancia a la que se encuentre de Braum. Los demás objetivos impactados quedan <status>levantados en el aire</status> durante {{ minknockup }} s.<br /><br />La fisura también crea una zona durante {{ slowzoneduration }} s que <status>ralentiza</status> un {{ movespeedmod }}%.<br />{{ spellmodifierdescriptionappend }}",
+          "cooldownBurn": "130/115/100",
+          "costBurn": "100",
+          "rangeBurn": "1250",
+          "image": "BraumRWrapper.png",
+          "sprite": "spell2",
+          "x": 144,
+          "y": 48
+        }
+      ],
+      "summonerSpells": {
+        "1": {
+          "name": "Limpiar",
+          "image": "SummonerBoost.png",
+          "sprite": "spell0",
+          "x": 48,
+          "y": 0
+        },
+        "3": {
+          "name": "Extenuación",
+          "image": "SummonerExhaust.png",
+          "sprite": "spell0",
+          "x": 240,
+          "y": 0
+        },
+        "4": {
+          "name": "Destello",
+          "image": "SummonerFlash.png",
+          "sprite": "spell0",
+          "x": 288,
+          "y": 0
+        },
+        "6": {
+          "name": "Fantasmal",
+          "image": "SummonerHaste.png",
+          "sprite": "spell0",
+          "x": 336,
+          "y": 0
+        },
+        "7": {
+          "name": "Curar",
+          "image": "SummonerHeal.png",
+          "sprite": "spell0",
+          "x": 384,
+          "y": 0
+        },
+        "11": {
+          "name": "Aplastar",
+          "image": "SummonerSmite.png",
+          "sprite": "spell0",
+          "x": 96,
+          "y": 48
+        },
+        "12": {
+          "name": "Teleportar",
+          "image": "SummonerTeleport.png",
+          "sprite": "spell0",
+          "x": 240,
+          "y": 48
+        },
+        "13": {
+          "name": "Claridad",
+          "image": "SummonerMana.png",
+          "sprite": "spell0",
+          "x": 432,
+          "y": 0
+        },
+        "14": {
+          "name": "Prender",
+          "image": "SummonerDot.png",
+          "sprite": "spell0",
+          "x": 192,
+          "y": 0
+        },
+        "21": {
+          "name": "Barrera",
+          "image": "SummonerBarrier.png",
+          "sprite": "spell0",
+          "x": 0,
+          "y": 0
+        },
+        "30": {
+          "name": "¡Al Rey!",
+          "image": "SummonerPoroRecall.png",
+          "sprite": "spell0",
+          "x": 0,
+          "y": 48
+        },
+        "31": {
+          "name": "Porolanzamiento",
+          "image": "SummonerPoroThrow.png",
+          "sprite": "spell0",
+          "x": 48,
+          "y": 48
+        },
+        "32": {
+          "name": "Marca",
+          "image": "SummonerSnowball.png",
+          "sprite": "spell0",
+          "x": 192,
+          "y": 48
+        },
+        "39": {
+          "name": "Marca",
+          "image": "SummonerSnowURFSnowball_Mark.png",
+          "sprite": "spell0",
+          "x": 144,
+          "y": 48
+        },
+        "54": {
+          "name": "Por determinar",
+          "image": "Summoner_UltBookPlaceholder.png",
+          "sprite": "spell0",
+          "x": 288,
+          "y": 48
+        },
+        "55": {
+          "name": "Provisional y Aplastar automático",
+          "image": "Summoner_UltBookSmitePlaceholder.png",
+          "sprite": "spell0",
+          "x": 336,
+          "y": 48
+        },
+        "2201": {
+          "name": "Huida",
+          "image": "SummonerCherryHold.png",
+          "sprite": "spell0",
+          "x": 144,
+          "y": 0
+        },
+        "2202": {
+          "name": "Destello",
+          "image": "SummonerCherryFlash.png",
+          "sprite": "spell0",
+          "x": 96,
+          "y": 0
+        }
+      },
+      "runes": {
+        "keystone": {
+          "8005": {
+            "name": "Ataque intensificado",
+            "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+            "key": "PressTheAttack"
+          },
+          "8008": {
+            "name": "Compás letal",
+            "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+            "key": "LethalTempo"
+          },
+          "8010": {
+            "name": "Conquistador",
+            "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png",
+            "key": "Conqueror"
+          },
+          "8021": {
+            "name": "Pies veloces",
+            "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+            "key": "FleetFootwork"
+          },
+          "8112": {
+            "name": "Electrocutar",
+            "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+            "key": "Electrocute"
+          },
+          "8128": {
+            "name": "Cosecha oscura",
+            "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+            "key": "DarkHarvest"
+          },
+          "8214": {
+            "name": "Invocar a Aery",
+            "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+            "key": "SummonAery"
+          },
+          "8229": {
+            "name": "Cometa arcano",
+            "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+            "key": "ArcaneComet"
+          },
+          "8230": {
+            "name": "Tensión del saqueador de tormentas",
+            "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
+            "key": "PhaseRush"
+          },
+          "8351": {
+            "name": "Mejora glacial",
+            "icon": "perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+            "key": "GlacialAugment"
+          },
+          "8360": {
+            "name": "Libro de hechizos",
+            "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+            "key": "UnsealedSpellbook"
+          },
+          "8369": {
+            "name": "Primer golpe",
+            "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+            "key": "FirstStrike"
+          },
+          "8437": {
+            "name": "Garras del inmortal",
+            "icon": "perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+            "key": "GraspOfTheUndying"
+          },
+          "8439": {
+            "name": "Reverberacción",
+            "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+            "key": "Aftershock"
+          },
+          "8465": {
+            "name": "Protector",
+            "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png",
+            "key": "Guardian"
+          },
+          "8992": {
+            "name": "Toque de muerte ígnea",
+            "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
+            "key": "DeathfireTouch"
+          },
+          "9923": {
+            "name": "Lluvia de cuchillas",
+            "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+            "key": "HailOfBlades"
+          }
+        },
+        "subStyle": {
+          "8000": {
+            "name": "Precisión",
+            "icon": "perk-images/Styles/7201_Precision.png",
+            "key": "Precision",
+            "slots": [
+              {
+                "runes": [
+                  {
+                    "id": 8005,
+                    "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+                    "key": "PressTheAttack",
+                    "name": "Ataque intensificado"
+                  },
+                  {
+                    "id": 8008,
+                    "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+                    "key": "LethalTempo",
+                    "name": "Compás letal"
+                  },
+                  {
+                    "id": 8021,
+                    "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+                    "key": "FleetFootwork",
+                    "name": "Pies veloces"
+                  },
+                  {
+                    "id": 8010,
+                    "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png",
+                    "key": "Conqueror",
+                    "name": "Conquistador"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 9101,
+                    "icon": "perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
+                    "key": "AbsorbLife",
+                    "name": "Absorber vida"
+                  },
+                  {
+                    "id": 9111,
+                    "icon": "perk-images/Styles/Precision/Triumph.png",
+                    "key": "Triumph",
+                    "name": "Triunfo"
+                  },
+                  {
+                    "id": 8009,
+                    "icon": "perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png",
+                    "key": "PresenceOfMind",
+                    "name": "Claridad mental"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 9104,
+                    "icon": "perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png",
+                    "key": "LegendAlacrity",
+                    "name": "Leyenda: Presteza"
+                  },
+                  {
+                    "id": 9105,
+                    "icon": "perk-images/Styles/Precision/LegendHaste/LegendHaste.png",
+                    "key": "LegendHaste",
+                    "name": "Leyenda: Velocidad"
+                  },
+                  {
+                    "id": 9103,
+                    "icon": "perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png",
+                    "key": "LegendBloodline",
+                    "name": "Leyenda: Linaje"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8014,
+                    "icon": "perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png",
+                    "key": "CoupDeGrace",
+                    "name": "Golpe de gracia"
+                  },
+                  {
+                    "id": 8017,
+                    "icon": "perk-images/Styles/Precision/CutDown/CutDown.png",
+                    "key": "CutDown",
+                    "name": "Derribado"
+                  },
+                  {
+                    "id": 8299,
+                    "icon": "perk-images/Styles/Sorcery/LastStand/LastStand.png",
+                    "key": "LastStand",
+                    "name": "Último esfuerzo"
+                  }
+                ]
+              }
+            ]
+          },
+          "8100": {
+            "name": "Dominación",
+            "icon": "perk-images/Styles/7200_Domination.png",
+            "key": "Domination",
+            "slots": [
+              {
+                "runes": [
+                  {
+                    "id": 8112,
+                    "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png",
+                    "key": "Electrocute",
+                    "name": "Electrocutar"
+                  },
+                  {
+                    "id": 8128,
+                    "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+                    "key": "DarkHarvest",
+                    "name": "Cosecha oscura"
+                  },
+                  {
+                    "id": 9923,
+                    "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+                    "key": "HailOfBlades",
+                    "name": "Lluvia de cuchillas"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8126,
+                    "icon": "perk-images/Styles/Domination/CheapShot/CheapShot.png",
+                    "key": "CheapShot",
+                    "name": "Golpe bajo"
+                  },
+                  {
+                    "id": 8139,
+                    "icon": "perk-images/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.png",
+                    "key": "TasteOfBlood",
+                    "name": "Sabor a sangre"
+                  },
+                  {
+                    "id": 8143,
+                    "icon": "perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png",
+                    "key": "SuddenImpact",
+                    "name": "Impacto repentino"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8137,
+                    "icon": "perk-images/Styles/Domination/SixthSense/SixthSense.png",
+                    "key": "SixthSense",
+                    "name": "Sexto sentido"
+                  },
+                  {
+                    "id": 8140,
+                    "icon": "perk-images/Styles/Domination/GrislyMementos/GrislyMementos.png",
+                    "key": "GrislyMementos",
+                    "name": "Recuerdo macabro"
+                  },
+                  {
+                    "id": 8141,
+                    "icon": "perk-images/Styles/Domination/DeepWard/DeepWard.png",
+                    "key": "DeepWard",
+                    "name": "Guardián de profundidad"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8135,
+                    "icon": "perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png",
+                    "key": "TreasureHunter",
+                    "name": "Cazador de tesoros"
+                  },
+                  {
+                    "id": 8105,
+                    "icon": "perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
+                    "key": "RelentlessHunter",
+                    "name": "Cazador incesante"
+                  },
+                  {
+                    "id": 8106,
+                    "icon": "perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
+                    "key": "UltimateHunter",
+                    "name": "Cazador definitivo"
+                  }
+                ]
+              }
+            ]
+          },
+          "8200": {
+            "name": "Brujería",
+            "icon": "perk-images/Styles/7202_Sorcery.png",
+            "key": "Sorcery",
+            "slots": [
+              {
+                "runes": [
+                  {
+                    "id": 8214,
+                    "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+                    "key": "SummonAery",
+                    "name": "Invocar a Aery"
+                  },
+                  {
+                    "id": 8229,
+                    "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+                    "key": "ArcaneComet",
+                    "name": "Cometa arcano"
+                  },
+                  {
+                    "id": 8230,
+                    "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
+                    "key": "PhaseRush",
+                    "name": "Tensión del saqueador de tormentas"
+                  },
+                  {
+                    "id": 8992,
+                    "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
+                    "key": "DeathfireTouch",
+                    "name": "Toque de muerte ígnea"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8224,
+                    "icon": "perk-images/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png",
+                    "key": "NullifyingOrb",
+                    "name": "Arcanólogo axiomático"
+                  },
+                  {
+                    "id": 8226,
+                    "icon": "perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png",
+                    "key": "ManaflowBand",
+                    "name": "Banda de maná"
+                  },
+                  {
+                    "id": 8275,
+                    "icon": "perk-images/Styles/Sorcery/NimbusCloak/6361.png",
+                    "key": "NimbusCloak",
+                    "name": "Capa del nimbo"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8210,
+                    "icon": "perk-images/Styles/Sorcery/Transcendence/Transcendence.png",
+                    "key": "Transcendence",
+                    "name": "Trascendencia"
+                  },
+                  {
+                    "id": 8234,
+                    "icon": "perk-images/Styles/Sorcery/Celerity/CelerityTemp.png",
+                    "key": "Celerity",
+                    "name": "Celeridad"
+                  },
+                  {
+                    "id": 8233,
+                    "icon": "perk-images/Styles/Sorcery/AbsoluteFocus/AbsoluteFocus.png",
+                    "key": "AbsoluteFocus",
+                    "name": "Concentración absoluta"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8237,
+                    "icon": "perk-images/Styles/Sorcery/Scorch/Scorch.png",
+                    "key": "Scorch",
+                    "name": "Piroláser"
+                  },
+                  {
+                    "id": 8232,
+                    "icon": "perk-images/Styles/Sorcery/Waterwalking/Waterwalking.png",
+                    "key": "Waterwalking",
+                    "name": "Caminar sobre agua"
+                  },
+                  {
+                    "id": 8236,
+                    "icon": "perk-images/Styles/Sorcery/GatheringStorm/GatheringStorm.png",
+                    "key": "GatheringStorm",
+                    "name": "Se avecina tormenta"
+                  }
+                ]
+              }
+            ]
+          },
+          "8300": {
+            "name": "Inspiración",
+            "icon": "perk-images/Styles/7203_Whimsy.png",
+            "key": "Inspiration",
+            "slots": [
+              {
+                "runes": [
+                  {
+                    "id": 8351,
+                    "icon": "perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+                    "key": "GlacialAugment",
+                    "name": "Mejora glacial"
+                  },
+                  {
+                    "id": 8360,
+                    "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+                    "key": "UnsealedSpellbook",
+                    "name": "Libro de hechizos"
+                  },
+                  {
+                    "id": 8369,
+                    "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+                    "key": "FirstStrike",
+                    "name": "Primer golpe"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8306,
+                    "icon": "perk-images/Styles/Inspiration/HextechFlashtraption/HextechFlashtraption.png",
+                    "key": "HextechFlashtraption",
+                    "name": "Destello hextech"
+                  },
+                  {
+                    "id": 8304,
+                    "icon": "perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png",
+                    "key": "MagicalFootwear",
+                    "name": "Calzado mágico"
+                  },
+                  {
+                    "id": 8321,
+                    "icon": "perk-images/Styles/Inspiration/CashBack/CashBack2.png",
+                    "key": "CashBack",
+                    "name": "Reembolso"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8313,
+                    "icon": "perk-images/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png",
+                    "key": "PerfectTiming",
+                    "name": "Tónico triple"
+                  },
+                  {
+                    "id": 8352,
+                    "icon": "perk-images/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png",
+                    "key": "TimeWarpTonic",
+                    "name": "Tónico de distorsión temporal"
+                  },
+                  {
+                    "id": 8345,
+                    "icon": "perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png",
+                    "key": "BiscuitDelivery",
+                    "name": "Entrega de galletas"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8347,
+                    "icon": "perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png",
+                    "key": "CosmicInsight",
+                    "name": "Perspicacia cósmica"
+                  },
+                  {
+                    "id": 8410,
+                    "icon": "perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png",
+                    "key": "ApproachVelocity",
+                    "name": "Velocidad de acercamiento"
+                  },
+                  {
+                    "id": 8316,
+                    "icon": "perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png",
+                    "key": "JackOfAllTrades",
+                    "name": "Manitas"
+                  }
+                ]
+              }
+            ]
+          },
+          "8400": {
+            "name": "Valor",
+            "icon": "perk-images/Styles/7204_Resolve.png",
+            "key": "Resolve",
+            "slots": [
+              {
+                "runes": [
+                  {
+                    "id": 8437,
+                    "icon": "perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+                    "key": "GraspOfTheUndying",
+                    "name": "Garras del inmortal"
+                  },
+                  {
+                    "id": 8439,
+                    "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+                    "key": "Aftershock",
+                    "name": "Reverberacción"
+                  },
+                  {
+                    "id": 8465,
+                    "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png",
+                    "key": "Guardian",
+                    "name": "Protector"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8446,
+                    "icon": "perk-images/Styles/Resolve/Demolish/Demolish.png",
+                    "key": "Demolish",
+                    "name": "Demoler"
+                  },
+                  {
+                    "id": 8463,
+                    "icon": "perk-images/Styles/Resolve/FontOfLife/FontOfLife.png",
+                    "key": "FontOfLife",
+                    "name": "Fuente de vida"
+                  },
+                  {
+                    "id": 8401,
+                    "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png",
+                    "key": "ShieldBash",
+                    "name": "Golpe de escudo"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8429,
+                    "icon": "perk-images/Styles/Resolve/Conditioning/Conditioning.png",
+                    "key": "Conditioning",
+                    "name": "Condicionamiento"
+                  },
+                  {
+                    "id": 8444,
+                    "icon": "perk-images/Styles/Resolve/SecondWind/SecondWind.png",
+                    "key": "SecondWind",
+                    "name": "Fuerzas renovadas"
+                  },
+                  {
+                    "id": 8473,
+                    "icon": "perk-images/Styles/Resolve/BonePlating/BonePlating.png",
+                    "key": "BonePlating",
+                    "name": "Revestimiento de huesos"
+                  }
+                ]
+              },
+              {
+                "runes": [
+                  {
+                    "id": 8451,
+                    "icon": "perk-images/Styles/Resolve/Overgrowth/Overgrowth.png",
+                    "key": "Overgrowth",
+                    "name": "Sobrecrecimiento"
+                  },
+                  {
+                    "id": 8453,
+                    "icon": "perk-images/Styles/Resolve/Revitalize/Revitalize.png",
+                    "key": "Revitalize",
+                    "name": "Revitalizar"
+                  },
+                  {
+                    "id": 8242,
+                    "icon": "perk-images/Styles/Sorcery/Unflinching/Unflinching.png",
+                    "key": "Unflinching",
+                    "name": "Inquebrantable"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "oldRunes": {},
+      "runeStats": {
+        "5001": {
+          "id": 5001,
+          "key": "StatModsHealthPlusIcon",
+          "name": "HealthScaling",
+          "longDesc": "+10-180 Health (based on level)",
+          "iconPath": "perk-images/StatMods/StatModsHealthPlusIcon.png"
+        },
+        "5002": {
+          "id": 5002,
+          "key": "StatModsArmorIcon",
+          "name": "Armor",
+          "longDesc": "+6 Armor",
+          "iconPath": "perk-images/StatMods/StatModsArmorIcon.png"
+        },
+        "5003": {
+          "id": 5003,
+          "key": "StatModsMagicResIcon",
+          "name": "MagicRes",
+          "longDesc": "+8 Magic Resist",
+          "iconPath": "perk-images/StatMods/StatModsMagicResIcon.png"
+        },
+        "5005": {
+          "id": 5005,
+          "key": "StatModsAttackSpeedIcon",
+          "name": "AttackSpeed",
+          "longDesc": "+10% Attack Speed",
+          "iconPath": "perk-images/StatMods/StatModsAttackSpeedIcon.png"
+        },
+        "5007": {
+          "id": 5007,
+          "key": "StatModsCDRScalingIcon",
+          "name": "CDRScaling",
+          "longDesc": "+8 <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_CDR'>Ability Haste</lol-uikit-tooltipped-keyword> ",
+          "iconPath": "perk-images/StatMods/StatModsCDRScalingIcon.png"
+        },
+        "5008": {
+          "id": 5008,
+          "key": "StatModsAdaptiveForceIcon",
+          "name": "Adaptive",
+          "longDesc": "+9 Adaptive Force",
+          "iconPath": "perk-images/StatMods/StatModsAdaptiveForceIcon.png"
+        },
+        "5010": {
+          "id": 5010,
+          "key": "StatModsMovementSpeedIcon",
+          "name": "Move Speed",
+          "longDesc": "+2% <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_MS'>Move Speed</lol-uikit-tooltipped-keyword>",
+          "iconPath": "perk-images/StatMods/StatModsMovementSpeedIcon.png"
+        },
+        "5011": {
+          "id": 5011,
+          "key": "StatModsHealthScalingIcon",
+          "name": "Health",
+          "longDesc": "+65 Health",
+          "iconPath": "perk-images/StatMods/StatModsHealthScalingIcon.png"
+        },
+        "5012": {
+          "id": 5012,
+          "key": "StatModsAdaptiveForceScalingIcon",
+          "name": "Resist Scaling",
+          "longDesc": "+1-8 Armor and Magic Resist (based on level)",
+          "iconPath": "perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png"
+        },
+        "5013": {
+          "id": 5013,
+          "key": "StatModsTenacityIcon",
+          "name": "Tenacity and Slow Resist",
+          "longDesc": "+10% Tenacity and Slow Resist",
+          "iconPath": "perk-images/StatMods/StatModsTenacityIcon.png"
+        }
+      },
+      "itemData": {},
+      "oldItemData": {},
+      "matchupId": "",
+      "filters": {
+        "region": "",
+        "role": "bot",
+        "matchup": "",
+        "twitch": ""
+      },
+      "similarChamps": [
+        "Rell",
+        "Thresh"
+      ],
+      "popRole": "supp",
+      "bans": [],
+      "sponsoredGuide": null,
+      "vodCount": 0,
+      "key": "Braum--bot--"
+    },
+    "__N_SSP": true
+  },
+  "page": "/champions/builds/[id]",
+  "query": {
+    "role": "bot",
+    "id": "Braum"
+  },
+  "buildId": "E7UXDmSZ8d4ZY6xlBz9BM",
+  "isFallback": false,
+  "isExperimentalCompile": false,
+  "gssp": true,
+  "locale": "es",
+  "locales": [
+    "en",
+    "de",
+    "es",
+    "fr",
+    "ko",
+    "ja",
+    "pl",
+    "pt",
+    "zh",
+    "tr",
+    "ru"
+  ],
+  "defaultLocale": "en",
+  "scriptLoader": []
+}

@@ -122,89 +122,392 @@ body {
   -webkit-app-region: no-drag; /* Exclude interactions */
 }
 
-/* Player Profile Widget */
-.player-profile-widget {
+
+/* ==========================================================================
+   PLAYER PROFILE WIDGETS & ELOS-THEMED CARDS
+   ========================================================================== */
+.profile-container-outer {
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+
+#welcome-profile-container {
+  max-width: 360px;
+  margin: 15px auto 25px auto;
+}
+
+#workspace-profile-container {
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* Base Card Style */
+.player-profile-card {
+  width: 100%;
+  position: relative;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.player-profile-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Background gradient glow */
+.rank-bg-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.player-profile-card:hover .rank-bg-glow {
+  opacity: 0.25;
+}
+
+/* Inner content flex */
+.profile-card-content {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 6px 14px;
-  border-radius: 30px;
-  font-family: var(--font-sans);
-  transition: var(--transition-smooth);
-  -webkit-app-region: no-drag;
-}
-
-.player-profile-widget:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
-}
-
-.player-avatar-container {
+  gap: 14px;
+  padding: 12px 16px;
   position: relative;
-  width: 32px;
-  height: 32px;
+  z-index: 2;
+}
+
+/* Avatar container and elements */
+.avatar-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.player-avatar {
-  width: 32px;
-  height: 32px;
+.profile-avatar {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  border: 1.5px solid rgba(168, 85, 247, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   background-color: rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-.player-level {
+.profile-level {
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
-  color: #ffffff;
-  font-size: 8px;
+  background: #0f131a;
+  color: var(--text-primary);
+  font-size: 8.5px;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1px 5px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   min-width: 16px;
   text-align: center;
   font-family: var(--font-display);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.player-meta {
+/* Text Meta Info styling */
+.profile-info {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  line-height: 1.2;
+  text-align: left;
+  line-height: 1.25;
+  min-width: 0;
+  flex: 1;
 }
 
-.player-name {
+.profile-name {
   color: var(--text-primary);
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.player-tier {
-  color: var(--text-secondary);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
+.rank-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.profile-tier {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.player-stats {
-  color: var(--text-muted);
-  font-size: 8px;
+.profile-stats {
+  color: var(--text-secondary);
+  font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.2px;
-  margin-top: 1px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pulsing-text {
+  animation: textPulse 2s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   SPECIFIC ELO RANK OVERRIDES (GRADIENTS, SHADOWS, ANIMATIONS)
+   ========================================================================== */
+
+/* Disconnected LCU client waiting card */
+.rank-disconnected {
+  background: rgba(20, 26, 40, 0.25);
+  border: 1.5px dashed rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+.rank-disconnected:hover {
+  transform: none;
+  background: rgba(20, 26, 40, 0.35);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Unranked / None */
+.rank-unranked, .rank-none {
+  background: linear-gradient(135deg, rgba(28, 33, 44, 0.8) 0%, rgba(13, 16, 22, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rank-unranked .profile-tier, .rank-none .profile-tier {
+  color: var(--text-secondary);
+}
+
+/* Iron */
+.rank-iron {
+  background: linear-gradient(135deg, rgba(62, 59, 58, 0.85) 0%, rgba(33, 31, 30, 0.85) 100%);
+  border-color: rgba(132, 126, 120, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(132, 126, 120, 0.05);
+}
+.rank-iron .profile-avatar {
+  border-color: rgba(132, 126, 120, 0.6);
+}
+.rank-iron .profile-level {
+  background: #4a4441;
+  border-color: rgba(132, 126, 120, 0.3);
+}
+.rank-iron .profile-tier {
+  color: #c5bfb9;
+}
+
+/* Bronze */
+.rank-bronze {
+  background: linear-gradient(135deg, rgba(94, 61, 46, 0.85) 0%, rgba(46, 30, 23, 0.85) 100%);
+  border-color: rgba(198, 120, 86, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 18px rgba(198, 120, 86, 0.12);
+}
+.rank-bronze .profile-avatar {
+  border-color: rgba(198, 120, 86, 0.6);
+}
+.rank-bronze .profile-level {
+  background: #7a4c37;
+  border-color: rgba(198, 120, 86, 0.3);
+}
+.rank-bronze .profile-tier {
+  color: #e59c7b;
+}
+
+/* Silver */
+.rank-silver {
+  background: linear-gradient(135deg, rgba(95, 111, 122, 0.8) 0%, rgba(48, 56, 62, 0.8) 100%);
+  border-color: rgba(163, 185, 201, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(163, 185, 201, 0.15);
+}
+.rank-silver .profile-avatar {
+  border-color: rgba(163, 185, 201, 0.6);
+}
+.rank-silver .profile-level {
+  background: #647581;
+  border-color: rgba(163, 185, 201, 0.3);
+}
+.rank-silver .profile-tier {
+  color: #d1dfeb;
+}
+
+/* Gold */
+.rank-gold {
+  background: linear-gradient(135deg, rgba(135, 99, 36, 0.85) 0%, rgba(68, 50, 18, 0.85) 100%);
+  border-color: rgba(245, 196, 75, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 22px rgba(245, 196, 75, 0.18);
+}
+.rank-gold .profile-avatar {
+  border-color: rgba(245, 196, 75, 0.7);
+}
+.rank-gold .profile-level {
+  background: #a37c2d;
+  border-color: rgba(245, 196, 75, 0.3);
+}
+.rank-gold .profile-tier {
+  color: #ffd678;
+}
+
+/* Platinum */
+.rank-platinum {
+  background: linear-gradient(135deg, rgba(39, 102, 102, 0.8) 0%, rgba(20, 51, 51, 0.8) 100%);
+  border-color: rgba(75, 196, 196, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 22px rgba(75, 196, 196, 0.2);
+}
+.rank-platinum .profile-avatar {
+  border-color: rgba(75, 196, 196, 0.7);
+}
+.rank-platinum .profile-level {
+  background: #318282;
+  border-color: rgba(75, 196, 196, 0.3);
+}
+.rank-platinum .profile-tier {
+  color: #9bf2f2;
+}
+
+/* Emerald */
+.rank-emerald {
+  background: linear-gradient(135deg, rgba(16, 92, 61, 0.8) 0%, rgba(8, 46, 30, 0.8) 100%);
+  border-color: rgba(46, 204, 113, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(46, 204, 113, 0.22);
+}
+.rank-emerald .profile-avatar {
+  border-color: rgba(46, 204, 113, 0.7);
+}
+.rank-emerald .profile-level {
+  background: #1e8750;
+  border-color: rgba(46, 204, 113, 0.3);
+}
+.rank-emerald .profile-tier {
+  color: #9bf3be;
+}
+
+/* Diamond */
+.rank-diamond {
+  background: linear-gradient(135deg, rgba(28, 81, 134, 0.8) 0%, rgba(14, 41, 68, 0.8) 100%);
+  border-color: rgba(0, 191, 255, 0.4);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 26px rgba(0, 191, 255, 0.25);
+}
+.rank-diamond .profile-avatar {
+  border-color: rgba(0, 191, 255, 0.75);
+}
+.rank-diamond .profile-level {
+  background: #145b9b;
+  border-color: rgba(0, 191, 255, 0.3);
+}
+.rank-diamond .profile-tier {
+  color: #b3ecff;
+}
+
+/* Master */
+.rank-master {
+  background: linear-gradient(135deg, rgba(67, 23, 102, 0.85) 0%, rgba(33, 11, 51, 0.85) 100%);
+  border-color: rgba(186, 85, 211, 0.45);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(186, 85, 211, 0.3);
+}
+.rank-master .rank-bg-glow {
+  background: radial-gradient(circle at 80% 20%, rgba(186, 85, 211, 0.25) 0%, transparent 60%);
+  opacity: 0.25;
+}
+.rank-master .profile-avatar {
+  border-color: rgba(186, 85, 211, 0.8);
+}
+.rank-master .profile-level {
+  background: #73278f;
+  border-color: rgba(186, 85, 211, 0.3);
+}
+.rank-master .profile-tier {
+  color: #f7b3ff;
+  text-shadow: 0 0 8px rgba(186, 85, 211, 0.5);
+}
+
+/* Grandmaster */
+.rank-grandmaster {
+  background: linear-gradient(135deg, rgba(117, 20, 20, 0.85) 0%, rgba(56, 9, 9, 0.85) 100%);
+  border-color: rgba(255, 69, 0, 0.45);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5), 0 0 32px rgba(255, 69, 0, 0.35);
+}
+.rank-grandmaster .rank-bg-glow {
+  background: radial-gradient(circle at 80% 20%, rgba(255, 69, 0, 0.3) 0%, transparent 60%);
+  opacity: 0.3;
+}
+.rank-grandmaster .profile-avatar {
+  border-color: rgba(255, 69, 0, 0.8);
+}
+.rank-grandmaster .profile-level {
+  background: #8f1700;
+  border-color: rgba(255, 69, 0, 0.3);
+}
+.rank-grandmaster .profile-tier {
+  color: #ffbba6;
+  text-shadow: 0 0 8px rgba(255, 69, 0, 0.5);
+}
+
+/* Challenger (Supreme/Animated) */
+.rank-challenger {
+  background: linear-gradient(135deg, rgba(62, 15, 94, 0.9) 0%, rgba(20, 18, 48, 0.9) 100%);
+  border-color: rgba(240, 230, 210, 0.4);
+  animation: challengerBreathe 4s infinite ease-in-out;
+}
+.rank-challenger .rank-bg-glow {
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(240, 230, 210, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(168, 85, 247, 0.22) 0%, transparent 55%);
+  opacity: 0.35;
+}
+.rank-challenger .profile-avatar {
+  border-color: rgba(240, 230, 210, 0.85);
+  box-shadow: 0 0 10px rgba(240, 230, 210, 0.2);
+}
+.rank-challenger .profile-level {
+  background: linear-gradient(135deg, #f0e6d2 0%, #c8aa6e 100%);
+  color: #0c0f17;
+  font-weight: 800;
+  border-color: #f0e6d2;
+}
+.rank-challenger .profile-tier {
+  color: #f0e6d2;
+  text-shadow: 0 0 10px rgba(240, 230, 210, 0.4);
+  font-weight: 900;
+}
+
+/* ==========================================================================
+   EXTRA KEYFRAMES FOR THEME CARDS
+   ========================================================================== */
+@keyframes textPulse {
+  0%, 100% { opacity: 0.5; text-shadow: 0 0 2px rgba(255,255,255,0.05); }
+  50% { opacity: 0.85; text-shadow: 0 0 8px rgba(255,255,255,0.25); }
+}
+
+@keyframes challengerBreathe {
+  0%, 100% {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(240, 230, 210, 0.15), 0 0 10px rgba(168, 85, 247, 0.15);
+    border-color: rgba(240, 230, 210, 0.35);
+  }
+  50% {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 32px rgba(240, 230, 210, 0.3), 0 0 18px rgba(168, 85, 247, 0.35);
+    border-color: rgba(240, 230, 210, 0.7);
+  }
 }
 
 /* Connection Pill */
@@ -1768,4 +2071,86 @@ input:checked + .slider::before {
 
 .pin-role-btn.pinned svg {
   transform: rotate(45deg);
+}
+
+/* ==========================================================================
+   SKILL MAXING ORDER STYLING
+   ========================================================================== */
+.skill-order-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 2px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.skill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(138, 43, 226, 0.15);
+  border: 1px solid rgba(138, 43, 226, 0.35);
+  color: var(--accent-purple-light);
+  font-size: 12px;
+  text-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.1) inset;
+}
+
+.skill-arrow {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.skill-playrate-badge {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--rune-gold);
+  margin-left: 2px;
+  background: rgba(240, 230, 210, 0.05);
+  border: 1px solid rgba(240, 230, 210, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Interactive Clickable Runes & Shards Premium Styling */
+.clickable {
+  cursor: pointer !important;
+}
+
+.rune-grid-item.clickable:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2) grayscale(0%);
+  opacity: 0.95;
+  z-index: 5;
+}
+
+.rune-grid-item.clickable.inactive:hover {
+  filter: grayscale(20%) brightness(1.1);
+  opacity: 0.65;
+  transform: scale(1.1);
+}
+
+.shard-grid-item.clickable {
+  cursor: pointer !important;
+}
+
+.shard-grid-item.clickable:hover {
+  border-color: rgba(0, 191, 255, 0.6);
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.4);
+  transform: scale(1.15);
+  filter: grayscale(0%);
+  opacity: 0.95;
+}
+
+.shard-grid-item.clickable.inactive:hover {
+  filter: grayscale(30%) brightness(1.1);
+  opacity: 0.6;
 }

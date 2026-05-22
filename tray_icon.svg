@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="100%" height="100%">
+  <defs>
+    <linearGradient id="otGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#00bfff" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Beautiful glowing hexagonal outer border -->
+  <path d="M16,3 L27,9.35 L27,22.65 L16,29 L5,22.65 L5,9.35 Z" fill="none" stroke="url(#otGrad)" stroke-width="2.5" filter="url(#glow)" />
+  <!-- Sharp lightning bolt inside -->
+  <path d="M17,7 L22,15 L18,15 L21,25 L11,16 L15,16 Z" fill="url(#otGrad)" filter="url(#glow)" />
+</svg>

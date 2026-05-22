@@ -5,10 +5,11 @@ const { exec } = require('child_process');
 const WebSocket = require('ws');
 
 class LcuConnector {
-  constructor({ customPath, onStatusChange, onChampSelectUpdate }) {
+  constructor({ customPath, onStatusChange, onChampSelectUpdate, onGameflowPhaseUpdate }) {
     this.customPath = customPath || '';
     this.onStatusChange = onStatusChange || (() => {});
     this.onChampSelectUpdate = onChampSelectUpdate || (() => {});
+    this.onGameflowPhaseUpdate = onGameflowPhaseUpdate || (() => {});
 
     this.port = null;
     this.password = null;
@@ -202,19 +203,24 @@ class LcuConnector {
       console.log('[LCU] WS Connected successfully');
       // Subscribe to all API events
       this.ws.send(JSON.stringify([5, "OnJsonApiEvent"]));
-      // Check immediately for current session
+      // Check immediately for current session and phase
       this.pollChampSelect();
+      this.pollGameflowPhase();
     });
 
     this.ws.on('message', (message) => {
       try {
         const [id, eventName, payload] = JSON.parse(message);
         console.log(`[LCU] WS Message: eventName=${eventName}, uri=${payload.uri}, eventType=${payload.eventType}`);
-        if (eventName === 'OnJsonApiEvent' && payload.uri === '/lol-champ-select/v1/session') {
-          if (payload.eventType === 'Delete') {
-            this.onChampSelectUpdate(null);
-          } else {
-            this.onChampSelectUpdate(payload.data);
+        if (eventName === 'OnJsonApiEvent') {
+          if (payload.uri === '/lol-champ-select/v1/session') {
+            if (payload.eventType === 'Delete') {
+              this.onChampSelectUpdate(null);
+            } else {
+              this.onChampSelectUpdate(payload.data);
+            }
+          } else if (payload.uri === '/lol-gameflow/v1/gameflow-phase') {
+            this.onGameflowPhaseUpdate(payload.data);
           }
         }
       } catch (err) {
@@ -246,6 +252,7 @@ class LcuConnector {
     this.disconnectWs();
     this.updateStatus('disconnected');
     this.onChampSelectUpdate(null);
+    this.onGameflowPhaseUpdate('None');
     this.restartScan();
   }
 
@@ -256,6 +263,15 @@ class LcuConnector {
     } catch (e) {
       // Not in champion select
       this.onChampSelectUpdate(null);
+    }
+  }
+
+  async pollGameflowPhase() {
+    try {
+      const phase = await this.request('GET', '/lol-gameflow/v1/gameflow-phase');
+      this.onGameflowPhaseUpdate(phase);
+    } catch (e) {
+      this.onGameflowPhaseUpdate('None');
     }
   }
 

@@ -17,18 +17,6 @@
       <span class="logo-sub">CLIENT</span>
     </div>
     <div class="header-controls">
-      <!-- Player Profile Widget -->
-      <div class="player-profile-widget" id="player-profile" style="display: none;">
-        <div class="player-avatar-container">
-          <img class="player-avatar" id="player-avatar" src="" alt="Avatar">
-          <span class="player-level" id="player-level">0</span>
-        </div>
-        <div class="player-meta">
-          <span class="player-name" id="player-name">Jugador</span>
-          <span class="player-tier" id="player-tier">UNRANKED</span>
-          <span class="player-stats" id="player-stats" style="display: none;">0% WR - 0 Partidas</span>
-        </div>
-      </div>
       <!-- Status Indicator -->
       <div class="connection-pill" id="lcu-pill">
         <span class="status-dot" id="status-dot"></span>
@@ -57,6 +45,9 @@
           <h1>Preparado para Onetricks</h1>
           <p>Entra en selección de campeones en League of Legends y buscaremos automáticamente las mejores runas y hechizos de los mejores One-tricks mundiales.</p>
         </div>
+        
+        <!-- Welcome Screen Player Profile Widget -->
+        <div id="welcome-profile-container" class="profile-container-outer"></div>
         
         <div class="feature-rows">
           <div class="feature-card">
@@ -124,6 +115,9 @@
               <button class="role-btn" data-role="support" title="Support">SUP</button>
             </div>
           </div>
+          
+          <!-- Workspace Screen Player Profile Widget -->
+          <div id="workspace-profile-container" class="profile-container-outer"></div>
         </div>
 
         <!-- RIGHT COLUMN: RUNE & SUMMONERS LAYOUT -->
@@ -202,6 +196,16 @@
                   </div>
                   <div class="runes-list horizontal large-icons" id="list-spells">
                     <!-- JS populated -->
+                  </div>
+                </div>
+
+                <!-- Skill Max Order Box -->
+                <div class="rune-tree-box compact-box" id="skill-order-box" style="display: none;">
+                  <div class="tree-header compact">
+                    <span>Orden Habilidades</span>
+                  </div>
+                  <div class="skill-order-content" id="skill-order-value">
+                    <!-- JS populated (e.g. E → Q → W) -->
                   </div>
                 </div>
               </div>
@@ -324,6 +328,16 @@
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-debug-browser">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Iniciar al Encender el Ordenador</h4>
+              <p>Arranca la aplicación automáticamente en segundo plano al iniciar el sistema operativo.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-start-login">
               <span class="slider"></span>
             </label>
           </div>

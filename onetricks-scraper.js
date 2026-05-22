@@ -209,6 +209,9 @@ class OnetricksScraper {
       const versionOk = await this.fetchLatestVersion();
       if (versionOk) {
         console.log(`DDragon initialized on version ${this.ddragonVersion}`);
+        if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+          this.mainWindow.webContents.send('ddragon-ready', this.ddragonVersion);
+        }
       }
 
       // 2. Fetch Champion list, Runes, and Spells to populate dictionaries
@@ -467,6 +470,7 @@ class OnetricksScraper {
     let rawSummoners = null;
     let rawItems = null;
     let rawRuneSets = [];
+    let rawSummonersOptions = [];
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
@@ -758,13 +762,30 @@ class OnetricksScraper {
 
 
           // 5. Get summoners from JSON
+          rawSummonersOptions = [];
           if (bestPatchData.sSpells && bestPatchData.sSpells.length > 0) {
-            const spells = bestPatchData.sSpells[0][0];
-            console.log('[SCRAPER] Summoner spells parsed:', spells);
-            rawSummoners = {
-              spell1Id: parseInt(spells[0]),
-              spell2Id: parseInt(spells[1])
-            };
+            bestPatchData.sSpells.forEach(entry => {
+              if (entry && Array.isArray(entry[0]) && entry[0].length >= 2) {
+                const spells = entry[0];
+                let rate = entry[1] || 0;
+                if (rate > 0 && rate <= 1.0) {
+                  rate = rate * 100;
+                }
+                rawSummonersOptions.push({
+                  spell1Id: parseInt(spells[0]),
+                  spell2Id: parseInt(spells[1]),
+                  playrate: Math.round(rate * 10) / 10
+                });
+              }
+            });
+            
+            if (rawSummonersOptions.length > 0) {
+              console.log('[SCRAPER] Summoner options parsed:', rawSummonersOptions);
+              rawSummoners = {
+                spell1Id: rawSummonersOptions[0].spell1Id,
+                spell2Id: rawSummonersOptions[0].spell2Id
+              };
+            }
           }
 
           // 6. Extract Item Builds from JSON!
@@ -971,10 +992,36 @@ class OnetricksScraper {
               return slot === 1 ? 'Q' : slot === 2 ? 'W' : slot === 3 ? 'E' : 'R';
             });
 
-            // Derive max order by counting how many times each non-R skill is leveled
-            const counts = { Q: 0, W: 0, E: 0 };
-            levelUpSequence.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
-            const maxOrder = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+            // Derive max order by tracking the level at which each skill reaches its highest rank in the sequence.
+            // This handles truncated sequences perfectly (e.g. up to level 13 where Q and E are both rank 5).
+            const ranks = { Q: 0, W: 0, E: 0 };
+            const reachLevel = {
+              Q: { 1: 99, 2: 99, 3: 99, 4: 99, 5: 99 },
+              W: { 1: 99, 2: 99, 3: 99, 4: 99, 5: 99 },
+              E: { 1: 99, 2: 99, 3: 99, 4: 99, 5: 99 }
+            };
+
+            levelUpSequence.forEach((s, index) => {
+              if (ranks[s] !== undefined) {
+                ranks[s]++;
+                if (ranks[s] <= 5) {
+                  reachLevel[s][ranks[s]] = index + 1;
+                }
+              }
+            });
+
+            const maxOrder = ['Q', 'W', 'E'];
+            maxOrder.sort((a, b) => {
+              const maxRankA = ranks[a];
+              const maxRankB = ranks[b];
+              if (maxRankA !== maxRankB) {
+                return maxRankB - maxRankA; // higher max rank first
+              }
+              // If same max rank, the one that reached it first (at lower level)
+              const lvlA = reachLevel[a][maxRankA] || 99;
+              const lvlB = reachLevel[b][maxRankB] || 99;
+              return lvlA - lvlB;
+            });
 
             skillOrder = {
               maxOrder,          // e.g. ['E', 'Q', 'W']
@@ -1144,6 +1191,7 @@ class OnetricksScraper {
       runes: rawRunes || this.getDefaultRunes(championName),
       rawRuneSets: rawRuneSets.length > 0 ? rawRuneSets : null,
       summoners: rawSummoners,
+      rawSummonersOptions: rawSummonersOptions.length > 0 ? rawSummonersOptions : null,
       items: rawItems || this.getDefaultItems(championName)
     };
   }
@@ -1285,6 +1333,28 @@ class OnetricksScraper {
     const spell1 = this.spellsMap[summoners.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
     const spell2 = this.spellsMap[summoners.spell2Id] || { name: 'Prender',  icon: 'summonerIgnite.png' };
 
+    // Resolve Summoner Spells Options (multiple paths)
+    let summonersOptions = [];
+    if (scraped.rawSummonersOptions && scraped.rawSummonersOptions.length > 0) {
+      summonersOptions = scraped.rawSummonersOptions.map(opt => {
+        const s1 = this.spellsMap[opt.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
+        const s2 = this.spellsMap[opt.spell2Id] || { name: 'Prender',  icon: 'summonerIgnite.png' };
+        return {
+          raw: { spell1Id: opt.spell1Id, spell2Id: opt.spell2Id },
+          spell1: { id: opt.spell1Id, name: s1.name, icon: s1.icon },
+          spell2: { id: opt.spell2Id, name: s2.name, icon: s2.icon },
+          playrate: opt.playrate !== undefined ? opt.playrate : 100
+        };
+      });
+    } else {
+      summonersOptions = [{
+        raw: summoners,
+        spell1: { id: summoners.spell1Id, name: spell1.name, icon: spell1.icon },
+        spell2: { id: summoners.spell2Id, name: spell2.name, icon: spell2.icon },
+        playrate: 100
+      }];
+    }
+
     return {
       champion: scraped.champion,
       role: scraped.role,
@@ -1295,6 +1365,7 @@ class OnetricksScraper {
         spell1: { id: summoners.spell1Id, name: spell1.name, icon: spell1.icon },
         spell2: { id: summoners.spell2Id, name: spell2.name, icon: spell2.icon }
       },
+      summonersOptions,
       items: scraped.items || { startingBuild: [], popularBoots: [], coreItems: [] }
     };
   }
