@@ -124,7 +124,10 @@ async function fetchPlayerInfo(retries = 3) {
       
       const ranked = await connector.getRankedStats();
       
-      const soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+      let soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+      if (!soloQ && ranked && ranked.queueMap) {
+        soloQ = ranked.queueMap['RANKED_SOLO_5x5'] || ranked.queueMap['RANKED_SOLO_5x5_CURRENT'] || ranked.queueMap.RANKED_SOLO_5x5;
+      }
       
       let tier = 'UNRANKED';
       let division = '';
@@ -242,7 +245,10 @@ async function fetchActiveGamePlayersInfo() {
           if (statsLookupPuuid) {
             try {
               const ranked = await connector.request('GET', `/lol-ranked/v1/ranked-stats/${statsLookupPuuid}`);
-              const soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+              let soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+              if (!soloQ && ranked && ranked.queueMap) {
+                soloQ = ranked.queueMap['RANKED_SOLO_5x5'] || ranked.queueMap['RANKED_SOLO_5x5_CURRENT'] || ranked.queueMap.RANKED_SOLO_5x5;
+              }
               if (soloQ) {
                 tier = soloQ.tier || 'UNRANKED';
                 division = soloQ.division || '';
@@ -328,6 +334,12 @@ function createWindow() {
       nodeIntegration: false
     }
   });
+
+  // Disable spellcheck on main window session to save RAM
+  mainWindow.webContents.session.setSpellCheckerEnabled(false);
+
+  // Disable system native application menu completely to save CPU and RAM
+  Menu.setApplicationMenu(null);
 
   mainWindow.loadFile('index.html');
 
@@ -485,8 +497,18 @@ async function checkAndTriggerActiveGameBuildScrape(activeGame) {
       console.log(`[CLIENT] Active player found in game playing ${me.championName}. Triggering automatic build scrape...`);
       appState.activeChampionName = me.championName;
       appState.activeChampionId = me.championId;
-      appState.activeRole = 'default';
-      triggerScrape(me.championName, 'default');
+      
+      let targetRole = 'default';
+      if (appState.activeRole && appState.activeRole !== 'default') {
+        targetRole = appState.activeRole;
+        console.log(`[CLIENT] Preserving active role: ${targetRole}`);
+      } else if (config && config.pinnedRole && config.pinnedRole !== 'default') {
+        targetRole = config.pinnedRole;
+        console.log(`[CLIENT] Using pinned role: ${targetRole}`);
+      }
+      
+      appState.activeRole = targetRole;
+      triggerScrape(me.championName, targetRole);
     } else {
       console.log('[CLIENT] Active player not found in current game team rosters or champion is unknown.');
     }
@@ -541,15 +563,14 @@ async function handleChampSelectUpdate(session) {
     return;
   }
 
-  // Auto-restore and focus window when champion select is active
+  // Focus window when champion select is active, but only if it's not in the background (hidden or minimized)
   if (mainWindow) {
-    if (!mainWindow.isVisible()) {
-      mainWindow.show();
+    const isBackground = !mainWindow.isVisible() || mainWindow.isMinimized();
+    if (!isBackground) {
+      mainWindow.focus();
+    } else {
+      console.log('[CLIENT] App is in the background (hidden or minimized). Keeping it in the background as requested.');
     }
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore();
-    }
-    mainWindow.focus();
   }
 
   // Find current player cell ID

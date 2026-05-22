@@ -19,6 +19,10 @@ class LcuConnector {
     this.scanInterval = null;
     this.ws = null;
     this.lockfilePath = null;
+    
+    // Caching and performance optimization fields
+    this.lastKnownPath = null;
+    this.lastProcessScanTime = 0;
   }
 
   setCustomPath(newPath) {
@@ -56,8 +60,13 @@ class LcuConnector {
     this.updateStatus('scanning');
 
     let possiblePaths = [];
+
+    // 1. Try last known working path first for instant reconnection!
+    if (this.lastKnownPath) {
+      possiblePaths.push(this.lastKnownPath);
+    }
     
-    // Check workspace/current directory first (for development & mock testing)
+    // 2. Check workspace/current directory first (for development & mock testing)
     possiblePaths.push(path.join(__dirname, 'lockfile'));
     possiblePaths.push(path.join(process.cwd(), 'lockfile'));
 
@@ -65,14 +74,8 @@ class LcuConnector {
       possiblePaths.push(path.join(this.customPath, 'lockfile'));
       possiblePaths.push(this.customPath); // if they selected lockfile itself
     }
-
-    // Try to auto-detect using PowerShell process query
-    const pathFromProcess = await this.detectPathFromProcess();
-    if (pathFromProcess) {
-      possiblePaths.push(path.join(pathFromProcess, 'lockfile'));
-    }
     
-    // Standard default paths on multiple drives
+    // 3. Standard default paths on multiple drives (very cheap, 0% CPU)
     possiblePaths.push('C:\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('D:\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('E:\\Riot Games\\League of Legends\\lockfile');
@@ -80,6 +83,28 @@ class LcuConnector {
     possiblePaths.push('C:\\Games\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('D:\\Games\\Riot Games\\League of Legends\\lockfile');
     possiblePaths.push('E:\\Games\\Riot Games\\League of Legends\\lockfile');
+
+    // Check if any of these cheap paths already have a lockfile
+    let foundLockfile = false;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        foundLockfile = true;
+        break;
+      }
+    }
+
+    // 4. Try to auto-detect using PowerShell process query only if no lockfile was found on standard/cheap paths
+    // AND at least 15 seconds have passed since the last process scan (throttling)
+    const now = Date.now();
+    if (!foundLockfile && (now - this.lastProcessScanTime > 15000)) {
+      this.lastProcessScanTime = now;
+      console.log('[LCU] Throttled process query active. Searching for League processes...');
+      const pathFromProcess = await this.detectPathFromProcess();
+      if (pathFromProcess) {
+        const procLockfilePath = path.join(pathFromProcess, 'lockfile');
+        possiblePaths.push(procLockfilePath);
+      }
+    }
 
     for (const p of possiblePaths) {
       if (fs.existsSync(p) && fs.lstatSync(p).isFile()) {
@@ -95,6 +120,7 @@ class LcuConnector {
             // Validate connection before asserting success
             const ok = await this.testConnection();
             if (ok) {
+              this.lastKnownPath = p; // Cache the successful path!
               this.stopScan();
               this.updateStatus('connected');
               this.connectWs();
@@ -283,19 +309,14 @@ class LcuConnector {
       // Get all current pages
       const pages = await this.request('GET', '/lol-perks/v1/pages');
       
-      // Find an editable page
-      const editablePage = pages.find(p => p.isEditable);
+      // 1. Try to find a page we created previously (starts with "OT:")
+      let targetPage = pages.find(p => p.isEditable && p.name && p.name.startsWith('OT:'));
       
-      // If we have an editable page, delete it first to free up slot and ensure clean sync
-      if (editablePage) {
-        console.log(`[LCU] Deleting existing editable rune page: ID ${editablePage.id}`);
-        try {
-          await this.request('DELETE', `/lol-perks/v1/pages/${editablePage.id}`);
-        } catch (e) {
-          console.warn('[LCU] Failed to delete old rune page, proceeding to create anyway:', e);
-        }
+      // 2. If not found, try to find any editable page to reuse
+      if (!targetPage) {
+        targetPage = pages.find(p => p.isEditable);
       }
-
+      
       const payload = {
         name: `OT: ${runes.name}`,
         primaryStyleId: runes.primaryStyleId,
@@ -304,20 +325,23 @@ class LcuConnector {
         current: true // automatically set active
       };
 
-      console.log(`[LCU] Creating new rune page: "${payload.name}"`);
-      const newPage = await this.request('POST', '/lol-perks/v1/pages', payload);
-      
-      if (newPage && newPage.id) {
-        console.log(`[LCU] Rune page created successfully with ID: ${newPage.id}`);
-        try {
-          // Secondary fallback to guarantee active page update
-          await this.request('PUT', '/lol-perks/v1/activepage', newPage.id);
-        } catch (e) {
-          // ignore active page errors since current: true in POST usually handles it
+      if (targetPage) {
+        console.log(`[LCU] Updating existing editable rune page in the same slot: ID ${targetPage.id} ("${targetPage.name}")`);
+        await this.request('PUT', `/lol-perks/v1/pages/${targetPage.id}`, payload);
+        console.log(`Applied runes in the same slot (ID ${targetPage.id}) for ${runes.name} successfully.`);
+      } else {
+        console.log(`[LCU] No editable rune page found. Creating a new one.`);
+        const newPage = await this.request('POST', '/lol-perks/v1/pages', payload);
+        if (newPage && newPage.id) {
+          console.log(`[LCU] Rune page created successfully with ID: ${newPage.id}`);
+          try {
+            await this.request('PUT', '/lol-perks/v1/activepage', newPage.id);
+          } catch (e) {
+            // ignore active page errors
+          }
         }
+        console.log(`Applied runes for ${runes.name} successfully.`);
       }
-      
-      console.log(`Applied runes for ${runes.name} successfully.`);
       return true;
     } catch (err) {
       console.error('Failed to apply runes:', err);
@@ -426,8 +450,8 @@ class LcuConnector {
         return false;
       }
 
-      // 4. Create new item set object
-      const title = `OT: ${championName}`;
+      // 4. Create new item set object (UNIFIED set)
+      const title = 'OT: Build';
       const newSet = {
         title: title,
         type: 'custom',
@@ -435,20 +459,21 @@ class LcuConnector {
         mode: 'any',
         priority: true,
         sortrank: 0,
-        uid: `ot-set-${championId}`,
+        uid: 'ot-unified-set',
         associatedChampions: [championId],
         associatedMaps: [],
         blocks: blocks
       };
 
-      // 5. Remove existing set for this champion to prevent duplication
+      // 5. Remove existing unified set or legacy sets to prevent duplication and keep 1 slot
       const beforeCount = setsData.itemSets.length;
       setsData.itemSets = setsData.itemSets.filter(set => {
-        if (set.uid === newSet.uid || set.title === title) return false;
-        if (set.associatedChampions && set.associatedChampions.includes(championId)) return false;
+        if (set.uid === 'ot-unified-set' || set.title === title) return false;
+        if (set.uid === `ot-set-${championId}`) return false;
+        if (set.associatedChampions && set.associatedChampions.includes(championId) && set.title && set.title.startsWith('OT:')) return false;
         return true;
       });
-      console.log(`[LCU] Removed ${beforeCount - setsData.itemSets.length} existing set(s) for ${championName}`);
+      console.log(`[LCU] Removed ${beforeCount - setsData.itemSets.length} existing set(s) to reuse the slot`);
 
       // 6. Add our new set
       setsData.itemSets.push(newSet);

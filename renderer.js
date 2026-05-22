@@ -1017,6 +1017,10 @@ function renderActiveGame(gameData) {
       const winrateClass = getWinrateClass(p.winrate, p.wins, p.losses);
       const totalGames = p.wins + p.losses;
       
+      // Smart privacy fallback: Riot hides losses for enemy players in LCU, returning losses as 0.
+      // If a player has wins but 0 losses (and wins is greater than 3), the 100% winrate is fake due to LCU privacy.
+      const isWinrateHidden = p.losses === 0 && p.wins > 3;
+      
       const opggUrl = getOpggUrl(p);
       
       // Smart Fallback: if we fetched a real summoner profile icon, use it. Otherwise, show their champion icon!
@@ -1056,10 +1060,12 @@ function renderActiveGame(gameData) {
             <span class="rank-badge-text">${tierLabel}</span>
             <span class="rank-lp">${p.lp} LP</span>
           </div>
+          ${isWinrateHidden ? '' : `
           <div class="player-winrate ${winrateClass}">
-            <span class="wr-pct">${totalGames > 0 ? p.winrate + '%' : '-%'}</span>
+            <span class="wr-pct">${(totalGames > 0) ? p.winrate + '%' : '-%'}</span>
             <span class="wr-games">${p.wins}V / ${p.losses}D</span>
           </div>
+          `}
         </div>
       `;
  
@@ -1077,25 +1083,9 @@ function renderActiveGame(gameData) {
 
   // Setup Multi OP.GG click action
   if (elBtnOpenMultiOpgg) {
-    let userTeam = gameData.blueTeam; // default to blue
-    if (lastPlayerInfo) {
-      const myName = (lastPlayerInfo.gameName || '').toLowerCase().trim();
-      const myTag = (lastPlayerInfo.tagLine || '').toLowerCase().trim();
-      const userInRed = gameData.redTeam.some(p => {
-        const pName = (p.gameName || '').toLowerCase().trim();
-        const pTag = (p.tagLine || '').toLowerCase().trim();
-        if (myName && myTag && pName && pTag) {
-          return myName === pName && myTag === pTag;
-        }
-        return (p.displayName || '').toLowerCase().includes((lastPlayerInfo.displayName || '').toLowerCase());
-      });
-      
-      if (userInRed) {
-        userTeam = gameData.redTeam;
-      }
-    }
+    const allPlayers = [...(gameData.blueTeam || []), ...(gameData.redTeam || [])];
 
-    const summonersParam = userTeam.map(p => {
+    const summonersParam = allPlayers.map(p => {
       let name = (p.gameName || '').trim();
       let tag = (p.tagLine || '').trim();
       if (!name && p.displayName) {

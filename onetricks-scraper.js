@@ -415,15 +415,17 @@ class OnetricksScraper {
         url += `?role=${role}`;
       }
 
-      const tempWindow = new BrowserWindow({
+      let tempWindow = new BrowserWindow({
         width: 1280,
         height: 900,
         show: debugBrowser,
         title: `[DEBUG] Scraping: ${championName}`,
         webPreferences: {
           offscreen: !debugBrowser,
-          images: true,
-          webSecurity: false
+          images: false, // Disables image loading inside Chromium to save network/CPU/RAM
+          webSecurity: false,
+          spellcheck: false, // Disables spellchecker for offscreen browser
+          partition: 'persist:scraper' // Enable persistent session to cache Cloudflare tokens and static resources
         }
       });
 
@@ -431,15 +433,68 @@ class OnetricksScraper {
         tempWindow.webContents.openDevTools({ mode: 'bottom' });
       }
 
-      // Clear cookies/cache to avoid state bugs
-      tempWindow.webContents.session.clearStorageData();
+      // Configure network request interceptor on the scraper's session
+      // to block heavy assets, tracking scripts, and advertisements
+      const scraperSession = tempWindow.webContents.session;
+      if (!scraperSession._hasWebRequestRules) {
+        scraperSession._hasWebRequestRules = true;
+        
+        // Disable spellchecking on the scraper session
+        scraperSession.setSpellCheckerEnabled(false);
+        
+        scraperSession.webRequest.onBeforeRequest((details, callback) => {
+          const lowerUrl = details.url.toLowerCase();
+          
+          // Always allow the main HTML document
+          if (details.resourceType === 'mainFrame') {
+            return callback({ cancel: false });
+          }
+          
+          // Block heavy media/design resource types
+          const blockTypes = ['image', 'stylesheet', 'font', 'media'];
+          if (blockTypes.includes(details.resourceType)) {
+            return callback({ cancel: true });
+          }
+          
+          // Block advertisements, metrics, trackers, and external analytics
+          const blockDomains = [
+            'google-analytics',
+            'googletagmanager',
+            'googleads',
+            'doubleclick',
+            'adsystem',
+            'adnxs',
+            'hotjar',
+            'sentry.io',
+            'facebook',
+            'amazon-ad',
+            'quantserve',
+            'scorecardresearch',
+            'fontawesome',
+            'adlightning',
+            'adskeeper',
+            'mgid.com',
+            'taboola',
+            'outbrain'
+          ];
+          
+          if (blockDomains.some(domain => lowerUrl.includes(domain))) {
+            return callback({ cancel: true });
+          }
+          
+          callback({ cancel: false });
+        });
+      }
 
       // Enforce chrome user agent to avoid any bots detections
       tempWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
       // Set timeout in case loading takes too long
-      const timeout = setTimeout(() => {
-        tempWindow.destroy();
+      let timeout = setTimeout(() => {
+        if (tempWindow && !tempWindow.isDestroyed()) {
+          tempWindow.destroy();
+          tempWindow = null;
+        }
         reject(new Error('Timeout waiting for Onetricks.gg to load'));
       }, 15000);
 
@@ -448,6 +503,8 @@ class OnetricksScraper {
         await new Promise(r => setTimeout(r, 1500));
 
         try {
+          if (!tempWindow || tempWindow.isDestroyed()) return;
+
           // Extract Next JSON props and raw HTML structures
           const scrapingResult = await tempWindow.webContents.executeJavaScript(`
             (function() {
@@ -471,14 +528,20 @@ class OnetricksScraper {
             })()
           `);
 
-          tempWindow.destroy();
+          if (tempWindow && !tempWindow.isDestroyed()) {
+            tempWindow.destroy();
+            tempWindow = null;
+          }
           clearTimeout(timeout);
 
           // Parse scraped results using our heuristics
           const data = this.parseScrapedData(championName, scrapingResult, role);
           resolve(this.resolveBuildDetails(data));
         } catch (err) {
-          tempWindow.destroy();
+          if (tempWindow && !tempWindow.isDestroyed()) {
+            tempWindow.destroy();
+            tempWindow = null;
+          }
           clearTimeout(timeout);
           reject(err);
         }
@@ -487,7 +550,10 @@ class OnetricksScraper {
       tempWindow.webContents.on('did-fail-load', (e, code, desc) => {
         // If error is just small resource issue, ignore, but if main load fails, reject
         if (desc !== 'ERR_ABORTED') {
-          tempWindow.destroy();
+          if (tempWindow && !tempWindow.isDestroyed()) {
+            tempWindow.destroy();
+            tempWindow = null;
+          }
           clearTimeout(timeout);
           reject(new Error(`Failed to load: ${desc} (code ${code})`));
         }
