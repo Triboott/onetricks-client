@@ -17,6 +17,18 @@
       <span class="logo-sub">CLIENT</span>
     </div>
     <div class="header-controls">
+      <!-- Player Profile Widget -->
+      <div class="player-profile-widget" id="player-profile" style="display: none;">
+        <div class="player-avatar-container">
+          <img class="player-avatar" id="player-avatar" src="" alt="Avatar">
+          <span class="player-level" id="player-level">0</span>
+        </div>
+        <div class="player-meta">
+          <span class="player-name" id="player-name">Jugador</span>
+          <span class="player-tier" id="player-tier">UNRANKED</span>
+          <span class="player-stats" id="player-stats" style="display: none;">0% WR - 0 Partidas</span>
+        </div>
+      </div>
       <!-- Status Indicator -->
       <div class="connection-pill" id="lcu-pill">
         <span class="status-dot" id="status-dot"></span>
@@ -143,7 +155,8 @@
             </div>
           </div>
 
-          <div id="rune-set-tabs" class="rune-set-tabs" style="display:none"></div>
+          <!-- Top Keystone Tabs Selector -->
+          <div id="keystone-tabs" class="keystone-tabs"></div>
 
           <div class="build-preview-container">
             <!-- Rune Paths Display -->
@@ -194,6 +207,9 @@
               </div>
             </div>
 
+            <!-- Bottom Cards Sets Selector -->
+            <div id="rune-sets-container" class="rune-sets-container"></div>
+
             <!-- Items Build Section -->
             <div class="items-build-section">
               <div class="tree-header compact">
@@ -201,15 +217,15 @@
               </div>
               <div class="items-row-container">
                 <!-- Starting Items -->
-                <div class="item-group-box">
-                  <span class="group-label">Iniciales</span>
+                <div class="item-group-box group-starting">
+                  <span class="group-label">Inicial</span>
                   <div class="items-list-flex" id="list-starting-items">
                     <!-- JS populated -->
                   </div>
                 </div>
 
                 <!-- Boots -->
-                <div class="item-group-box">
+                <div class="item-group-box group-boots">
                   <span class="group-label">Botas</span>
                   <div class="items-list-flex" id="list-boots-items">
                     <!-- JS populated -->
@@ -217,9 +233,17 @@
                 </div>
 
                 <!-- Core Items -->
-                <div class="item-group-box">
-                  <span class="group-label">Principales</span>
+                <div class="item-group-box group-core">
+                  <span class="group-label">CORE (1os 3)</span>
                   <div class="items-list-flex" id="list-core-items">
+                    <!-- JS populated -->
+                  </div>
+                </div>
+
+                <!-- Recommended Items -->
+                <div class="item-group-box group-recommended">
+                  <span class="group-label">Recomendados</span>
+                  <div class="items-list-flex" id="list-recommended-items">
                     <!-- JS populated -->
                   </div>
                 </div>

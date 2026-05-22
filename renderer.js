@@ -3,6 +3,13 @@ const elStatusDot = document.getElementById('status-dot');
 const elStatusText = document.getElementById('status-text');
 const elLcuPill = document.getElementById('lcu-pill');
 
+const elPlayerProfile = document.getElementById('player-profile');
+const elPlayerAvatar = document.getElementById('player-avatar');
+const elPlayerLevel = document.getElementById('player-level');
+const elPlayerName = document.getElementById('player-name');
+const elPlayerTier = document.getElementById('player-tier');
+const elPlayerStats = document.getElementById('player-stats');
+
 const elScreenWelcome = document.getElementById('screen-welcome');
 const elScreenWorkspace = document.getElementById('screen-workspace');
 
@@ -46,6 +53,7 @@ const elSettingsCheckDebugBrowser = document.getElementById('settings-check-debu
 const elListStartingItems = document.getElementById('list-starting-items');
 const elListBootsItems = document.getElementById('list-boots-items');
 const elListCoreItems = document.getElementById('list-core-items');
+const elListRecommendedItems = document.getElementById('list-recommended-items');
 const elBtnSettingsDone = document.getElementById('btn-settings-done');
 
 const elInputLolPath = document.getElementById('input-lol-path');
@@ -58,6 +66,7 @@ const elBtnClose = document.getElementById('btn-close');
 // Local visual state data memory
 let activeScrapedData = null;
 let activeRuneSetIndex = 0;
+let runesReforged = [];
 let ddragonVersion = '14.10.1'; // Default fallback version
 let appConfig = {
   autoApplyRunes: true,
@@ -73,6 +82,15 @@ let appConfig = {
 // INITIAL STATE LOADING & BINDINGS
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  // Load runesReforged.json from local cache
+  try {
+    const res = await fetch('ddragon_cache/runesReforged.json');
+    runesReforged = await res.json();
+    console.log('[RENDERER] Loaded runesReforged.json successfully');
+  } catch (err) {
+    console.error('[RENDERER] Failed to load runesReforged.json:', err);
+  }
+
   // 1. Fetch initial configuration & states from main process
   try {
     const state = await window.api.getInitialState();
@@ -82,6 +100,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateConfigUI(appConfig);
     updateLcuStatusUI(state.appState.lcuStatus);
+    if (state.appState.lcuStatus === 'connected' && state.playerInfo) {
+      updatePlayerProfileUI(state.playerInfo);
+    } else {
+      updatePlayerProfileUI(null);
+    }
   } catch (err) {
     console.error('Failed to get initial state:', err);
   }
@@ -291,6 +314,63 @@ function updateLcuStatusUI(status) {
   }
 }
 
+// Translate ranks to Spanish
+const TIER_TRANSLATIONS = {
+  'IRON': 'Hierro',
+  'BRONZE': 'Bronce',
+  'SILVER': 'Plata',
+  'GOLD': 'Oro',
+  'PLATINUM': 'Platino',
+  'EMERALD': 'Esmeralda',
+  'DIAMOND': 'Diamante',
+  'MASTER': 'Maestro',
+  'GRANDMASTER': 'Gran Maestro',
+  'CHALLENGER': 'Aspirante',
+  'UNRANKED': 'Unranked'
+};
+
+function updatePlayerProfileUI(playerInfo) {
+  if (!playerInfo) {
+    elPlayerProfile.style.display = 'none';
+    return;
+  }
+
+  // Populate data
+  elPlayerName.textContent = playerInfo.displayName;
+  elPlayerLevel.textContent = playerInfo.summonerLevel;
+  elPlayerAvatar.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${playerInfo.profileIconId}.png`;
+
+  // Handle errors / fallbacks for avatar icon
+  elPlayerAvatar.onerror = () => {
+    elPlayerAvatar.src = `https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/${playerInfo.profileIconId}.png`;
+  };
+
+  // Rank translating and formatting
+  const rawTier = (playerInfo.tier || 'UNRANKED').toUpperCase();
+  const translatedTier = TIER_TRANSLATIONS[rawTier] || rawTier;
+  
+  if (rawTier === 'UNRANKED' || rawTier === 'NONE') {
+    elPlayerTier.textContent = 'SIN CLASIFICAR';
+    elPlayerStats.style.display = 'none';
+  } else {
+    const isApex = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(rawTier);
+    const divisionStr = isApex ? '' : ` ${playerInfo.division || ''}`;
+    elPlayerTier.textContent = `${translatedTier}${divisionStr} (${playerInfo.lp} LP)`;
+    
+    // Winrate stats
+    const totalGames = playerInfo.wins + playerInfo.losses;
+    if (totalGames > 0) {
+      elPlayerStats.textContent = `${playerInfo.winrate}% WR - ${totalGames} Partidas`;
+      elPlayerStats.style.display = 'block';
+    } else {
+      elPlayerStats.style.display = 'none';
+    }
+  }
+
+  // Show profile widget
+  elPlayerProfile.style.display = 'flex';
+}
+
 // Update manual/auto layout of bottom actions footer
 function updateBottomActionLayout() {
   if (appConfig.autoApplyRunes && appConfig.autoApplySpells && appConfig.autoApplyItems) {
@@ -308,8 +388,13 @@ function updateBottomActionLayout() {
 // ==========================================================================
 
 // Connection status updates listener
-window.api.onLcuStatus(({ status, config }) => {
+window.api.onLcuStatus(({ status, config, playerInfo }) => {
   updateLcuStatusUI(status);
+  if (status !== 'connected') {
+    updatePlayerProfileUI(null);
+  } else if (playerInfo) {
+    updatePlayerProfileUI(playerInfo);
+  }
   if (config) {
     appConfig = config;
     updateConfigUI(config);
@@ -391,171 +476,412 @@ window.api.onScrapeSuccess((data) => {
 // ==========================================================================
 // TEMPLATE ENGINE / RENDERING LOGIC
 // ==========================================================================
+// Stat Shards metadata for high-fidelity 3x3 grid display
+const SHARD_META = {
+  5001: { name: 'Vida Plana', icon: 'perk-images/StatMods/StatModsHealthPlusIcon.png' },
+  5002: { name: 'Armadura', icon: 'perk-images/StatMods/StatModsArmorIcon.png' },
+  5003: { name: 'Resistencia Mágica', icon: 'perk-images/StatMods/StatModsMagicResIcon.png' },
+  5005: { name: 'Velocidad de Ataque', icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png' },
+  5007: { name: 'Aceleración de Habilidad', icon: 'perk-images/StatMods/StatModsCDRScalingIcon.png' },
+  5008: { name: 'Fuerza Adaptable', icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png' },
+  5010: { name: 'Velocidad de Movimiento', icon: 'perk-images/StatMods/StatModsMovementSpeedIcon.png' },
+  5011: { name: 'Vida Escalar', icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png' },
+  5012: { name: 'Resistencia Escalar', icon: 'perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png' },
+  5013: { name: 'Tenacidad y Resistencia a Ralentizaciones', icon: 'perk-images/StatMods/StatModsTenacityIcon.png' }
+};
+
+// State variables for Keystone-grouped selection
+let activeKeystonesList = [];
+let selectedKeystoneIndex = 0;
+let selectedSetIndex = 0;
+let selectedSummonerIndex = 0;
+
 function renderBuildDetails(data) {
   const summoners = data.summoners;
-  const items = data.items || { startingBuild: [], popularBoots: [], coreItems: [] };
+  const items = data.items || { startingBuild: [], popularBoots: [], coreBuild: [], recommendedItems: [], coreItems: [] };
 
-  // 1. Reset tab state and render tab selector
-  activeRuneSetIndex = 0;
-  
-  // Sort the runeSets descending by playrate defensively
-  if (data.runeSets && data.runeSets.length > 0) {
-    data.runeSets.sort((a, b) => (b.playrate || 0) - (a.playrate || 0));
-    // Make sure data.runes points to the most popular set
-    data.runes = data.runeSets[0];
-  }
+  // 1. Group the sets in data.runeSets by keystone
+  const rawSets = data.runeSets || [data.runes];
+  const keystonesMap = {};
 
-  renderRuneSetTabs(data.runeSets || [data.runes]);
-
-  // 2. Render the first (most popular) rune set
-  renderRuneSet(data.runes);
-
-  // 3. Draw Summoner Spells
-  elListSpells.innerHTML = '';
-  [summoners.spell1, summoners.spell2].forEach((spell) => {
-    const container = document.createElement('div');
-    container.className = 'spell-icon-container';
-    container.title = spell.name;
-
-    const img = document.createElement('img');
-    img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${spell.icon}`;
-    img.className = 'rune-img';
-    img.alt = spell.name;
-
-    container.appendChild(img);
-    elListSpells.appendChild(container);
+  rawSets.forEach((set, originalIndex) => {
+    const keystone = set.primaryPerks && set.primaryPerks[0];
+    if (!keystone) return;
+    
+    const keystoneId = keystone.id;
+    if (!keystonesMap[keystoneId]) {
+      keystonesMap[keystoneId] = {
+        id: keystoneId,
+        name: keystone.name,
+        icon: keystone.icon,
+        playrateSum: 0,
+        sets: []
+      };
+    }
+    
+    // Set the overall keystone playrate if available, otherwise sum set playrates
+    if (set.keystonePlayrate !== undefined && set.keystonePlayrate !== null) {
+      keystonesMap[keystoneId].playrateSum = set.keystonePlayrate;
+    } else {
+      keystonesMap[keystoneId].playrateSum += (set.playrate || 0);
+    }
+    
+    keystonesMap[keystoneId].sets.push({
+      set,
+      originalIndex
+    });
   });
 
+  // Preserve the original order from the scraper's runeSets array (scraper already orders by website display order)
+  Object.values(keystonesMap).forEach(group => {
+    group.sets.sort((a, b) => a.originalIndex - b.originalIndex);
+  });
+
+  // Sort keystones by playrateSum descending
+  activeKeystonesList = Object.values(keystonesMap).sort((a, b) => b.playrateSum - a.playrateSum);
+
+  // Default selection: most popular keystone (index 0) and its first set (index 0)
+  selectedKeystoneIndex = 0;
+  selectedSetIndex = 0;
+
+  // Render top keystone tabs
+  renderKeystoneTabs();
+
+  // Draw the selected set, shards, cards, and auto-apply!
+  selectRuneSet(0, 0);
+
+  // 3. Draw Summoner Spells (Multiple options ordered by playrate)
+  const summonerOpts = data.summonersOptions || [summoners];
+  const activeIdx = summonerOpts.findIndex(opt => 
+    opt.raw.spell1Id === summoners.raw.spell1Id && opt.raw.spell2Id === summoners.raw.spell2Id
+  );
+  if (activeIdx !== -1) {
+    selectedSummonerIndex = activeIdx;
+  } else if (selectedSummonerIndex >= summonerOpts.length) {
+    selectedSummonerIndex = 0;
+  }
+  renderSummonerOptions(summonerOpts);
+
   // 4. Draw Recommended Items
-  renderItemGroup(elListStartingItems, items.startingBuild);
-  renderItemGroup(elListBootsItems, items.popularBoots);
-  renderItemGroup(elListCoreItems, items.coreItems.slice(0, 6));
+  renderItemGroup(elListStartingItems, items.startingBuild, true);
+  renderItemGroup(elListBootsItems, items.popularBoots, true);
+  renderItemGroup(elListCoreItems, items.coreBuild || items.coreItems || [], true);
+  renderItemGroup(elListRecommendedItems, items.recommendedItems || [], true);
 
   // 5. Update Footer Indicators
   updateBottomActionLayout();
 }
 
-// Render the rune trees for a single rune set
+// Render top keystone tabs
+function renderKeystoneTabs() {
+  const container = document.getElementById('keystone-tabs');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  activeKeystonesList.forEach((keystoneGroup, index) => {
+    const tab = document.createElement('div');
+    const isSelected = index === selectedKeystoneIndex;
+    
+    tab.className = 'keystone-tab' + (isSelected ? ' active' : '');
+    tab.title = keystoneGroup.name;
+    
+    const img = document.createElement('img');
+    img.src = `https://ddragon.leagueoflegends.com/cdn/img/${keystoneGroup.icon}`;
+    img.className = 'keystone-tab-img';
+    img.alt = keystoneGroup.name;
+    
+    const info = document.createElement('div');
+    info.className = 'keystone-tab-info';
+    
+    const name = document.createElement('span');
+    name.className = 'keystone-tab-name';
+    name.textContent = keystoneGroup.name;
+    
+    const playrate = document.createElement('span');
+    playrate.className = 'keystone-tab-playrate';
+    const formattedPr = Number(keystoneGroup.playrateSum.toFixed(1));
+    playrate.textContent = `${formattedPr}% PR`;
+    
+    info.appendChild(name);
+    info.appendChild(playrate);
+    
+    tab.appendChild(img);
+    tab.appendChild(info);
+    
+    tab.addEventListener('click', () => {
+      selectRuneSet(index, 0);
+    });
+    
+    container.appendChild(tab);
+  });
+  
+  // Add help icon at the end of the container
+  const helpIcon = document.createElement('div');
+  helpIcon.className = 'keystone-help-icon';
+  helpIcon.textContent = '?';
+  helpIcon.title = 'Las runas clave más populares recopiladas de los mejores jugadores del mundo.';
+  container.appendChild(helpIcon);
+}
+
+// Select specific set inside active keystone group
+function selectRuneSet(keystoneIndex, setIndex) {
+  if (!activeKeystonesList[keystoneIndex]) return;
+  const keystoneGroup = activeKeystonesList[keystoneIndex];
+  if (!keystoneGroup.sets[setIndex]) return;
+  
+  selectedKeystoneIndex = keystoneIndex;
+  selectedSetIndex = setIndex;
+  
+  const selectedObj = keystoneGroup.sets[setIndex];
+  const runeSet = selectedObj.set;
+  
+  // Update the global index for backward-compatibility
+  activeRuneSetIndex = selectedObj.originalIndex;
+  
+  // Render the selected rune set in the complete grid!
+  renderRuneSet(runeSet);
+  
+  // Render the bottom card sets selector!
+  renderRuneSetCards(keystoneGroup.sets, setIndex);
+  
+  // Highlight the correct keystone tab as active!
+  document.querySelectorAll('.keystone-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === keystoneIndex);
+  });
+  
+  // Auto-apply if enabled!
+  if (appConfig.autoApplyRunes) {
+    window.api.applyBuild({ runes: runeSet.raw });
+  }
+}
+
+// Render bottom cards for sets selector
+function renderRuneSetCards(sets, selectedIndex) {
+  const container = document.getElementById('rune-sets-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  sets.forEach((setItem, index) => {
+    const set = setItem.set;
+    const card = document.createElement('div');
+    const isSelected = index === selectedIndex;
+    
+    card.className = 'rune-set-card' + (isSelected ? ' active' : '');
+    card.title = `${set.primaryStyleName} + ${set.subStyleName}`;
+    
+    // Card header
+    const header = document.createElement('div');
+    header.className = 'rune-set-card-header';
+    
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'rune-set-card-title';
+    titleSpan.textContent = `Set ${index + 1}`;
+    
+    const iconsDiv = document.createElement('div');
+    iconsDiv.className = 'rune-set-card-icons';
+    
+    const primaryIcon = document.createElement('img');
+    primaryIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${set.primaryStyleIcon}`;
+    primaryIcon.className = 'rune-set-card-mini-icon';
+    primaryIcon.alt = set.primaryStyleName;
+    
+    const plusSpan = document.createElement('span');
+    plusSpan.className = 'rune-set-card-plus';
+    plusSpan.textContent = '+';
+    
+    const subIcon = document.createElement('img');
+    subIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${set.subStyleIcon}`;
+    subIcon.className = 'rune-set-card-mini-icon';
+    subIcon.alt = set.subStyleName;
+    
+    iconsDiv.appendChild(primaryIcon);
+    iconsDiv.appendChild(plusSpan);
+    iconsDiv.appendChild(subIcon);
+    
+    header.appendChild(titleSpan);
+    header.appendChild(iconsDiv);
+    
+    // Card body
+    const body = document.createElement('div');
+    body.className = 'rune-set-card-body';
+    
+    const playrateLabel = document.createElement('div');
+    playrateLabel.className = 'rune-set-card-playrate-label';
+    playrateLabel.textContent = `${set.playrate}% Playrate`;
+    
+    const progressWrapper = document.createElement('div');
+    progressWrapper.className = 'rune-set-card-progress-wrapper';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'rune-set-card-progress-bar';
+    progressBar.style.width = `${set.playrate}%`;
+    
+    progressWrapper.appendChild(progressBar);
+    body.appendChild(playrateLabel);
+    body.appendChild(progressWrapper);
+    
+    // Card footer
+    const footer = document.createElement('div');
+    footer.className = 'rune-set-card-footer';
+    footer.textContent = `${set.subStyleName}`;
+    
+    card.appendChild(header);
+    card.appendChild(body);
+    card.appendChild(footer);
+    
+    card.addEventListener('click', () => {
+      selectRuneSet(selectedKeystoneIndex, index);
+    });
+    
+    container.appendChild(card);
+  });
+}
+
+// Render the complete interactive rune trees grid for a single rune set
 function renderRuneSet(runeSet) {
   if (!runeSet) return;
+
+  // Track the active perk IDs in a Set for super-fast lookups
+  const activePerkIds = new Set([
+    ...runeSet.primaryPerks.map(p => p.id),
+    ...runeSet.secondaryPerks.map(p => p.id)
+  ]);
 
   // Primary Tree Header
   elIconPrimaryStyle.src = `https://ddragon.leagueoflegends.com/cdn/img/${runeSet.primaryStyleIcon}`;
   elNamePrimaryStyle.textContent = runeSet.primaryStyleName;
 
-  // Primary Tree Perks
+  // Look up primary style in static runesReforged
+  const primaryStyle = runesReforged.find(style => style.id === runeSet.primaryStyleId);
+
+  // Render Primary Grid
   elListPrimaryRunes.innerHTML = '';
-  runeSet.primaryPerks.forEach((perk, index) => {
-    const isKeystone = index === 0;
-    elListPrimaryRunes.appendChild(createRuneRowHtml(perk, isKeystone));
-  });
+  if (primaryStyle && primaryStyle.slots) {
+    primaryStyle.slots.forEach((slot, slotIndex) => {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'rune-row-grid';
+      if (slotIndex === 0) {
+        rowDiv.classList.add('keystone-row');
+      }
+      
+      slot.runes.forEach(rune => {
+        const itemDiv = document.createElement('div');
+        const isActive = activePerkIds.has(rune.id);
+        
+        itemDiv.className = `rune-grid-item style-${runeSet.primaryStyleId}`;
+        itemDiv.classList.add(isActive ? 'active' : 'inactive');
+        itemDiv.title = `${rune.name}: ${rune.shortDesc}`;
+        
+        const img = document.createElement('img');
+        img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
+        img.className = slotIndex === 0 ? 'keystone-img' : 'rune-img';
+        img.alt = rune.name;
+        
+        itemDiv.appendChild(img);
+        rowDiv.appendChild(itemDiv);
+      });
+      elListPrimaryRunes.appendChild(rowDiv);
+    });
+  } else {
+    // Fallback: render vertical rows of selected ones if runesReforged not loaded
+    runeSet.primaryPerks.forEach((perk, index) => {
+      const isKeystone = index === 0;
+      elListPrimaryRunes.appendChild(createRuneRowHtml(perk, isKeystone));
+    });
+  }
 
   // Secondary Tree Header
   elIconSubStyle.src = `https://ddragon.leagueoflegends.com/cdn/img/${runeSet.subStyleIcon}`;
   elNameSubStyle.textContent = runeSet.subStyleName;
 
-  // Secondary Tree Perks
+  // Look up secondary style in static runesReforged
+  const secondaryStyle = runesReforged.find(style => style.id === runeSet.subStyleId);
+
+  // Render Secondary Grid
   elListSecondaryRunes.innerHTML = '';
-  runeSet.secondaryPerks.forEach((perk) => {
-    elListSecondaryRunes.appendChild(createRuneRowHtml(perk, false));
-  });
+  if (secondaryStyle && secondaryStyle.slots) {
+    // Secondary tree ignores keystones slot[0], renders slot[1], slot[2], slot[3]
+    for (let slotIndex = 1; slotIndex < secondaryStyle.slots.length; slotIndex++) {
+      const slot = secondaryStyle.slots[slotIndex];
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'rune-row-grid';
+      
+      slot.runes.forEach(rune => {
+        const itemDiv = document.createElement('div');
+        const isActive = activePerkIds.has(rune.id);
+        
+        itemDiv.className = `rune-grid-item style-${runeSet.subStyleId}`;
+        itemDiv.classList.add(isActive ? 'active' : 'inactive');
+        itemDiv.title = `${rune.name}: ${rune.shortDesc}`;
+        
+        const img = document.createElement('img');
+        img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
+        img.className = 'rune-img';
+        img.alt = rune.name;
+        
+        itemDiv.appendChild(img);
+        rowDiv.appendChild(itemDiv);
+      });
+      elListSecondaryRunes.appendChild(rowDiv);
+    }
+  } else {
+    // Fallback
+    runeSet.secondaryPerks.forEach((perk) => {
+      elListSecondaryRunes.appendChild(createRuneRowHtml(perk, false));
+    });
+  }
 
-  // Stat Shards
+  // Stat Shards 3x3 Grid
   elListShards.innerHTML = '';
-  runeSet.shardsPerks.forEach((perk) => {
-    const container = document.createElement('div');
-    container.className = 'shard-icon-container';
-    container.title = perk.name;
+  
+  const shardRowsOptions = [
+    [5005, 5008, 5007], // Row 1: Attack Speed, Adaptive Force, Haste
+    [5008, 5010, 5011], // Row 2: Adaptive Force, MS, Scaling Health
+    [5011, 5013, 5001]  // Row 3: Scaling Health, Tenacity, Flat Health
+  ];
 
-    const img = document.createElement('img');
-    img.src = `https://ddragon.leagueoflegends.com/cdn/img/${perk.icon}`;
-    img.className = 'rune-img';
-    img.alt = perk.name;
-
-    container.appendChild(img);
-    elListShards.appendChild(container);
-  });
-}
-
-// Build the tab selector row above the rune preview
-function renderRuneSetTabs(runeSets) {
-  const tabsContainer = document.getElementById('rune-set-tabs');
-  if (!tabsContainer) return;
-
-  if (!runeSets || runeSets.length <= 1) {
-    tabsContainer.style.display = 'none';
-    return;
-  }
-
-  tabsContainer.style.display = 'flex';
-  tabsContainer.innerHTML = '';
-
-  runeSets.forEach((set, index) => {
-    const tab = document.createElement('button');
-    tab.className = 'rune-set-tab' + (index === 0 ? ' active' : '');
-    tab.id = `rune-set-tab-${index}`;
-    tab.title = `${set.primaryStyleName} + ${set.subStyleName}`;
-
-    // Keystone icon
-    const keystone = set.primaryPerks && set.primaryPerks[0];
-    if (keystone && keystone.icon) {
-      const keystoneImg = document.createElement('img');
-      keystoneImg.src = `https://ddragon.leagueoflegends.com/cdn/img/${keystone.icon}`;
-      keystoneImg.className = 'tab-keystone';
-      keystoneImg.alt = keystone.name || '';
-      tab.appendChild(keystoneImg);
+  const activeShards = runeSet.shardsPerks || [];
+  const shardGridDiv = document.createElement('div');
+  shardGridDiv.className = 'shards-grid';
+  
+  for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+    const rowOptions = [...shardRowsOptions[rowIndex]];
+    const activeShard = activeShards[rowIndex];
+    
+    // Fallback swap if active shard is a legacy/non-standard choice
+    if (activeShard && !rowOptions.includes(activeShard.id)) {
+      rowOptions[2] = activeShard.id;
     }
-
-    const labelDiv = document.createElement('div');
-    labelDiv.className = 'tab-labels';
-
-    const mainLabel = document.createElement('div');
-    mainLabel.className = 'tab-label';
-    mainLabel.textContent = set.primaryStyleName;
-
-    const subLabel = document.createElement('div');
-    subLabel.className = 'tab-sub';
-    subLabel.textContent = `+ ${set.subStyleName}`;
-
-    labelDiv.appendChild(mainLabel);
-    labelDiv.appendChild(subLabel);
-
-    // Inyectar el badge de playrate
-    if (set.playrate) {
-      const playrateBadge = document.createElement('div');
-      playrateBadge.className = 'tab-playrate';
-      playrateBadge.textContent = `${set.playrate}% PR`;
-      labelDiv.appendChild(playrateBadge);
-    }
-
-    tab.appendChild(labelDiv);
-
-    tab.addEventListener('click', () => switchRuneSet(index));
-    tabsContainer.appendChild(tab);
-  });
-}
-
-// Switch the displayed rune set when a tab is clicked
-function switchRuneSet(index) {
-  if (!activeScrapedData || !activeScrapedData.runeSets || !activeScrapedData.runeSets[index]) return;
-  activeRuneSetIndex = index;
-
-  // Update tab active states
-  document.querySelectorAll('.rune-set-tab').forEach((tab, i) => {
-    tab.classList.toggle('active', i === index);
-  });
-
-  // Re-render rune columns with the selected set
-  renderRuneSet(activeScrapedData.runeSets[index]);
-
-  // Auto-apply if enabled
-  if (appConfig.autoApplyRunes) {
-    window.api.applyBuild({ runes: activeScrapedData.runeSets[index].raw });
+    
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'shard-row';
+    
+    rowOptions.forEach(shardId => {
+      const isSelected = activeShard && activeShard.id === shardId;
+      const shardInfo = SHARD_META[shardId] || (activeShard && activeShard.id === shardId ? activeShard : { name: `Atributo ${shardId}`, icon: '' });
+      
+      const shardItem = document.createElement('div');
+      shardItem.className = 'shard-grid-item';
+      shardItem.classList.add(isSelected ? 'active' : 'inactive');
+      shardItem.title = shardInfo.name;
+      
+      const img = document.createElement('img');
+      img.src = shardInfo.icon ? `https://ddragon.leagueoflegends.com/cdn/img/${shardInfo.icon}` : 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/StatMods/StatModsAdaptiveForceIcon.png';
+      img.className = 'shard-img';
+      img.alt = shardInfo.name;
+      
+      shardItem.appendChild(img);
+      rowDiv.appendChild(shardItem);
+    });
+    shardGridDiv.appendChild(rowDiv);
   }
+  elListShards.appendChild(shardGridDiv);
 }
 
 // Helper to render a group of item items beautifully
-function renderItemGroup(container, itemsList) {
+function renderItemGroup(container, itemsList, showPlayrates = false) {
   if (!container) return;
   container.innerHTML = '';
   if (!itemsList || itemsList.length === 0) {
@@ -576,7 +902,6 @@ function renderItemGroup(container, itemsList) {
     img.className = 'item-icon';
     img.alt = item.name;
     
-    // In case specific DDragon item ID fails to load, try Onetricks CDN, then fall back to placeholder
     img.onerror = () => {
       if (img.src.includes('ddragon.leagueoflegends.com')) {
         img.src = `https://d3liizu15b1tmi.cloudfront.net/onetricks/16.9.1/img/item/${item.id}.png`;
@@ -586,11 +911,28 @@ function renderItemGroup(container, itemsList) {
     };
 
     wrapper.appendChild(img);
+
+    // Show playrate badge if enabled and playrate is provided
+    if (showPlayrates && item.playrate !== undefined && item.playrate !== null) {
+      const badge = document.createElement('span');
+      badge.className = 'item-playrate-badge';
+      
+      let prText = item.playrate;
+      if (typeof prText === 'number') {
+        prText = Math.round(prText);
+      }
+      if (!String(prText).includes('%')) {
+        prText = `${prText}%`;
+      }
+      badge.textContent = prText;
+      wrapper.appendChild(badge);
+    }
+
     container.appendChild(wrapper);
   });
 }
 
-// Helper to construct a single visual row element for a rune
+// Helper to construct a single visual row element for a rune (kept as fallback)
 function createRuneRowHtml(perk, isKeystone) {
   const row = document.createElement('div');
   row.className = 'rune-row' + (isKeystone ? ' keystone' : '');
@@ -623,4 +965,75 @@ function createRuneRowHtml(perk, isKeystone) {
   row.appendChild(meta);
 
   return row;
+}
+
+// Render the clickable list of summoner options
+function renderSummonerOptions(options) {
+  elListSpells.innerHTML = '';
+  elListSpells.className = 'runes-list vertical-spells-list';
+
+  options.forEach((opt, idx) => {
+    const row = document.createElement('div');
+    const isActive = idx === selectedSummonerIndex;
+    row.className = 'summoners-row' + (isActive ? ' active' : '');
+    row.title = `Hechizos: ${opt.spell1.name} + ${opt.spell2.name} (${opt.playrate}% Playrate)`;
+    row.setAttribute('data-index', idx);
+
+    const pairDiv = document.createElement('div');
+    pairDiv.className = 'summoners-spells-pair';
+
+    // Spell 1
+    const s1Div = document.createElement('div');
+    s1Div.className = 'spell-icon-mini-container';
+    const s1Img = document.createElement('img');
+    s1Img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${opt.spell1.icon}`;
+    s1Img.alt = opt.spell1.name;
+    s1Div.appendChild(s1Img);
+
+    // Spell 2
+    const s2Div = document.createElement('div');
+    s2Div.className = 'spell-icon-mini-container';
+    const s2Img = document.createElement('img');
+    s2Img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/spell/${opt.spell2.icon}`;
+    s2Img.alt = opt.spell2.name;
+    s2Div.appendChild(s2Img);
+
+    pairDiv.appendChild(s1Div);
+    pairDiv.appendChild(s2Div);
+
+    const playrateSpan = document.createElement('span');
+    playrateSpan.className = 'summoners-playrate';
+    playrateSpan.textContent = `${opt.playrate}%`;
+
+    row.appendChild(pairDiv);
+    row.appendChild(playrateSpan);
+
+    row.addEventListener('click', () => {
+      selectSummonersOption(idx);
+    });
+
+    elListSpells.appendChild(row);
+  });
+}
+
+// Select summoner option and auto-apply it
+function selectSummonersOption(idx) {
+  if (!activeScrapedData || !activeScrapedData.summonersOptions || !activeScrapedData.summonersOptions[idx]) return;
+
+  selectedSummonerIndex = idx;
+  const selectedOpt = activeScrapedData.summonersOptions[idx];
+
+  // Update activeScrapedData.summoners so manual apply works with the chosen spells
+  activeScrapedData.summoners = selectedOpt;
+
+  // Visually toggle active rows
+  const rows = elListSpells.querySelectorAll('.summoners-row');
+  rows.forEach((row, i) => {
+    row.classList.toggle('active', i === idx);
+  });
+
+  // Auto-apply if enabled
+  if (appConfig.autoApplySpells) {
+    window.api.applyBuild({ summoners: selectedOpt.raw });
+  }
 }

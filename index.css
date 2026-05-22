@@ -122,6 +122,91 @@ body {
   -webkit-app-region: no-drag; /* Exclude interactions */
 }
 
+/* Player Profile Widget */
+.player-profile-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-family: var(--font-sans);
+  transition: var(--transition-smooth);
+  -webkit-app-region: no-drag;
+}
+
+.player-profile-widget:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+}
+
+.player-avatar-container {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(168, 85, 247, 0.6);
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.player-level {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  min-width: 16px;
+  text-align: center;
+  font-family: var(--font-display);
+}
+
+.player-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.player-name {
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.player-tier {
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.player-stats {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  margin-top: 1px;
+}
+
 /* Connection Pill */
 .connection-pill {
   display: flex;
@@ -443,7 +528,7 @@ input:checked + .slider::before {
    ========================================================================== */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 280px 1fr;
   gap: 20px;
   height: 100%;
 }
@@ -550,7 +635,7 @@ input:checked + .slider::before {
 .details-panel {
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 16px 20px;
   border-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -606,48 +691,106 @@ input:checked + .slider::before {
 
 .quick-toggles {
   display: flex;
-  gap: 20px;
+  gap: 10px;
+  align-items: center;
+}
+
+.switch-container.compact {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.switch-container.compact:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.switch-container.compact:has(input:checked) {
+  background: rgba(138, 43, 226, 0.05);
+  border-color: rgba(138, 43, 226, 0.25);
+}
+
+.switch-container.compact:has(input:checked):hover {
+  background: rgba(138, 43, 226, 0.08);
+  border-color: rgba(138, 43, 226, 0.4);
 }
 
 .switch-container.compact .slider {
-  width: 36px;
-  height: 20px;
+  width: 32px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 34px;
+  position: relative;
+  transition: var(--transition-smooth);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .switch-container.compact .slider::before {
+  content: "";
+  position: absolute;
   height: 12px;
   width: 12px;
-  left: 3px;
-  bottom: 3px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #e5e7eb;
+  border-radius: 50%;
+  transition: var(--transition-smooth);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.switch-container.compact input:checked + .slider {
+  background-color: var(--accent-purple);
+  box-shadow: 0 0 8px var(--accent-purple-glow);
+  border-color: rgba(138, 43, 226, 0.35);
 }
 
 .switch-container.compact input:checked + .slider::before {
-  transform: translateX(16px);
+  transform: translateX(14px);
+  background-color: #ffffff;
 }
 
 .switch-container.compact .switch-label {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.switch-container.compact input:checked ~ .switch-label {
+  color: var(--text-primary);
 }
 
 /* Runes trees visuals */
 .build-preview-container {
   flex: 1;
   overflow-y: auto;
-  padding-right: 4px;
+  overflow-x: hidden; /* Strictly block horizontal scroll */
+  padding-right: 20px; /* Increased from 4px to allocate space for the vertical scrollbar so it never overlaps the shards/spells */
 }
 
 .rune-trees-flex {
   display: flex;
-  gap: 16px;
+  justify-content: center; /* Center the columns horizontally */
+  gap: 20px; /* Increase gap for beautiful premium spacing */
   height: 100%;
 }
 
 .rune-tree-box {
   flex: 1;
+  min-width: 180px; /* Prevent over-shrinking of grids, optimized from 220px */
+  max-width: 250px; /* Prevent over-stretching to keep proportions beautiful */
   background: rgba(255, 255, 255, 0.015);
   border: 1px solid var(--border-card);
   border-radius: 12px;
-  padding: 16px;
+  padding: 10px 12px; /* More compact padding, reduced from 16px */
 }
 
 .rune-tree-box.primary {
@@ -655,15 +798,92 @@ input:checked + .slider::before {
 }
 
 .shards-spells-column {
-  width: 160px;
+  width: 170px; /* Optimize space, tailored to spells and shards */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .rune-tree-box.compact-box {
   flex: none;
-  padding: 12px;
+  padding: 10px;
+  min-width: 0; /* Override the 180px min-width from .rune-tree-box to prevent overflow and clipping */
+  width: 100%;
+}
+
+#list-spells {
+  width: 100%;
+}
+
+.runes-list.vertical-spells-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding-top: 4px;
+}
+
+.summoners-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.summoners-row:hover {
+  background: rgba(138, 43, 226, 0.08);
+  border-color: rgba(138, 43, 226, 0.25);
+  transform: translateY(-1px);
+}
+
+.summoners-row.active {
+  background: rgba(138, 43, 226, 0.18);
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.12);
+}
+
+.summoners-spells-pair {
+  display: flex;
+  gap: 6px;
+}
+
+.spell-icon-mini-container {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-primary);
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.summoners-row:hover .spell-icon-mini-container {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.summoners-row.active .spell-icon-mini-container {
+  border-color: var(--accent-purple);
+}
+
+.spell-icon-mini-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.summoners-playrate {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--rune-gold);
 }
 
 .tree-header {
@@ -1066,29 +1286,50 @@ input:checked + .slider::before {
 
 .items-row-container {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin-top: 10px;
 }
 
 .item-group-box {
-  flex: 1;
   background: rgba(255, 255, 255, 0.01);
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 8px;
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  transition: var(--transition-smooth);
+}
+
+.item-group-box:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.item-group-box.group-starting {
+  flex: 0.6;
+}
+
+.item-group-box.group-boots {
+  flex: 0.8;
+}
+
+.item-group-box.group-core {
+  flex: 1.1;
+}
+
+.item-group-box.group-recommended {
+  flex: 1.7;
 }
 
 .group-label {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   width: 100%;
   text-align: center;
@@ -1102,6 +1343,7 @@ input:checked + .slider::before {
   flex-wrap: wrap;
   min-height: 36px;
   align-items: center;
+  width: 100%;
 }
 
 .item-wrapper {
@@ -1129,105 +1371,358 @@ input:checked + .slider::before {
   object-fit: cover;
 }
 
-/* ==========================================================================
-   RUNE SET TABS
-   ========================================================================== */
-.rune-set-tabs {
-  display: flex;
-  gap: 6px;
-  padding: 0 0 14px 0;
-  flex-wrap: wrap;
+.item-playrate-badge {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  background: rgba(12, 15, 23, 0.85);
+  backdrop-filter: blur(4px);
+  color: var(--rune-gold);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 3px;
+  border-top-left-radius: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1;
+  pointer-events: none;
 }
 
-.rune-set-tab {
+/* ==========================================================================
+   KEYSTONE TABS & RUNE GRIDS STYLING (ONETRICKS STYLE)
+   ========================================================================== */
+.keystone-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid var(--border-card);
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.keystone-tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.03);
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: var(--font-display);
-  color: rgba(255, 255, 255, 0.45);
-  outline: none;
+  flex: 1;
+  min-width: 120px;
+  max-width: 180px;
 }
 
-.rune-set-tab:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.85);
+.keystone-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
-.rune-set-tab.active {
-  background: rgba(138, 43, 226, 0.18);
-  border-color: rgba(138, 43, 226, 0.55);
+.keystone-tab.active {
+  background: rgba(138, 43, 226, 0.12);
+  border-color: rgba(138, 43, 226, 0.45);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+}
+
+.keystone-tab-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.keystone-tab-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.1;
+  min-width: 0;
+  flex: 1;
+}
+
+.keystone-tab-name {
+  font-size: 11.5px;
+  font-weight: 700;
   color: var(--text-primary);
-  box-shadow: 0 0 12px rgba(138, 43, 226, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.rune-set-tab img.tab-keystone {
+.keystone-tab-playrate {
+  font-size: 10px;
+  color: var(--rune-gold-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.keystone-tab.active .keystone-tab-playrate {
+  color: var(--rune-gold);
+}
+
+.keystone-help-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.keystone-help-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Custom runic grids styling */
+.rune-row-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rune-grid-item {
+  width: 38px;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.keystone-row .rune-grid-item {
+  width: 48px;
+  height: 48px;
+}
+
+.rune-grid-item img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-primary);
+  object-fit: cover;
+  transition: all 0.2s ease;
+}
+
+.keystone-row .rune-grid-item img {
+  border-width: 2px;
+}
+
+/* Hover and active states for different paths */
+.rune-grid-item.inactive {
+  filter: grayscale(100%);
+  opacity: 0.2;
+}
+
+.rune-grid-item.inactive:hover {
+  filter: grayscale(30%);
+  opacity: 0.6;
+  transform: scale(1.08);
+  cursor: default;
+}
+
+.rune-grid-item.active {
+  transform: scale(1.12);
+  z-index: 2;
+}
+
+/* Precision = Gold */
+.rune-grid-item.style-8000.active img {
+  border-color: #eab308;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.7);
+}
+
+/* Domination = Red */
+.rune-grid-item.style-8100.active img {
+  border-color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+}
+
+/* Sorcery = Blue */
+.rune-grid-item.style-8200.active img {
+  border-color: #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
+}
+
+/* Inspiration = Teal */
+.rune-grid-item.style-8300.active img {
+  border-color: #06b6d4;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.7);
+}
+
+/* Resolve = Green */
+.rune-grid-item.style-8400.active img {
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
+}
+
+/* Stat Shards 3x3 Grid */
+.shards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.shard-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.shard-grid-item {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  object-fit: cover;
-  opacity: 0.75;
-  transition: opacity 0.18s ease;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  transition: var(--transition-fast);
+  cursor: default;
+  flex-shrink: 0;
 }
 
-.rune-set-tab.active img.tab-keystone,
-.rune-set-tab:hover img.tab-keystone {
-  opacity: 1;
+.shard-grid-item.active {
+  border-color: #00bfff;
+  box-shadow: 0 0 8px rgba(0, 191, 255, 0.5);
+  background: rgba(0, 191, 255, 0.1);
 }
 
-.tab-labels {
+.shard-grid-item.inactive {
+  filter: grayscale(100%);
+  opacity: 0.2;
+}
+
+.shard-img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+/* Bottom Cards Sets Selector */
+.rune-sets-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.rune-set-card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  line-height: 1;
-  gap: 3px;
-  text-align: left;
+  gap: 8px;
 }
 
-.tab-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.rune-set-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
-.tab-sub {
-  font-size: 9px;
-  opacity: 0.6;
+.rune-set-card.active {
+  background: rgba(138, 43, 226, 0.08);
+  border-color: rgba(138, 43, 226, 0.4);
+  box-shadow: 0 0 12px rgba(138, 43, 226, 0.15);
 }
 
-.rune-set-tab.active .tab-sub {
-  opacity: 0.8;
+.rune-set-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.tab-playrate {
-  font-size: 8px;
+.rune-set-card-title {
+  font-family: var(--font-display);
+  font-size: 12px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--rune-gold);
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-top: 4px;
-  align-self: flex-start;
-  letter-spacing: 0.05em;
-  transition: all 0.18s ease;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
 }
 
-.rune-set-tab.active .tab-playrate {
-  background: rgba(168, 85, 247, 0.2);
-  color: #fff;
-  border-color: rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
+.rune-set-card-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.rune-set-tab:hover .tab-playrate {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+.rune-set-card-mini-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.rune-set-card-plus {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.rune-set-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rune-set-card-playrate-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.rune-set-card-progress-wrapper {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rune-set-card-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #a855f7 0%, #3b82f6 100%);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.rune-set-card-footer {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 /* ==========================================================================

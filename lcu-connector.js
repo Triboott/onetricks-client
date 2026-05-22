@@ -430,6 +430,14 @@ class LcuConnector {
       return false;
     }
   }
+
+  async getCurrentSummoner() {
+    return await this.request('GET', '/lol-summoner/v1/current-summoner');
+  }
+
+  async getRankedStats() {
+    return await this.request('GET', '/lol-ranked/v1/current-ranked-stats');
+  }
 }
 
 module.exports = LcuConnector;

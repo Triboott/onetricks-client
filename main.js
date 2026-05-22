@@ -50,47 +50,106 @@ function saveConfig() {
 function applyFlashPreference(summoners) {
   if (!summoners || !summoners.raw) return summoners;
 
-  const raw = { ...summoners.raw };
-  const spell1 = { ...summoners.spell1 };
-  const spell2 = { ...summoners.spell2 };
+  const result = {
+    ...summoners,
+    raw: { ...summoners.raw },
+    spell1: { ...summoners.spell1 },
+    spell2: { ...summoners.spell2 }
+  };
 
-  const hasFlash = raw.spell1Id === 4 || raw.spell2Id === 4;
+  const hasFlash = result.raw.spell1Id === 4 || result.raw.spell2Id === 4;
   if (hasFlash) {
     if (config.flashOnD) {
       // We want Flash on spell1 (D)
-      if (raw.spell2Id === 4) {
+      if (result.raw.spell2Id === 4) {
         // Swap them
-        const tempId = raw.spell1Id;
-        raw.spell1Id = raw.spell2Id;
-        raw.spell2Id = tempId;
+        const tempId = result.raw.spell1Id;
+        result.raw.spell1Id = result.raw.spell2Id;
+        result.raw.spell2Id = tempId;
 
-        const tempSpell = { ...spell1 };
-        summoners.spell1 = { ...spell2 };
-        summoners.spell2 = tempSpell;
+        const tempSpell = result.spell1;
+        result.spell1 = result.spell2;
+        result.spell2 = tempSpell;
       }
     } else {
       // We want Flash on spell2 (F)
-      if (raw.spell1Id === 4) {
+      if (result.raw.spell1Id === 4) {
         // Swap them
-        const tempId = raw.spell1Id;
-        raw.spell1Id = raw.spell2Id;
-        raw.spell2Id = tempId;
+        const tempId = result.raw.spell1Id;
+        result.raw.spell1Id = result.raw.spell2Id;
+        result.raw.spell2Id = tempId;
 
-        const tempSpell = { ...spell1 };
-        summoners.spell1 = { ...spell2 };
-        summoners.spell2 = tempSpell;
+        const tempSpell = result.spell1;
+        result.spell1 = result.spell2;
+        result.spell2 = tempSpell;
       }
     }
   }
 
-  summoners.raw = raw;
-  return summoners;
+  return result;
+}
+
+async function fetchPlayerInfo(retries = 3) {
+  if (!connector || connector.status !== 'connected') return null;
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      const summoner = await connector.getCurrentSummoner();
+      if (!summoner || (!summoner.displayName && !summoner.gameName)) {
+        // If summoner isn't fully ready, wait and retry
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      
+      const ranked = await connector.getRankedStats();
+      
+      const soloQ = ranked && ranked.queues && ranked.queues.find(q => q.queueType === 'RANKED_SOLO_5x5');
+      
+      let tier = 'UNRANKED';
+      let division = '';
+      let lp = 0;
+      let wins = 0;
+      let losses = 0;
+      let winrate = 0;
+      
+      if (soloQ) {
+        tier = soloQ.tier || 'UNRANKED';
+        division = soloQ.division || '';
+        lp = soloQ.leaguePoints || 0;
+        wins = soloQ.wins || 0;
+        losses = soloQ.losses || 0;
+        
+        const totalGames = wins + losses;
+        if (totalGames > 0) {
+          winrate = Math.round((wins / totalGames) * 100);
+        }
+      }
+      
+      return {
+        displayName: summoner.displayName || summoner.gameName || 'Summoner',
+        profileIconId: summoner.profileIconId || 1,
+        summonerLevel: summoner.summonerLevel || 1,
+        tier,
+        division,
+        lp,
+        wins,
+        losses,
+        winrate
+      };
+    } catch (err) {
+      console.warn(`[CLIENT] Failed fetch player info attempt ${i + 1}/${retries}:`, err.message);
+      if (i < retries - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  }
+  return null;
 }
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 720,
+    width: 1280,
+    height: 800,
     frame: false, // Borderless for premium custom header
     resizable: false,
     transparent: false,
@@ -122,10 +181,14 @@ app.whenReady().then(() => {
   scraper = new OnetricksScraper(mainWindow);
   connector = new LcuConnector({
     customPath: config.customLoLPath,
-    onStatusChange: (status) => {
+    onStatusChange: async (status) => {
       console.log(`[CLIENT] LCU Status changed: ${status}`);
       appState.lcuStatus = status;
-      sendToRenderer('lcu-status', { status, config });
+      let playerInfo = null;
+      if (status === 'connected') {
+        playerInfo = await fetchPlayerInfo();
+      }
+      sendToRenderer('lcu-status', { status, config, playerInfo });
     },
     onChampSelectUpdate: handleChampSelectUpdate
   });
@@ -251,8 +314,13 @@ async function triggerScrape(championName, role) {
       return;
     }
 
-    if (scraped && scraped.summoners) {
-      scraped.summoners = applyFlashPreference(scraped.summoners);
+    if (scraped) {
+      if (scraped.summoners) {
+        scraped.summoners = applyFlashPreference(scraped.summoners);
+      }
+      if (scraped.summonersOptions) {
+        scraped.summonersOptions = scraped.summonersOptions.map(opt => applyFlashPreference(opt));
+      }
     }
 
     appState.scrapedData = scraped;
@@ -287,11 +355,16 @@ async function triggerScrape(championName, role) {
 }
 
 // IPC Channels definitions
-ipcMain.handle('get-initial-state', () => {
+ipcMain.handle('get-initial-state', async () => {
+  let playerInfo = null;
+  if (connector && connector.status === 'connected') {
+    playerInfo = await fetchPlayerInfo();
+  }
   return {
     appState,
     config,
-    ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
+    ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1',
+    playerInfo
   };
 });
 
@@ -309,6 +382,14 @@ ipcMain.on('apply-build', async (event, data) => {
       await connector.applyRunes(data.runes);
     }
     if (data.summoners) {
+      if (appState.scrapedData) {
+        const matchingOpt = appState.scrapedData.summonersOptions && appState.scrapedData.summonersOptions.find(
+          opt => opt.raw.spell1Id === data.summoners.spell1Id && opt.raw.spell2Id === data.summoners.spell2Id
+        );
+        if (matchingOpt) {
+          appState.scrapedData.summoners = matchingOpt;
+        }
+      }
       await connector.applySummonerSpells(data.summoners);
     }
     if (data.items) {
@@ -334,11 +415,17 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   saveConfig();
 
   // In-session dynamic update for Flash preference!
-  if (appState.scrapedData && appState.scrapedData.summoners) {
-    appState.scrapedData.summoners = applyFlashPreference(appState.scrapedData.summoners);
+  if (appState.scrapedData) {
+    if (appState.scrapedData.summoners) {
+      appState.scrapedData.summoners = applyFlashPreference(appState.scrapedData.summoners);
+    }
+    if (appState.scrapedData.summonersOptions) {
+      appState.scrapedData.summonersOptions = appState.scrapedData.summonersOptions.map(opt => applyFlashPreference(opt));
+    }
+    
     sendToRenderer('scrape-success', appState.scrapedData);
 
-    if (config.autoApplySpells) {
+    if (config.autoApplySpells && appState.scrapedData.summoners) {
       connector.applySummonerSpells(appState.scrapedData.summoners.raw).catch(err => {
         console.error('Failed to auto-apply summoner spells on toggle:', err);
       });

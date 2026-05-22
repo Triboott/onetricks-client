@@ -68,7 +68,31 @@ const server = https.createServer(httpsOptions, (req, res) => {
 
   if (req.method === 'GET' && url.pathname === '/lol-summoner/v1/current-summoner') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ summonerId: 12345678, accountId: 87654321 }));
+    res.end(JSON.stringify({ 
+      summonerId: 12345678, 
+      accountId: 87654321, 
+      displayName: 'Teemo OTP', 
+      gameName: 'Teemo OTP',
+      profileIconId: 7, 
+      summonerLevel: 150 
+    }));
+    return;
+  }
+
+  if (req.method === 'GET' && url.pathname === '/lol-ranked/v1/current-ranked-stats') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      queues: [
+        {
+          queueType: 'RANKED_SOLO_5x5',
+          tier: 'EMERALD',
+          division: 'II',
+          leaguePoints: 75,
+          wins: 58,
+          losses: 42
+        }
+      ]
+    }));
     return;
   }
 

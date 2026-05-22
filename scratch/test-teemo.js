@@ -3,7 +3,7 @@ const path = require('path');
 
 // Mock Electron so we can load the scraper without Electron runtime errors
 const mockApp = {
-  getPath: () => __dirname
+  getPath: () => path.join(__dirname, '..')
 };
 require.cache[require.resolve('electron')] = {
   exports: {
@@ -12,7 +12,7 @@ require.cache[require.resolve('electron')] = {
   }
 };
 
-const OnetricksScraper = require('./onetricks-scraper.js');
+const OnetricksScraper = require('../onetricks-scraper.js');
 
 async function test() {
   console.log('Initializing OnetricksScraper...');
@@ -33,8 +33,8 @@ async function test() {
   console.log('\n--- RESOLVED ITEMS ---');
   console.log('Starting Items:', resolved.items.startingBuild);
   console.log('Boots:', resolved.items.popularBoots);
-  console.log('Core Build:', resolved.items.coreBuild);
-  console.log('Recommended Items:', resolved.items.recommendedItems);
+  console.log('Core Build (coreItems):', resolved.items.coreItems);
+  console.log('Recommended Items (recommendedItems):', resolved.items.recommendedItems);
 }
 
 test().catch(console.error);

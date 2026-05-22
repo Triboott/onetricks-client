@@ -470,13 +470,15 @@ class OnetricksScraper {
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
-      if (championName.toLowerCase() === 'veigar') {
-        fs.writeFileSync('veigar_nextData.json', JSON.stringify(nextData, null, 2), 'utf8');
-      }
+      // DEBUG: always save scraped JSON for inspection
+      try {
+        fs.writeFileSync(`${championName.toLowerCase()}_nextData.json`, JSON.stringify(nextData, null, 2), 'utf8');
+      } catch(e) {}
       const pp = nextData.props.pageProps;
       if (pp.firstItemStats) {
         let bestPatchData = null;
         let bestPatchStatsData = null;
+        let defaultItemKey = null;
         const patchKeys = Object.keys(pp.firstItemStats || {});
         // Sort patchKeys so that specific versions (e.g. "16.10") are checked first, then major versions ("16"), then "all"
         const sortedKeys = patchKeys.sort((a, b) => {
@@ -489,7 +491,7 @@ class OnetricksScraper {
           const pData = pp.firstItemStats[key];
           if (pData && pData.all && pData.all.popTree && pData.all.popRunes && Object.keys(pData.all.popRunes).length > 0) {
             // Find default first item key based on the highest overall playrate
-            let defaultItemKey = null;
+            defaultItemKey = null;
             let maxPlayrate = -1;
             for (const itemKey of Object.keys(pData)) {
               if (itemKey !== 'all' && itemKey !== 'top' && pData[itemKey] && pData[itemKey].popTree && pData[itemKey].popRunes && Object.keys(pData[itemKey].popRunes).length > 0 && typeof pData[itemKey].playrate === 'number') {
@@ -532,7 +534,11 @@ class OnetricksScraper {
         }
 
         if (bestPatchData) {
-          const runePatchData = bestPatchData;
+          // For rune ORDERING: use the most popular item's popTree (this is what the website uses to order sets).
+          // For rune BUILD DETAILS and PLAYRATES: always use 'all' stats for global accuracy.
+          const allPatchData = (bestPatchStatsData && bestPatchStatsData.all) ? bestPatchStatsData.all : bestPatchData;
+          const runePatchData = bestPatchData; // item-specific: used for popTree ordering only
+
           // Bypassed mostPopularKeystone to always fetch all 4 main sets from popTree
           if (runePatchData.popTree && Array.isArray(runePatchData.popTree)) {
             // Compute total playrates/games sum first to determine if we need to convert to percentages
@@ -549,32 +555,54 @@ class OnetricksScraper {
             console.log('[SCRAPER] RAW popTree:', JSON.stringify(runePatchData.popTree));
             // ─────────────────────────────────────────────────────────────────────
             // Build the list of tree entries based on the popKeystone order (matching the website's tabs)
+            // Helper: compute real playrate sum for a [primaryStyle, subStyle, keystone] combo from allPatchData.popRunes (global stats)
+            const computeComboPlayrate = (primaryStyle, subStyle, keystoneId) => {
+              const builds = allPatchData.popRunes && allPatchData.popRunes[keystoneId];
+              if (!builds) return 0;
+              return builds.reduce((sum, b) => {
+                if (b[2] && b[2][0] === primaryStyle && b[2][1] === subStyle) {
+                  return sum + (b[1] || 0);
+                }
+                return sum;
+              }, 0);
+            };
+
+            // The popTree from the most popular item (runePatchData) defines display order (matches the website).
+            // The keystoneOrder from allPatchData defines which keystones are most popular globally.
             let treeEntries = [];
             if (runePatchData.popTree && Array.isArray(runePatchData.popTree)) {
               treeEntries = [...runePatchData.popTree];
-              if (runePatchData.popKeystone && Array.isArray(runePatchData.popKeystone)) {
-                const keystoneOrder = runePatchData.popKeystone.map(k => parseInt(k[0]));
+              // Pre-compute original index map to preserve item's popTree order within the same keystone
+              const originalIndex = new Map(treeEntries.map((e, i) => [e, i]));
+              const keystoneSource = allPatchData.popKeystone ? allPatchData : runePatchData;
+              if (keystoneSource.popKeystone && Array.isArray(keystoneSource.popKeystone)) {
+                const keystoneOrder = keystoneSource.popKeystone.map(k => parseInt(k[0]));
                 treeEntries.sort((a, b) => {
                   const idxA = keystoneOrder.indexOf(a[2]);
                   const idxB = keystoneOrder.indexOf(b[2]);
                   if (idxA !== -1 && idxB !== -1) {
                     if (idxA !== idxB) return idxA - idxB;
-                    return (b[3] || 0) - (a[3] || 0); // fallback to popTree playrate
+                    // Same keystone: preserve the original item popTree order (server pre-sorts this correctly)
+                    return (originalIndex.get(a) || 0) - (originalIndex.get(b) || 0);
                   }
                   if (idxA !== -1) return -1;
                   if (idxB !== -1) return 1;
-                  return (b[3] || 0) - (a[3] || 0);
+                  return (originalIndex.get(a) || 0) - (originalIndex.get(b) || 0);
                 });
               }
               treeEntries = treeEntries.slice(0, 4);
             }
 
+
             for (const treeEntry of treeEntries) {
-              const primaryStyleId = treeEntry[0];
-              const subStyleId     = treeEntry[1];
+              let primaryStyleId = treeEntry[0];
+              let subStyleId     = treeEntry[1];
               const keystoneId     = treeEntry[2];
 
-              const keystoneBuilds = runePatchData.popRunes[keystoneId];
+              // Look for builds in allPatchData (global) first, then fall back to item-specific
+              const globalKeystoneBuilds = allPatchData.popRunes && allPatchData.popRunes[keystoneId];
+              const localKeystoneBuilds  = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
+              const keystoneBuilds = globalKeystoneBuilds || localKeystoneBuilds;
               if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
               // Find the build that has the exact matching primary and secondary style
@@ -617,8 +645,14 @@ class OnetricksScraper {
               
               if (!chosenBuild) chosenBuild = keystoneBuilds[0]; // final fallback
 
+              // Sync style IDs to the chosen build to prevent mismatching/empty style renders
+              if (chosenBuild && chosenBuild[2]) {
+                primaryStyleId = chosenBuild[2][0];
+                subStyleId = chosenBuild[2][1];
+              }
+
               const runesList = chosenBuild[0];
-              const statShards = runePatchData.popStat || [5005, 5008, 5002];
+              const statShards = allPatchData.popStat || runePatchData.popStat || [5005, 5008, 5002];
 
               // Sort runes properly: Primary tree first (sorted by slot), then Secondary tree (sorted by slot)
               const primaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === primaryStyleId);
@@ -629,15 +663,16 @@ class OnetricksScraper {
               
               const sortedPerks = [...primaryRunes, ...secondaryRunes, ...statShards];
 
-              // Sum the playrates of all builds with this exact primaryStyleId and subStyleId under this keystoneId
+              // Sum the playrates of all builds with this exact primaryStyleId and subStyleId under this keystoneId.
+              // Use item-specific stats (runePatchData) to match the website's display, which shows playrates
+              // relative to the most popular first item. Fall back to allPatchData if not found.
               let sumBuildPlayrates = 0;
               let hasBuilds = false;
               
-              // Prioritize global/all stats for calculating playrates to get webpage percentages
-              const globalSource = (bestPatchStatsData && bestPatchStatsData.all) || runePatchData;
-              const globalBuilds = globalSource.popRunes && globalSource.popRunes[keystoneId];
-              if (globalBuilds && Array.isArray(globalBuilds)) {
-                globalBuilds.forEach(build => {
+              // Primary: use the most popular item's popRunes (matches website display)
+              const itemBuilds = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
+              if (itemBuilds && Array.isArray(itemBuilds)) {
+                itemBuilds.forEach(build => {
                   if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
                     sumBuildPlayrates += build[1] || 0;
                     hasBuilds = true;
@@ -645,17 +680,14 @@ class OnetricksScraper {
                 });
               }
 
-              // Fallback 1: search in local builds if not found in global
-              if (!hasBuilds) {
-                const localBuilds = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
-                if (localBuilds && Array.isArray(localBuilds)) {
-                  localBuilds.forEach(build => {
-                    if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
-                      sumBuildPlayrates += build[1] || 0;
-                      hasBuilds = true;
-                    }
-                  });
-                }
+              // Fallback: search in allPatchData if not found in item-specific
+              if (!hasBuilds && allPatchData && allPatchData.popRunes && allPatchData.popRunes[keystoneId]) {
+                allPatchData.popRunes[keystoneId].forEach(build => {
+                  if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                    sumBuildPlayrates += build[1] || 0;
+                    hasBuilds = true;
+                  }
+                });
               }
 
               // Fallback 2: search in other items
@@ -673,10 +705,12 @@ class OnetricksScraper {
                 }
               }
 
-              // Try to find the keystone's overall playrate in popKeystone
+
+              // Try to find the keystone's overall playrate in allPatchData.popKeystone (global accuracy)
               let keystonePlayrate = null;
-              if (runePatchData.popKeystone && Array.isArray(runePatchData.popKeystone)) {
-                const kEntry = runePatchData.popKeystone.find(x => parseInt(x[0]) === keystoneId);
+              const keystonePlayrateSource = allPatchData.popKeystone ? allPatchData : runePatchData;
+              if (keystonePlayrateSource.popKeystone && Array.isArray(keystonePlayrateSource.popKeystone)) {
+                const kEntry = keystonePlayrateSource.popKeystone.find(x => parseInt(x[0]) === keystoneId);
                 if (kEntry && typeof kEntry[1] === 'number') {
                   keystonePlayrate = kEntry[1];
                 }
@@ -701,6 +735,13 @@ class OnetricksScraper {
               const actualSecondaryRunes = runesList.filter(runeId => this.perksMap[runeId]?.styleId === subStyleId);
               console.log(`[SCRAPER] Set ${rawRuneSets.length + 1}: Primary=${primaryStyleId}, Sub=${subStyleId}, Keystone=${keystoneId}, playratePercent=${playratePercent}`);
               console.log(`[SCRAPER]   Secondary runes found: ${actualSecondaryRunes.join(', ')} (expected subStyleId: ${subStyleId})`);
+
+              // Evitar combinaciones de estilos duplicadas en las pestañas/tarjetas de la UI
+              const isDuplicate = rawRuneSets.some(set => set.primaryStyleId === primaryStyleId && set.subStyleId === subStyleId);
+              if (isDuplicate) {
+                console.log(`[SCRAPER] Skipping duplicate style combo: Primary=${primaryStyleId}, Sub=${subStyleId}`);
+                continue;
+              }
 
               rawRuneSets.push({
                 name: championName,
@@ -731,45 +772,73 @@ class OnetricksScraper {
           
           let startingBuild = [];
           if (bestPatchData.startingItems && bestPatchData.startingItems.length > 0) {
-            const firstSet = bestPatchData.startingItems[0][0];
-            startingBuild = firstSet.map(idStr => {
-              const id = idStr.toString();
-              return {
-                id,
-                name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
-                gold: itemData[id] ? itemData[id].gold : 0
-              };
-            });
-          }
-
-          if (role === 'jungle' || scrapedRole === 'jungle') {
-            const jungleStarters = [
-              { id: '1101', name: 'Cachorro de Garraígnea', gold: 450 },
-              { id: '1103', name: 'Brote de Pisamusgo', gold: 450 },
-              { id: '1102', name: 'Cría de Caminavientos', gold: 450 }
-            ];
-            jungleStarters.forEach(item => {
-              if (itemData[item.id]) {
-                item.name = itemData[item.id].name;
+            const uniqueStarters = {};
+            bestPatchData.startingItems.forEach(entry => {
+              if (entry && Array.isArray(entry[0])) {
+                const items = entry[0];
+                const playrate = entry[1] || 0;
+                items.forEach(idStr => {
+                  const id = idStr.toString();
+                  // Exclude potions, biscuits, wards, and trinkets
+                  const excluded = ['2003', '2010', '2031', '2055', '3340', '3363', '3364'];
+                  if (!excluded.includes(id)) {
+                    if (!uniqueStarters[id]) {
+                      uniqueStarters[id] = 0;
+                    }
+                    uniqueStarters[id] += playrate;
+                  }
+                });
               }
             });
-            const otherScraped = startingBuild.filter(it => !['1101', '1102', '1103'].includes(it.id));
-            startingBuild = [...jungleStarters, ...otherScraped];
+
+            const starterIds = Object.keys(uniqueStarters);
+            if (starterIds.length > 0) {
+              startingBuild = starterIds.map(id => {
+                let rate = uniqueStarters[id];
+                if (rate > 0 && rate <= 1.0) {
+                  rate = rate * 100;
+                }
+                return {
+                  id,
+                  name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+                  gold: itemData[id] ? itemData[id].gold : 0,
+                  playrate: Math.round(rate)
+                };
+              });
+              startingBuild.sort((a, b) => b.playrate - a.playrate);
+            } else {
+              const firstSet = bestPatchData.startingItems[0][0];
+              startingBuild = firstSet
+                .map(idStr => idStr.toString())
+                .filter(id => !['2003', '2010', '2031', '2055', '3340', '3363', '3364'].includes(id))
+                .map(id => ({
+                  id,
+                  name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+                  gold: itemData[id] ? itemData[id].gold : 0,
+                  playrate: 100
+                }));
+            }
           }
 
           let popularBoots = [];
           if (bestPatchData.boots && bestPatchData.boots.length > 0) {
             popularBoots = bestPatchData.boots.slice(0, 2).map(b => {
               const id = b[0].toString();
+              let rate = b[1] || 0;
+              if (rate > 0 && rate <= 1.0) {
+                rate = rate * 100;
+              }
               return {
                 id,
                 name: itemData[id] ? itemData[id].name : `Botas ${id}`,
-                gold: itemData[id] ? itemData[id].gold : 0
+                gold: itemData[id] ? itemData[id].gold : 0,
+                playrate: Math.round(rate)
               };
             });
           }
 
           let coreItems = [];
+          let recommendedItems = [];
           if (bestPatchData.popularItems && bestPatchData.popularItems.length > 0) {
             const startingIds = startingBuild.map(i => i.id);
             const bootsIds = popularBoots.map(i => i.id);
@@ -790,12 +859,71 @@ class OnetricksScraper {
             // Filter out starting items and boots from the sequential list
             const cleanSequentialIds = sequentialIds.filter(id => !startingIds.includes(id) && !bootsIds.includes(id));
 
-            // Map them to rich item objects
-            const seqItems = cleanSequentialIds.map(id => ({
-              id,
-              name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
-              gold: itemData[id] ? itemData[id].gold : 0
-            }));
+            // Build playrates map for items based on first item stats
+            const playratesMap = {};
+            if (bestPatchData.popularItems && Array.isArray(bestPatchData.popularItems)) {
+              bestPatchData.popularItems.forEach(item => {
+                if (item && item[0]) {
+                  const id = item[0].toString();
+                  let rate = item[1] || 0;
+                  if (rate > 0 && rate <= 1.0) {
+                    rate = rate * 100;
+                  }
+                  playratesMap[id] = Math.round(rate);
+                }
+              });
+            }
+
+            // Populate the playrate for defaultItemKey (first core item) which is excluded from popularItems
+            if (defaultItemKey) {
+              const keyStr = defaultItemKey.toString();
+              let rate = 0;
+              if (bestPatchStatsData && bestPatchStatsData[keyStr] && typeof bestPatchStatsData[keyStr].playrate === 'number') {
+                rate = bestPatchStatsData[keyStr].playrate;
+              } else if (bestPatchStatsData && bestPatchStatsData.all && bestPatchStatsData.all.popularItems) {
+                const entry = bestPatchStatsData.all.popularItems.find(x => x && x[0] && x[0].toString() === keyStr);
+                if (entry) {
+                  rate = entry[1] || 0;
+                }
+              }
+              if (rate > 0 && rate <= 1.0) {
+                rate = rate * 100;
+              }
+              playratesMap[keyStr] = Math.round(rate);
+            }
+
+            // Map sequential items to rich item objects with playrate lookup
+            const seqItems = cleanSequentialIds.map(id => {
+              let rate = playratesMap[id];
+              
+              // Búsqueda directa del playrate del primer objeto en el parche actual
+              if (rate === undefined && bestPatchStatsData && bestPatchStatsData[id] && typeof bestPatchStatsData[id].playrate === 'number') {
+                let r = bestPatchStatsData[id].playrate;
+                if (r > 0 && r <= 1.0) {
+                  r = r * 100;
+                }
+                rate = Math.round(r);
+              }
+              
+              if (rate === undefined) {
+                if (bestPatchStatsData && bestPatchStatsData.all && bestPatchStatsData.all.popularItems) {
+                  const entry = bestPatchStatsData.all.popularItems.find(x => x && x[0] && x[0].toString() === id);
+                  if (entry) {
+                    let r = entry[1] || 0;
+                    if (r > 0 && r <= 1.0) {
+                      r = r * 100;
+                    }
+                    rate = Math.round(r);
+                  }
+                }
+              }
+              return {
+                id,
+                name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
+                gold: itemData[id] ? itemData[id].gold : 0,
+                playrate: rate !== undefined ? rate : 0
+              };
+            });
 
             // Filter out starting, boots, and already added sequential items from popularItems list
             const filteredPopularItems = bestPatchData.popularItems.filter(item => {
@@ -806,21 +934,64 @@ class OnetricksScraper {
             // Map extra items
             const extraItems = filteredPopularItems.map(item => {
               const id = item[0].toString();
+              let rate = playratesMap[id];
+              if (rate === undefined) {
+                let r = item[1] || 0;
+                if (r > 0 && r <= 1.0) {
+                  r = r * 100;
+                }
+                rate = Math.round(r);
+              }
               return {
                 id,
                 name: itemData[id] ? itemData[id].name : `Objeto ${id}`,
-                gold: itemData[id] ? itemData[id].gold : 0
+                gold: itemData[id] ? itemData[id].gold : 0,
+                playrate: rate !== undefined ? rate : 0
               };
             });
 
-            coreItems = [...seqItems, ...extraItems].slice(0, 12);
+            // Splitting Core items (first 3 of sequence) and Recommended items
+            coreItems = seqItems.slice(0, 3);
+            recommendedItems = [...seqItems.slice(3), ...extraItems].slice(0, 12);
+          }
+
+          // 7. Extract Skill Order from skillPaths
+          let skillOrder = null;
+          const skillSource = allPatchData.skillPaths || runePatchData.skillPaths;
+          if (skillSource && skillSource.length > 0) {
+            // skillPaths[i] = [[{skillSlot: "3"}, ...per level], playrate]
+            const topPath = skillSource[0]; // most played path (already sorted by server)
+            const levels  = topPath[0];     // array of per-level skill choices
+            let pathRate  = topPath[1] || 0;
+            if (pathRate > 0 && pathRate <= 1.0) pathRate = pathRate * 100;
+
+            // Build Q/W/E/R level-up sequence
+            const levelUpSequence = levels.map(lvl => {
+              const slot = parseInt(lvl[0].skillSlot);
+              return slot === 1 ? 'Q' : slot === 2 ? 'W' : slot === 3 ? 'E' : 'R';
+            });
+
+            // Derive max order by counting how many times each non-R skill is leveled
+            const counts = { Q: 0, W: 0, E: 0 };
+            levelUpSequence.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
+            const maxOrder = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+
+            skillOrder = {
+              maxOrder,          // e.g. ['E', 'Q', 'W']
+              levelSequence: levelUpSequence, // full level-by-level sequence
+              playrate: Math.round(pathRate * 10) / 10
+            };
+            console.log(`[SCRAPER] Skill max order: ${maxOrder.join(' → ')} (${skillOrder.playrate}% playrate)`);
           }
 
           rawItems = {
             startingBuild,
             popularBoots,
-            coreItems
+            coreItems,
+            recommendedItems,
+            skillOrder
           };
+
         }
       }
     }
