@@ -73,6 +73,7 @@ const server = https.createServer(httpsOptions, (req, res) => {
       accountId: 87654321, 
       displayName: 'Teemo OTP', 
       gameName: 'Teemo OTP',
+      tagLine: 'OTP',
       profileIconId: 7, 
       summonerLevel: 150 
     }));

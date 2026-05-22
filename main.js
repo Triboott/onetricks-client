@@ -19,7 +19,8 @@ let config = {
   flashOnD: false,
   debugBrowser: false,
   pinnedRole: 'default',
-  startAtLogin: false
+  startAtLogin: false,
+  enableSounds: true
 };
 
 // Global application state
@@ -143,8 +144,21 @@ async function fetchPlayerInfo(retries = 3) {
         }
       }
       
+      const rawDisplayName = summoner.displayName || summoner.gameName || 'Summoner';
+      const gameName = summoner.gameName || '';
+      const tagLine = summoner.tagLine || '';
+      
+      let displayName = rawDisplayName;
+      if (gameName && tagLine) {
+        displayName = `${gameName}#${tagLine}`;
+      } else if (rawDisplayName && !rawDisplayName.includes('#') && tagLine) {
+        displayName = `${rawDisplayName}#${tagLine}`;
+      }
+      
       return {
-        displayName: summoner.displayName || summoner.gameName || 'Summoner',
+        displayName,
+        gameName,
+        tagLine,
         profileIconId: summoner.profileIconId || 1,
         summonerLevel: summoner.summonerLevel || 1,
         tier,
@@ -515,7 +529,9 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds }) => {
+  const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
+
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
   if (autoApplyItems !== undefined) {
@@ -531,18 +547,23 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
     config.startAtLogin = startAtLogin;
     updateLoginItemSettings();
   }
+  if (enableSounds !== undefined) {
+    config.enableSounds = enableSounds;
+  }
   saveConfig();
 
   // In-session dynamic update for Flash preference!
   if (appState.scrapedData) {
-    if (appState.scrapedData.summoners) {
-      appState.scrapedData.summoners = applyFlashPreference(appState.scrapedData.summoners);
+    if (flashPreferenceChanged) {
+      if (appState.scrapedData.summoners) {
+        appState.scrapedData.summoners = applyFlashPreference(appState.scrapedData.summoners);
+      }
+      if (appState.scrapedData.summonersOptions) {
+        appState.scrapedData.summonersOptions = appState.scrapedData.summonersOptions.map(opt => applyFlashPreference(opt));
+      }
+      
+      sendToRenderer('scrape-success', appState.scrapedData);
     }
-    if (appState.scrapedData.summonersOptions) {
-      appState.scrapedData.summonersOptions = appState.scrapedData.summonersOptions.map(opt => applyFlashPreference(opt));
-    }
-    
-    sendToRenderer('scrape-success', appState.scrapedData);
 
     if (config.autoApplySpells && appState.scrapedData.summoners) {
       connector.applySummonerSpells(appState.scrapedData.summoners.raw).catch(err => {

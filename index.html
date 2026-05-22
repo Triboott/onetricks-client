@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
+  <!-- Ambient Cosmic Glow background layers -->
+  <div class="ambient-glow-container">
+    <div class="ambient-glow style-default active"></div>
+    <div class="ambient-glow style-8000"></div>
+    <div class="ambient-glow style-8100"></div>
+    <div class="ambient-glow style-8200"></div>
+    <div class="ambient-glow style-8300"></div>
+    <div class="ambient-glow style-8400"></div>
+  </div>
+
   <!-- Custom Borderless App Header -->
   <header class="app-header">
     <div class="logo-area">
@@ -22,6 +32,9 @@
         <span class="status-dot" id="status-dot"></span>
         <span class="status-text" id="status-text">DESCONECTADO</span>
       </div>
+      <button class="icon-btn" id="btn-toggle-sound" title="Silenciar Sonidos">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      </button>
       <button class="icon-btn" id="btn-settings" title="Ajustes">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
@@ -259,7 +272,6 @@
           <div class="action-footer">
             <div class="action-status-indicator" id="action-status-indicator">
             </div>
-            <button class="btn btn-apply neon-glow" id="btn-manual-apply">APLICAR EN EL JUEGO</button>
           </div>
 
         </div>
@@ -337,7 +349,17 @@
               <p>Arranca la aplicación automáticamente en segundo plano al iniciar el sistema operativo.</p>
             </div>
             <label class="switch-container">
-              <input type="checkbox" id="settings-check-start-login">
+              <input type="checkbox" id="settings-check-start-login" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Efectos de Sonido Interactivos</h4>
+              <p>Activa los sonidos táctiles de los botones, transiciones y alertas de la aplicación.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-sounds" checked>
               <span class="slider"></span>
             </label>
           </div>

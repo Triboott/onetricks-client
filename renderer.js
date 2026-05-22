@@ -1,3 +1,225 @@
+// ==========================================================================
+// PROGRAMMATIC WEB AUDIO SOUND EFFECTS SYNTH ENGINE
+// ==========================================================================
+const sfx = {
+  ctx: null,
+  
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  },
+  
+  playTick() {
+    this.init();
+    if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
+    const now = this.ctx.currentTime;
+    
+    // Low body thump (triangle wave sweep, 160Hz -> 80Hz)
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.012);
+    
+    oscGain.gain.setValueAtTime(0.015, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+    
+    osc.connect(oscGain);
+    oscGain.connect(this.ctx.destination);
+    
+    // High switch click transient (5ms bandpass-filtered noise burst around 2.8kHz)
+    try {
+      const bufferSize = this.ctx.sampleRate * 0.005; // 5ms
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2800, now);
+      filter.Q.setValueAtTime(4, now);
+      
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.008, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.005);
+      
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      
+      noise.start(now);
+      noise.stop(now + 0.005);
+    } catch (e) {
+      console.warn("Click noise transient skipped:", e);
+    }
+    
+    osc.start(now);
+    osc.stop(now + 0.012);
+  },
+
+  playSwitch() {
+    this.init();
+    if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
+    const now = this.ctx.currentTime;
+    
+    // 1. Warm low body tone sweep (triangle wave, 240Hz -> 150Hz)
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+    
+    oscGain.gain.setValueAtTime(0.008, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    
+    osc.connect(oscGain);
+    oscGain.connect(this.ctx.destination);
+    
+    // 2. Soft delicate crystalline bell chime (sine wave, A5 - 880Hz)
+    const bell = this.ctx.createOscillator();
+    const bellGain = this.ctx.createGain();
+    
+    bell.type = 'sine';
+    bell.frequency.setValueAtTime(880, now);
+    
+    bellGain.gain.setValueAtTime(0.003, now);
+    bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    
+    bell.connect(bellGain);
+    bellGain.connect(this.ctx.destination);
+    
+    // 3. Gentle slide swoosh (150ms noise swept down by a bandpass filter)
+    try {
+      const bufferSize = this.ctx.sampleRate * 0.15; // 150ms
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(600, now);
+      filter.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+      filter.Q.setValueAtTime(2.0, now);
+      
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.010, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+      
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      
+      noise.start(now);
+      noise.stop(now + 0.15);
+    } catch (e) {
+      console.warn("Switch whoosh noise skipped:", e);
+    }
+    
+    osc.start(now);
+    osc.stop(now + 0.15);
+    bell.start(now);
+    bell.stop(now + 0.15);
+  },
+
+  playApply() {
+    this.init();
+    if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
+    const now = this.ctx.currentTime;
+    
+    // 1. Warm Sub-Bass (A2 - 110Hz) to ground the action
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    
+    subOsc.type = 'triangle';
+    subOsc.frequency.setValueAtTime(110, now);
+    
+    subGain.gain.setValueAtTime(0, now);
+    subGain.gain.linearRampToValueAtTime(0.015, now + 0.05); // 50ms attack
+    subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    
+    subOsc.connect(subGain);
+    subGain.connect(this.ctx.destination);
+    
+    subOsc.start(now);
+    subOsc.stop(now + 0.6);
+    
+    // 2. Beautiful Staggered Crystalline Chime (A Major Chord: A4, C#5, E5, A5)
+    // Runs through a lowpass filter at 1.5kHz to keep it incredibly warm and smooth.
+    const chord = [440.00, 554.37, 659.25, 880.00];
+    
+    chord.forEach((freq, index) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      const start = now + (index * 0.035); // Stagger arpeggio
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, start);
+      
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1500, start);
+      
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.008, start + 0.035); // Soft 35ms attack
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.50);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start(start);
+      osc.stop(start + 0.50);
+    });
+  },
+  
+  playNotification() {
+    this.init();
+    if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
+    const now = this.ctx.currentTime;
+    
+    // Soft, warm executive hotel chime (E5 -> A5 with soft attacks)
+    const tones = [
+      { freq: 659.25, offset: 0, duration: 0.4 },
+      { freq: 880.00, offset: 0.08, duration: 0.5 }
+    ];
+    
+    tones.forEach(t => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      const start = now + t.offset;
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(t.freq, start);
+      
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1200, start);
+      
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.012, start + 0.04); // Soft 40ms attack
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + t.duration);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start(start);
+      osc.stop(start + t.duration);
+    });
+  }
+};
+
 // DOM Elements Cache
 const elStatusDot = document.getElementById('status-dot');
 const elStatusText = document.getElementById('status-text');
@@ -41,6 +263,7 @@ const elActionStatusIndicator = document.getElementById('action-status-indicator
 const elBtnManualApply = document.getElementById('btn-manual-apply');
 
 const elBtnSettings = document.getElementById('btn-settings');
+const elBtnToggleSound = document.getElementById('btn-toggle-sound');
 const elBtnSettingsClose = document.getElementById('btn-settings-close');
 const elSettingsOverlay = document.getElementById('settings-overlay');
 const elSettingsCheckRunes = document.getElementById('settings-check-runes');
@@ -49,6 +272,7 @@ const elSettingsCheckItems = document.getElementById('settings-check-items');
 const elSettingsCheckFlashD = document.getElementById('settings-check-flash-d');
 const elSettingsCheckDebugBrowser = document.getElementById('settings-check-debug-browser');
 const elSettingsCheckStartLogin = document.getElementById('settings-check-start-login');
+const elSettingsCheckSounds = document.getElementById('settings-check-sounds');
 const elListStartingItems = document.getElementById('list-starting-items');
 const elListBootsItems = document.getElementById('list-boots-items');
 const elListCoreItems = document.getElementById('list-core-items');
@@ -69,6 +293,7 @@ let activeRuneSet = null;
 let runesReforged = [];
 let ddragonVersion = '14.10.1'; // Default fallback version
 let lastPlayerInfo = null; // Store last player info to allow re-rendering when DDragon loads
+let lastLcuStatus = 'disconnected'; // Track LCU status transitions for SFX cues
 let appConfig = {
   autoApplyRunes: true,
   autoApplySpells: true,
@@ -77,7 +302,8 @@ let appConfig = {
   flashOnD: false,
   debugBrowser: false,
   startAtLogin: false,
-  pinnedRole: 'default'
+  pinnedRole: 'default',
+  enableSounds: true
 };
 
 // ==========================================================================
@@ -112,15 +338,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // 2. Bind Header window custom actions (Minimize / Close)
-  elBtnMinimize.addEventListener('click', () => window.api.minimizeWindow());
-  elBtnClose.addEventListener('click', () => window.api.closeWindow());
+  elBtnMinimize.addEventListener('click', () => {
+    sfx.playTick();
+    window.api.minimizeWindow();
+  });
+  elBtnClose.addEventListener('click', () => {
+    sfx.playTick();
+    window.api.closeWindow();
+  });
 
   // 3. Bind Settings overlays openers/closers
   elBtnSettings.addEventListener('click', () => {
+    sfx.playSwitch();
     elSettingsOverlay.classList.add('active');
   });
   
   const closeSettings = () => {
+    sfx.playSwitch();
     elSettingsOverlay.classList.remove('active');
     elPathSuccessLbl.style.display = 'none';
   };
@@ -129,6 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4. Bind settings save buttons & toggles
   elBtnSavePath.addEventListener('click', () => {
+    sfx.playTick();
     const pathStr = elInputLolPath.value.trim();
     window.api.saveCustomPath(pathStr);
     elPathSuccessLbl.style.display = 'block';
@@ -139,12 +374,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Wire sync across all identical checkboxes in UI
   const handleToggleChange = () => {
+    const prevAutoApplyRunes = appConfig.autoApplyRunes;
+    const prevAutoApplySpells = appConfig.autoApplySpells;
+    const prevAutoApplyItems = appConfig.autoApplyItems;
+
     appConfig.autoApplyRunes = elCheckAutoRunes.checked;
     appConfig.autoApplySpells = elCheckAutoSpells.checked;
     appConfig.autoApplyItems = elCheckAutoItems.checked;
     appConfig.flashOnD = elSettingsCheckFlashD.checked;
     appConfig.debugBrowser = elSettingsCheckDebugBrowser.checked;
     appConfig.startAtLogin = elSettingsCheckStartLogin.checked;
+    appConfig.enableSounds = elSettingsCheckSounds.checked;
+    
+    updateSoundToggleButtonUI(appConfig.enableSounds);
+    sfx.playTick(); // Tick will respect the updated enableSounds state immediately!
     
     // Sync states
     elCheckAutoRunesWelcome.checked = appConfig.autoApplyRunes;
@@ -160,8 +403,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       autoApplyItems: appConfig.autoApplyItems,
       flashOnD: appConfig.flashOnD,
       debugBrowser: appConfig.debugBrowser,
-      startAtLogin: appConfig.startAtLogin
+      startAtLogin: appConfig.startAtLogin,
+      enableSounds: appConfig.enableSounds
     });
+
+    // If activeScrapedData is loaded and any of the settings transitioned from OFF to ON, apply directly!
+    let appliedComponents = [];
+    if (activeScrapedData) {
+      const buildToApply = {};
+
+      if (appConfig.autoApplyRunes && !prevAutoApplyRunes) {
+        const runeSet = activeScrapedData.runeSets
+          ? activeScrapedData.runeSets[activeRuneSetIndex]
+          : activeScrapedData.runes;
+        if (runeSet && runeSet.raw) {
+          buildToApply.runes = runeSet.raw;
+          appliedComponents.push('Runas');
+        }
+      }
+
+      if (appConfig.autoApplySpells && !prevAutoApplySpells) {
+        if (activeScrapedData.summoners && activeScrapedData.summoners.raw) {
+          buildToApply.summoners = activeScrapedData.summoners.raw;
+          appliedComponents.push('Hechizos');
+        }
+      }
+
+      if (appConfig.autoApplyItems && !prevAutoApplyItems) {
+        if (activeScrapedData.items) {
+          buildToApply.items = activeScrapedData.items;
+          appliedComponents.push('Objetos');
+        }
+      }
+
+      if (Object.keys(buildToApply).length > 0) {
+        window.api.applyBuild(buildToApply);
+        sfx.playApply();
+        
+        let componentsStr = '';
+        if (appliedComponents.length === 1) {
+          componentsStr = appliedComponents[0];
+        } else {
+          componentsStr = appliedComponents.slice(0, -1).join(', ') + ' y ' + appliedComponents[appliedComponents.length - 1];
+        }
+        
+        // Show temporary flashing success indicator
+        showTemporaryStatus(`¡${componentsStr} aplicadas/os directamente al juego!`);
+        return;
+      }
+    }
 
     updateBottomActionLayout();
   };
@@ -169,6 +459,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   elSettingsCheckFlashD.addEventListener('change', handleToggleChange);
   elSettingsCheckDebugBrowser.addEventListener('change', handleToggleChange);
   elSettingsCheckStartLogin.addEventListener('change', handleToggleChange);
+  elSettingsCheckSounds.addEventListener('change', handleToggleChange);
+
+  if (elBtnToggleSound) {
+    elBtnToggleSound.addEventListener('click', () => {
+      const newState = !(appConfig.enableSounds !== false);
+      appConfig.enableSounds = newState;
+      elSettingsCheckSounds.checked = newState;
+      updateSoundToggleButtonUI(newState);
+      handleToggleChange();
+    });
+  }
 
   [elCheckAutoRunesWelcome, elCheckAutoSpellsWelcome, elCheckAutoItemsWelcome, elCheckAutoRunes, elCheckAutoSpells, elCheckAutoItems, elSettingsCheckRunes, elSettingsCheckSpells, elSettingsCheckItems].forEach(box => {
     box.addEventListener('change', (e) => {
@@ -194,29 +495,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Manual applying click handler
-  elBtnManualApply.addEventListener('click', () => {
-    if (activeScrapedData) {
-      // Pick first/selected rune set
-      const runeSet = activeScrapedData.runeSets
-        ? activeScrapedData.runeSets[activeRuneSetIndex]
-        : activeScrapedData.runes;
-      window.api.applyBuild({
-        runes: runeSet.raw,
-        summoners: activeScrapedData.summoners.raw,
-        items: activeScrapedData.items
-      });
+  if (elBtnManualApply) {
+    elBtnManualApply.addEventListener('click', () => {
+      sfx.playApply();
+      if (activeScrapedData) {
+        // Pick first/selected rune set
+        const runeSet = activeScrapedData.runeSets
+          ? activeScrapedData.runeSets[activeRuneSetIndex]
+          : activeScrapedData.runes;
+        window.api.applyBuild({
+          runes: runeSet.raw,
+          summoners: activeScrapedData.summoners.raw,
+          items: activeScrapedData.items
+        });
 
-      // Show temporary manual success indicator
-      elActionStatusIndicator.innerHTML = '<span class="indicator-green-text">✅ ¡Runas y hechizos aplicados con éxito!</span>';
-      elActionStatusIndicator.classList.add('active');
-    }
-  });
+        // Show temporary manual success indicator
+        elActionStatusIndicator.innerHTML = '<span class="indicator-green-text">✅ ¡Runas y hechizos aplicados con éxito!</span>';
+        elActionStatusIndicator.classList.add('active');
+      }
+    });
+  }
 
   // 5. Bind role selector buttons click events
   if (elRoleSelector) {
     const buttons = elRoleSelector.querySelectorAll('.role-btn');
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
+        sfx.playTick();
         const role = btn.getAttribute('data-role');
         // Visually update immediately for responsiveness
         updateActiveRoleUI(role);
@@ -230,6 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const elBtnPinRole = document.getElementById('btn-pin-role');
   if (elBtnPinRole) {
     elBtnPinRole.addEventListener('click', () => {
+      sfx.playTick();
       const activeBtn = elRoleSelector.querySelector('.role-btn.active');
       const activeRole = activeBtn ? activeBtn.getAttribute('data-role') : 'default';
 
@@ -273,9 +579,31 @@ function updateConfigUI(config) {
   elSettingsCheckFlashD.checked = !!config.flashOnD;
   elSettingsCheckDebugBrowser.checked = !!config.debugBrowser;
   elSettingsCheckStartLogin.checked = !!config.startAtLogin;
+  elSettingsCheckSounds.checked = config.enableSounds !== false;
+  updateSoundToggleButtonUI(config.enableSounds !== false);
   elInputLolPath.value = config.customLoLPath || '';
 
   updatePinnedRoleUI(config.pinnedRole);
+}
+
+// Update the volume icon and muted styles in the header
+function updateSoundToggleButtonUI(enabled) {
+  const elBtnToggleSound = document.getElementById('btn-toggle-sound');
+  if (!elBtnToggleSound) return;
+  
+  if (enabled) {
+    elBtnToggleSound.classList.remove('muted');
+    elBtnToggleSound.title = "Silenciar Sonidos";
+    elBtnToggleSound.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+    `;
+  } else {
+    elBtnToggleSound.classList.add('muted');
+    elBtnToggleSound.title = "Activar Sonidos";
+    elBtnToggleSound.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+    `;
+  }
 }
 
 // Update the visual representation of the pinned role button
@@ -341,6 +669,7 @@ function updatePlayerProfileUI(playerInfo) {
     if (elWelcomeProfileContainer) {
       elWelcomeProfileContainer.innerHTML = `
         <div class="player-profile-card rank-disconnected">
+          <div class="scan-line"></div>
           <div class="profile-card-content" style="justify-content: center; text-align: center; padding: 12px 16px;">
             <div class="profile-info" style="align-items: center; gap: 4px;">
               <span class="profile-name pulsing-text" style="color: var(--text-muted); font-size: 13px; font-weight: 700;">🔌 ESPERANDO CONEXIÓN LCU...</span>
@@ -374,6 +703,25 @@ function updatePlayerProfileUI(playerInfo) {
     
   const avatarUrl = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${playerInfo.profileIconId}.png`;
 
+  // Format dynamic OP.GG URL supporting Riot Names with #taglines
+  let gameName = (playerInfo.gameName || '').trim();
+  let tagLine = (playerInfo.tagLine || '').trim();
+  const displayName = (playerInfo.displayName || '').trim();
+
+  // Robust parsing: if gameName or tagLine is missing but displayName contains '#', extract them
+  if ((!gameName || !tagLine) && displayName.includes('#')) {
+    const parts = displayName.split('#');
+    gameName = parts[0].trim();
+    tagLine = parts[1].trim();
+  }
+
+  let opggUrl = '';
+  if (gameName && tagLine) {
+    opggUrl = `https://op.gg/es/lol/summoners/euw/${encodeURIComponent(gameName)}-${encodeURIComponent(tagLine)}`;
+  } else {
+    opggUrl = `https://op.gg/es/lol/summoners/search?q=${encodeURIComponent(displayName || gameName)}&region=euw`;
+  }
+
   const cardHtml = `
     <div class="player-profile-card rank-${tierClass}">
       <div class="rank-bg-glow"></div>
@@ -382,13 +730,15 @@ function updatePlayerProfileUI(playerInfo) {
           <img class="profile-avatar" src="${avatarUrl}" alt="Avatar" onerror="if(!this.src.includes('14.10.1')){this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/${playerInfo.profileIconId}.png';}else{this.onerror=null;this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/29.png';}">
           <span class="profile-level">${playerInfo.summonerLevel}</span>
         </div>
-        <div class="profile-info">
-          <span class="profile-name">${playerInfo.displayName}</span>
-          <div class="rank-badge-row">
-            <span class="profile-tier">${tierLabel}</span>
+        <a class="profile-link-wrapper" href="${opggUrl}" target="_blank" title="Ver perfil en OP.GG">
+          <div class="profile-info">
+            <span class="profile-name">${playerInfo.displayName}</span>
+            <div class="rank-badge-row">
+              <span class="profile-tier">${tierLabel}</span>
+            </div>
+            <span class="profile-stats">${statsText}</span>
           </div>
-          <span class="profile-stats">${statsText}</span>
-        </div>
+        </a>
       </div>
     </div>
   `;
@@ -402,15 +752,32 @@ function updatePlayerProfileUI(playerInfo) {
   }
 }
 
-// Update manual/auto layout of bottom actions footer
+let temporaryStatusTimeout = null;
+
+// Show a temporary success message in the action status indicator
+function showTemporaryStatus(message) {
+  if (temporaryStatusTimeout) {
+    clearTimeout(temporaryStatusTimeout);
+  }
+  
+  elActionStatusIndicator.innerHTML = `<span class="indicator-green-text-intense"><span class="pulse-dot"></span>${message}</span>`;
+  elActionStatusIndicator.classList.add('active');
+  
+  temporaryStatusTimeout = setTimeout(() => {
+    temporaryStatusTimeout = null;
+    updateBottomActionLayout();
+  }, 4000);
+}
+
+// Update bottom actions footer status indicator with dynamic info
 function updateBottomActionLayout() {
-  if (appConfig.autoApplyRunes && appConfig.autoApplySpells && appConfig.autoApplyItems) {
-    elActionStatusIndicator.innerHTML = '';
-    elActionStatusIndicator.classList.add('active');
-    elBtnManualApply.style.display = 'none';
-  } else {
-    elActionStatusIndicator.classList.remove('active');
-    elBtnManualApply.style.display = 'block';
+  if (temporaryStatusTimeout) return; // Don't interrupt showing temporary success state!
+  
+  elActionStatusIndicator.innerHTML = '';
+  elActionStatusIndicator.classList.remove('active');
+
+  if (elBtnManualApply) {
+    elBtnManualApply.style.display = 'none'; // Ensure manual apply button is always hidden if somehow referenced
   }
 }
 
@@ -423,6 +790,13 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
   if (newVersion) {
     ddragonVersion = newVersion;
   }
+  
+  // Play chime on LCU online connection transition
+  if (status === 'connected' && lastLcuStatus !== 'connected') {
+    sfx.playNotification();
+  }
+  lastLcuStatus = status;
+
   updateLcuStatusUI(status);
   if (status !== 'connected') {
     updatePlayerProfileUI(null);
@@ -451,11 +825,18 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
   }
   if (!active) {
     // Screen welcome transition
+    if (elScreenWorkspace.classList.contains('active')) {
+      sfx.playSwitch();
+    }
     elScreenWorkspace.classList.remove('active');
     elScreenWelcome.classList.add('active');
     activeScrapedData = null;
+    updateAmbientGlowTheme(null);
   } else {
     // Screen workspace transition
+    if (elScreenWelcome.classList.contains('active')) {
+      sfx.playSwitch();
+    }
     elScreenWelcome.classList.remove('active');
     elScreenWorkspace.classList.add('active');
 
@@ -488,6 +869,21 @@ function updateActiveRoleUI(activeRole) {
     } else {
       btn.classList.remove('active');
     }
+  });
+}
+
+// Helper to update background ambient glows dynamically
+function updateAmbientGlowTheme(primaryStyleId) {
+  const container = document.querySelector('.ambient-glow-container');
+  if (!container) return;
+  
+  const layers = container.querySelectorAll('.ambient-glow');
+  layers.forEach(layer => {
+    const isTarget = primaryStyleId 
+      ? layer.classList.contains(`style-${primaryStyleId}`)
+      : layer.classList.contains('style-default');
+    
+    layer.classList.toggle('active', isTarget);
   });
 }
 
@@ -538,8 +934,14 @@ let activeKeystonesList = [];
 let selectedKeystoneIndex = 0;
 let selectedSetIndex = 0;
 let selectedSummonerIndex = 0;
+let animateInTimeout = null;
 
 function renderBuildDetails(data) {
+  if (animateInTimeout) {
+    clearTimeout(animateInTimeout);
+  }
+  elScreenWorkspace.classList.add('animate-in');
+
   const summoners = data.summoners;
   const items = data.items || { startingBuild: [], popularBoots: [], coreBuild: [], recommendedItems: [], coreItems: [] };
 
@@ -647,6 +1049,11 @@ function renderBuildDetails(data) {
 
   // 6. Update Footer Indicators
   updateBottomActionLayout();
+
+  animateInTimeout = setTimeout(() => {
+    elScreenWorkspace.classList.remove('animate-in');
+    animateInTimeout = null;
+  }, 1000);
 }
 
 // Render top keystone tabs
@@ -687,18 +1094,12 @@ function renderKeystoneTabs() {
     tab.appendChild(info);
     
     tab.addEventListener('click', () => {
+      sfx.playTick();
       selectRuneSet(index, 0);
     });
     
     container.appendChild(tab);
   });
-  
-  // Add help icon at the end of the container
-  const helpIcon = document.createElement('div');
-  helpIcon.className = 'keystone-help-icon';
-  helpIcon.textContent = '?';
-  helpIcon.title = 'Las runas clave más populares recopiladas de los mejores jugadores del mundo.';
-  container.appendChild(helpIcon);
 }
 
 // Select specific set inside active keystone group
@@ -810,6 +1211,7 @@ function renderRuneSetCards(sets, selectedIndex) {
     card.appendChild(footer);
     
     card.addEventListener('click', () => {
+      sfx.playTick();
       selectRuneSet(selectedKeystoneIndex, index);
     });
     
@@ -912,6 +1314,9 @@ function reResolveAndRender(runeSet) {
 // Render the complete interactive rune trees grid for a single rune set
 function renderRuneSet(runeSet) {
   if (!runeSet) return;
+
+  // Update background ambient glows dynamically to match the primary rune style
+  updateAmbientGlowTheme(runeSet.primaryStyleId);
 
   // Track the active perk IDs in a Set for super-fast lookups
   const activePerkIds = new Set([
@@ -1174,7 +1579,7 @@ function renderItemGroup(container, itemsList, showPlayrates = false) {
   itemsList.forEach(item => {
     const wrapper = document.createElement('div');
     wrapper.className = 'item-wrapper';
-    wrapper.title = `${item.name} (${item.gold} oro)`;
+    wrapper.setAttribute('data-tooltip', `${item.name} | ${item.gold} oro`);
 
     const img = document.createElement('img');
     img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${item.id}.png`;

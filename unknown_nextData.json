@@ -1,0 +1,1407 @@
+{
+  "props": {
+    "pageProps": {
+      "championData": {
+        "Aatrox": {
+          "image": "Aatrox.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 0,
+          "name": "Aatrox",
+          "key": "266"
+        },
+        "Ahri": {
+          "image": "Ahri.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 0,
+          "name": "Ahri",
+          "key": "103"
+        },
+        "Akali": {
+          "image": "Akali.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 0,
+          "name": "Akali",
+          "key": "84"
+        },
+        "Akshan": {
+          "image": "Akshan.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 0,
+          "name": "Akshan",
+          "key": "166"
+        },
+        "Alistar": {
+          "image": "Alistar.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 0,
+          "name": "Alistar",
+          "key": "12"
+        },
+        "Ambessa": {
+          "image": "Ambessa.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 0,
+          "name": "Ambessa",
+          "key": "799"
+        },
+        "Amumu": {
+          "image": "Amumu.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 0,
+          "name": "Amumu",
+          "key": "32"
+        },
+        "Anivia": {
+          "image": "Anivia.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 0,
+          "name": "Anivia",
+          "key": "34"
+        },
+        "Annie": {
+          "image": "Annie.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 0,
+          "name": "Annie",
+          "key": "1"
+        },
+        "Aphelios": {
+          "image": "Aphelios.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 0,
+          "name": "Aphelios",
+          "key": "523"
+        },
+        "Ashe": {
+          "image": "Ashe.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 48,
+          "name": "Ashe",
+          "key": "22"
+        },
+        "AurelionSol": {
+          "image": "AurelionSol.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 48,
+          "name": "Aurelion Sol",
+          "key": "136"
+        },
+        "Aurora": {
+          "image": "Aurora.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 48,
+          "name": "Aurora",
+          "key": "893"
+        },
+        "Azir": {
+          "image": "Azir.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 48,
+          "name": "Azir",
+          "key": "268"
+        },
+        "Bard": {
+          "image": "Bard.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 48,
+          "name": "Bardo",
+          "key": "432"
+        },
+        "Belveth": {
+          "image": "Belveth.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 48,
+          "name": "Bel'Veth",
+          "key": "200"
+        },
+        "Blitzcrank": {
+          "image": "Blitzcrank.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 48,
+          "name": "Blitzcrank",
+          "key": "53"
+        },
+        "Brand": {
+          "image": "Brand.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 48,
+          "name": "Brand",
+          "key": "63"
+        },
+        "Braum": {
+          "image": "Braum.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 48,
+          "name": "Braum",
+          "key": "201"
+        },
+        "Briar": {
+          "image": "Briar.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 48,
+          "name": "Briar",
+          "key": "233"
+        },
+        "Caitlyn": {
+          "image": "Caitlyn.png",
+          "sprite": "champion0",
+          "x": 0,
+          "y": 96,
+          "name": "Caitlyn",
+          "key": "51"
+        },
+        "Camille": {
+          "image": "Camille.png",
+          "sprite": "champion0",
+          "x": 48,
+          "y": 96,
+          "name": "Camille",
+          "key": "164"
+        },
+        "Cassiopeia": {
+          "image": "Cassiopeia.png",
+          "sprite": "champion0",
+          "x": 96,
+          "y": 96,
+          "name": "Cassiopeia",
+          "key": "69"
+        },
+        "Chogath": {
+          "image": "Chogath.png",
+          "sprite": "champion0",
+          "x": 144,
+          "y": 96,
+          "name": "Cho'Gath",
+          "key": "31"
+        },
+        "Corki": {
+          "image": "Corki.png",
+          "sprite": "champion0",
+          "x": 192,
+          "y": 96,
+          "name": "Corki",
+          "key": "42"
+        },
+        "Darius": {
+          "image": "Darius.png",
+          "sprite": "champion0",
+          "x": 240,
+          "y": 96,
+          "name": "Darius",
+          "key": "122"
+        },
+        "Diana": {
+          "image": "Diana.png",
+          "sprite": "champion0",
+          "x": 288,
+          "y": 96,
+          "name": "Diana",
+          "key": "131"
+        },
+        "Draven": {
+          "image": "Draven.png",
+          "sprite": "champion0",
+          "x": 336,
+          "y": 96,
+          "name": "Draven",
+          "key": "119"
+        },
+        "DrMundo": {
+          "image": "DrMundo.png",
+          "sprite": "champion0",
+          "x": 384,
+          "y": 96,
+          "name": "Dr. Mundo",
+          "key": "36"
+        },
+        "Ekko": {
+          "image": "Ekko.png",
+          "sprite": "champion0",
+          "x": 432,
+          "y": 96,
+          "name": "Ekko",
+          "key": "245"
+        },
+        "Elise": {
+          "image": "Elise.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 0,
+          "name": "Elise",
+          "key": "60"
+        },
+        "Evelynn": {
+          "image": "Evelynn.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 0,
+          "name": "Evelynn",
+          "key": "28"
+        },
+        "Ezreal": {
+          "image": "Ezreal.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 0,
+          "name": "Ezreal",
+          "key": "81"
+        },
+        "Fiddlesticks": {
+          "image": "Fiddlesticks.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 0,
+          "name": "Fiddlesticks",
+          "key": "9"
+        },
+        "Fiora": {
+          "image": "Fiora.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 0,
+          "name": "Fiora",
+          "key": "114"
+        },
+        "Fizz": {
+          "image": "Fizz.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 0,
+          "name": "Fizz",
+          "key": "105"
+        },
+        "Galio": {
+          "image": "Galio.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 0,
+          "name": "Galio",
+          "key": "3"
+        },
+        "Gangplank": {
+          "image": "Gangplank.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 0,
+          "name": "Gangplank",
+          "key": "41"
+        },
+        "Garen": {
+          "image": "Garen.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 0,
+          "name": "Garen",
+          "key": "86"
+        },
+        "Gnar": {
+          "image": "Gnar.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 0,
+          "name": "Gnar",
+          "key": "150"
+        },
+        "Gragas": {
+          "image": "Gragas.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 48,
+          "name": "Gragas",
+          "key": "79"
+        },
+        "Graves": {
+          "image": "Graves.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 48,
+          "name": "Graves",
+          "key": "104"
+        },
+        "Gwen": {
+          "image": "Gwen.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 48,
+          "name": "Gwen",
+          "key": "887"
+        },
+        "Hecarim": {
+          "image": "Hecarim.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 48,
+          "name": "Hecarim",
+          "key": "120"
+        },
+        "Heimerdinger": {
+          "image": "Heimerdinger.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 48,
+          "name": "Heimerdinger",
+          "key": "74"
+        },
+        "Hwei": {
+          "image": "Hwei.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 48,
+          "name": "Hwei",
+          "key": "910"
+        },
+        "Illaoi": {
+          "image": "Illaoi.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 48,
+          "name": "Illaoi",
+          "key": "420"
+        },
+        "Irelia": {
+          "image": "Irelia.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 48,
+          "name": "Irelia",
+          "key": "39"
+        },
+        "Ivern": {
+          "image": "Ivern.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 48,
+          "name": "Ivern",
+          "key": "427"
+        },
+        "Janna": {
+          "image": "Janna.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 48,
+          "name": "Janna",
+          "key": "40"
+        },
+        "JarvanIV": {
+          "image": "JarvanIV.png",
+          "sprite": "champion1",
+          "x": 0,
+          "y": 96,
+          "name": "Jarvan IV",
+          "key": "59"
+        },
+        "Jax": {
+          "image": "Jax.png",
+          "sprite": "champion1",
+          "x": 48,
+          "y": 96,
+          "name": "Jax",
+          "key": "24"
+        },
+        "Jayce": {
+          "image": "Jayce.png",
+          "sprite": "champion1",
+          "x": 96,
+          "y": 96,
+          "name": "Jayce",
+          "key": "126"
+        },
+        "Jhin": {
+          "image": "Jhin.png",
+          "sprite": "champion1",
+          "x": 144,
+          "y": 96,
+          "name": "Jhin",
+          "key": "202"
+        },
+        "Jinx": {
+          "image": "Jinx.png",
+          "sprite": "champion1",
+          "x": 192,
+          "y": 96,
+          "name": "Jinx",
+          "key": "222"
+        },
+        "Kaisa": {
+          "image": "Kaisa.png",
+          "sprite": "champion1",
+          "x": 240,
+          "y": 96,
+          "name": "Kai'Sa",
+          "key": "145"
+        },
+        "Kalista": {
+          "image": "Kalista.png",
+          "sprite": "champion1",
+          "x": 288,
+          "y": 96,
+          "name": "Kalista",
+          "key": "429"
+        },
+        "Karma": {
+          "image": "Karma.png",
+          "sprite": "champion1",
+          "x": 336,
+          "y": 96,
+          "name": "Karma",
+          "key": "43"
+        },
+        "Karthus": {
+          "image": "Karthus.png",
+          "sprite": "champion1",
+          "x": 384,
+          "y": 96,
+          "name": "Karthus",
+          "key": "30"
+        },
+        "Kassadin": {
+          "image": "Kassadin.png",
+          "sprite": "champion1",
+          "x": 432,
+          "y": 96,
+          "name": "Kassadin",
+          "key": "38"
+        },
+        "Katarina": {
+          "image": "Katarina.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 0,
+          "name": "Katarina",
+          "key": "55"
+        },
+        "Kayle": {
+          "image": "Kayle.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 0,
+          "name": "Kayle",
+          "key": "10"
+        },
+        "Kayn": {
+          "image": "Kayn.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 0,
+          "name": "Kayn",
+          "key": "141"
+        },
+        "Kennen": {
+          "image": "Kennen.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 0,
+          "name": "Kennen",
+          "key": "85"
+        },
+        "Khazix": {
+          "image": "Khazix.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 0,
+          "name": "Kha'Zix",
+          "key": "121"
+        },
+        "Kindred": {
+          "image": "Kindred.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 0,
+          "name": "Kindred",
+          "key": "203"
+        },
+        "Kled": {
+          "image": "Kled.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 0,
+          "name": "Kled",
+          "key": "240"
+        },
+        "KogMaw": {
+          "image": "KogMaw.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 0,
+          "name": "Kog'Maw",
+          "key": "96"
+        },
+        "KSante": {
+          "image": "KSante.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 0,
+          "name": "K'Sante",
+          "key": "897"
+        },
+        "Leblanc": {
+          "image": "Leblanc.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 0,
+          "name": "LeBlanc",
+          "key": "7"
+        },
+        "LeeSin": {
+          "image": "LeeSin.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 48,
+          "name": "Lee Sin",
+          "key": "64"
+        },
+        "Leona": {
+          "image": "Leona.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 48,
+          "name": "Leona",
+          "key": "89"
+        },
+        "Lillia": {
+          "image": "Lillia.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 48,
+          "name": "Lillia",
+          "key": "876"
+        },
+        "Lissandra": {
+          "image": "Lissandra.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 48,
+          "name": "Lissandra",
+          "key": "127"
+        },
+        "Lucian": {
+          "image": "Lucian.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 48,
+          "name": "Lucian",
+          "key": "236"
+        },
+        "Lulu": {
+          "image": "Lulu.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 48,
+          "name": "Lulu",
+          "key": "117"
+        },
+        "Lux": {
+          "image": "Lux.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 48,
+          "name": "Lux",
+          "key": "99"
+        },
+        "Malphite": {
+          "image": "Malphite.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 48,
+          "name": "Malphite",
+          "key": "54"
+        },
+        "Malzahar": {
+          "image": "Malzahar.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 48,
+          "name": "Malzahar",
+          "key": "90"
+        },
+        "Maokai": {
+          "image": "Maokai.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 48,
+          "name": "Maokai",
+          "key": "57"
+        },
+        "MasterYi": {
+          "image": "MasterYi.png",
+          "sprite": "champion2",
+          "x": 0,
+          "y": 96,
+          "name": "Maestro Yi",
+          "key": "11"
+        },
+        "Mel": {
+          "image": "Mel.png",
+          "sprite": "champion2",
+          "x": 48,
+          "y": 96,
+          "name": "Mel",
+          "key": "800"
+        },
+        "Milio": {
+          "image": "Milio.png",
+          "sprite": "champion2",
+          "x": 96,
+          "y": 96,
+          "name": "Milio",
+          "key": "902"
+        },
+        "MissFortune": {
+          "image": "MissFortune.png",
+          "sprite": "champion2",
+          "x": 144,
+          "y": 96,
+          "name": "Miss Fortune",
+          "key": "21"
+        },
+        "MonkeyKing": {
+          "image": "MonkeyKing.png",
+          "sprite": "champion2",
+          "x": 192,
+          "y": 96,
+          "name": "Wukong",
+          "key": "62"
+        },
+        "Mordekaiser": {
+          "image": "Mordekaiser.png",
+          "sprite": "champion2",
+          "x": 240,
+          "y": 96,
+          "name": "Mordekaiser",
+          "key": "82"
+        },
+        "Morgana": {
+          "image": "Morgana.png",
+          "sprite": "champion2",
+          "x": 288,
+          "y": 96,
+          "name": "Morgana",
+          "key": "25"
+        },
+        "Naafiri": {
+          "image": "Naafiri.png",
+          "sprite": "champion2",
+          "x": 336,
+          "y": 96,
+          "name": "Naafiri",
+          "key": "950"
+        },
+        "Nami": {
+          "image": "Nami.png",
+          "sprite": "champion2",
+          "x": 384,
+          "y": 96,
+          "name": "Nami",
+          "key": "267"
+        },
+        "Nasus": {
+          "image": "Nasus.png",
+          "sprite": "champion2",
+          "x": 432,
+          "y": 96,
+          "name": "Nasus",
+          "key": "75"
+        },
+        "Nautilus": {
+          "image": "Nautilus.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 0,
+          "name": "Nautilus",
+          "key": "111"
+        },
+        "Neeko": {
+          "image": "Neeko.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 0,
+          "name": "Neeko",
+          "key": "518"
+        },
+        "Nidalee": {
+          "image": "Nidalee.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 0,
+          "name": "Nidalee",
+          "key": "76"
+        },
+        "Nilah": {
+          "image": "Nilah.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 0,
+          "name": "Nilah",
+          "key": "895"
+        },
+        "Nocturne": {
+          "image": "Nocturne.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 0,
+          "name": "Nocturne",
+          "key": "56"
+        },
+        "Nunu": {
+          "image": "Nunu.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 0,
+          "name": "Nunu y Willump",
+          "key": "20"
+        },
+        "Olaf": {
+          "image": "Olaf.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 0,
+          "name": "Olaf",
+          "key": "2"
+        },
+        "Orianna": {
+          "image": "Orianna.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 0,
+          "name": "Orianna",
+          "key": "61"
+        },
+        "Ornn": {
+          "image": "Ornn.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 0,
+          "name": "Ornn",
+          "key": "516"
+        },
+        "Pantheon": {
+          "image": "Pantheon.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 0,
+          "name": "Pantheon",
+          "key": "80"
+        },
+        "Poppy": {
+          "image": "Poppy.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 48,
+          "name": "Poppy",
+          "key": "78"
+        },
+        "Pyke": {
+          "image": "Pyke.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 48,
+          "name": "Pyke",
+          "key": "555"
+        },
+        "Qiyana": {
+          "image": "Qiyana.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 48,
+          "name": "Qiyana",
+          "key": "246"
+        },
+        "Quinn": {
+          "image": "Quinn.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 48,
+          "name": "Quinn",
+          "key": "133"
+        },
+        "Rakan": {
+          "image": "Rakan.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 48,
+          "name": "Rakan",
+          "key": "497"
+        },
+        "Rammus": {
+          "image": "Rammus.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 48,
+          "name": "Rammus",
+          "key": "33"
+        },
+        "RekSai": {
+          "image": "RekSai.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 48,
+          "name": "Rek'Sai",
+          "key": "421"
+        },
+        "Rell": {
+          "image": "Rell.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 48,
+          "name": "Rell",
+          "key": "526"
+        },
+        "Renata": {
+          "image": "Renata.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 48,
+          "name": "Renata Glasc",
+          "key": "888"
+        },
+        "Renekton": {
+          "image": "Renekton.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 48,
+          "name": "Renekton",
+          "key": "58"
+        },
+        "Rengar": {
+          "image": "Rengar.png",
+          "sprite": "champion3",
+          "x": 0,
+          "y": 96,
+          "name": "Rengar",
+          "key": "107"
+        },
+        "Riven": {
+          "image": "Riven.png",
+          "sprite": "champion3",
+          "x": 48,
+          "y": 96,
+          "name": "Riven",
+          "key": "92"
+        },
+        "Rumble": {
+          "image": "Rumble.png",
+          "sprite": "champion3",
+          "x": 96,
+          "y": 96,
+          "name": "Rumble",
+          "key": "68"
+        },
+        "Ryze": {
+          "image": "Ryze.png",
+          "sprite": "champion3",
+          "x": 144,
+          "y": 96,
+          "name": "Ryze",
+          "key": "13"
+        },
+        "Samira": {
+          "image": "Samira.png",
+          "sprite": "champion3",
+          "x": 192,
+          "y": 96,
+          "name": "Samira",
+          "key": "360"
+        },
+        "Sejuani": {
+          "image": "Sejuani.png",
+          "sprite": "champion3",
+          "x": 240,
+          "y": 96,
+          "name": "Sejuani",
+          "key": "113"
+        },
+        "Senna": {
+          "image": "Senna.png",
+          "sprite": "champion3",
+          "x": 288,
+          "y": 96,
+          "name": "Senna",
+          "key": "235"
+        },
+        "Seraphine": {
+          "image": "Seraphine.png",
+          "sprite": "champion3",
+          "x": 336,
+          "y": 96,
+          "name": "Seraphine",
+          "key": "147"
+        },
+        "Sett": {
+          "image": "Sett.png",
+          "sprite": "champion3",
+          "x": 384,
+          "y": 96,
+          "name": "Sett",
+          "key": "875"
+        },
+        "Shaco": {
+          "image": "Shaco.png",
+          "sprite": "champion3",
+          "x": 432,
+          "y": 96,
+          "name": "Shaco",
+          "key": "35"
+        },
+        "Shen": {
+          "image": "Shen.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 0,
+          "name": "Shen",
+          "key": "98"
+        },
+        "Shyvana": {
+          "image": "Shyvana.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 0,
+          "name": "Shyvana",
+          "key": "102"
+        },
+        "Singed": {
+          "image": "Singed.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 0,
+          "name": "Singed",
+          "key": "27"
+        },
+        "Sion": {
+          "image": "Sion.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 0,
+          "name": "Sion",
+          "key": "14"
+        },
+        "Sivir": {
+          "image": "Sivir.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 0,
+          "name": "Sivir",
+          "key": "15"
+        },
+        "Skarner": {
+          "image": "Skarner.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 0,
+          "name": "Skarner",
+          "key": "72"
+        },
+        "Smolder": {
+          "image": "Smolder.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 0,
+          "name": "Smolder",
+          "key": "901"
+        },
+        "Sona": {
+          "image": "Sona.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 0,
+          "name": "Sona",
+          "key": "37"
+        },
+        "Soraka": {
+          "image": "Soraka.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 0,
+          "name": "Soraka",
+          "key": "16"
+        },
+        "Swain": {
+          "image": "Swain.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 0,
+          "name": "Swain",
+          "key": "50"
+        },
+        "Sylas": {
+          "image": "Sylas.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 48,
+          "name": "Sylas",
+          "key": "517"
+        },
+        "Syndra": {
+          "image": "Syndra.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 48,
+          "name": "Syndra",
+          "key": "134"
+        },
+        "TahmKench": {
+          "image": "TahmKench.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 48,
+          "name": "Tahm Kench",
+          "key": "223"
+        },
+        "Taliyah": {
+          "image": "Taliyah.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 48,
+          "name": "Taliyah",
+          "key": "163"
+        },
+        "Talon": {
+          "image": "Talon.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 48,
+          "name": "Talon",
+          "key": "91"
+        },
+        "Taric": {
+          "image": "Taric.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 48,
+          "name": "Taric",
+          "key": "44"
+        },
+        "Teemo": {
+          "image": "Teemo.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 48,
+          "name": "Teemo",
+          "key": "17"
+        },
+        "Thresh": {
+          "image": "Thresh.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 48,
+          "name": "Thresh",
+          "key": "412"
+        },
+        "Tristana": {
+          "image": "Tristana.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 48,
+          "name": "Tristana",
+          "key": "18"
+        },
+        "Trundle": {
+          "image": "Trundle.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 48,
+          "name": "Trundle",
+          "key": "48"
+        },
+        "Tryndamere": {
+          "image": "Tryndamere.png",
+          "sprite": "champion4",
+          "x": 0,
+          "y": 96,
+          "name": "Tryndamere",
+          "key": "23"
+        },
+        "TwistedFate": {
+          "image": "TwistedFate.png",
+          "sprite": "champion4",
+          "x": 48,
+          "y": 96,
+          "name": "Twisted Fate",
+          "key": "4"
+        },
+        "Twitch": {
+          "image": "Twitch.png",
+          "sprite": "champion4",
+          "x": 96,
+          "y": 96,
+          "name": "Twitch",
+          "key": "29"
+        },
+        "Udyr": {
+          "image": "Udyr.png",
+          "sprite": "champion4",
+          "x": 144,
+          "y": 96,
+          "name": "Udyr",
+          "key": "77"
+        },
+        "Urgot": {
+          "image": "Urgot.png",
+          "sprite": "champion4",
+          "x": 192,
+          "y": 96,
+          "name": "Urgot",
+          "key": "6"
+        },
+        "Varus": {
+          "image": "Varus.png",
+          "sprite": "champion4",
+          "x": 240,
+          "y": 96,
+          "name": "Varus",
+          "key": "110"
+        },
+        "Vayne": {
+          "image": "Vayne.png",
+          "sprite": "champion4",
+          "x": 288,
+          "y": 96,
+          "name": "Vayne",
+          "key": "67"
+        },
+        "Veigar": {
+          "image": "Veigar.png",
+          "sprite": "champion4",
+          "x": 336,
+          "y": 96,
+          "name": "Veigar",
+          "key": "45"
+        },
+        "Velkoz": {
+          "image": "Velkoz.png",
+          "sprite": "champion4",
+          "x": 384,
+          "y": 96,
+          "name": "Vel'Koz",
+          "key": "161"
+        },
+        "Vex": {
+          "image": "Vex.png",
+          "sprite": "champion4",
+          "x": 432,
+          "y": 96,
+          "name": "Vex",
+          "key": "711"
+        },
+        "Vi": {
+          "image": "Vi.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 0,
+          "name": "Vi",
+          "key": "254"
+        },
+        "Viego": {
+          "image": "Viego.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 0,
+          "name": "Viego",
+          "key": "234"
+        },
+        "Viktor": {
+          "image": "Viktor.png",
+          "sprite": "champion5",
+          "x": 96,
+          "y": 0,
+          "name": "Viktor",
+          "key": "112"
+        },
+        "Vladimir": {
+          "image": "Vladimir.png",
+          "sprite": "champion5",
+          "x": 144,
+          "y": 0,
+          "name": "Vladimir",
+          "key": "8"
+        },
+        "Volibear": {
+          "image": "Volibear.png",
+          "sprite": "champion5",
+          "x": 192,
+          "y": 0,
+          "name": "Volibear",
+          "key": "106"
+        },
+        "Warwick": {
+          "image": "Warwick.png",
+          "sprite": "champion5",
+          "x": 240,
+          "y": 0,
+          "name": "Warwick",
+          "key": "19"
+        },
+        "Xayah": {
+          "image": "Xayah.png",
+          "sprite": "champion5",
+          "x": 288,
+          "y": 0,
+          "name": "Xayah",
+          "key": "498"
+        },
+        "Xerath": {
+          "image": "Xerath.png",
+          "sprite": "champion5",
+          "x": 336,
+          "y": 0,
+          "name": "Xerath",
+          "key": "101"
+        },
+        "XinZhao": {
+          "image": "XinZhao.png",
+          "sprite": "champion5",
+          "x": 384,
+          "y": 0,
+          "name": "Xin Zhao",
+          "key": "5"
+        },
+        "Yasuo": {
+          "image": "Yasuo.png",
+          "sprite": "champion5",
+          "x": 432,
+          "y": 0,
+          "name": "Yasuo",
+          "key": "157"
+        },
+        "Yone": {
+          "image": "Yone.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 48,
+          "name": "Yone",
+          "key": "777"
+        },
+        "Yorick": {
+          "image": "Yorick.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 48,
+          "name": "Yorick",
+          "key": "83"
+        },
+        "Yunara": {
+          "image": "Yunara.png",
+          "sprite": "champion5",
+          "x": 96,
+          "y": 48,
+          "name": "Yunara",
+          "key": "804"
+        },
+        "Yuumi": {
+          "image": "Yuumi.png",
+          "sprite": "champion5",
+          "x": 144,
+          "y": 48,
+          "name": "Yuumi",
+          "key": "350"
+        },
+        "Zaahen": {
+          "image": "Zaahen.png",
+          "sprite": "champion5",
+          "x": 192,
+          "y": 48,
+          "name": "Zaahen",
+          "key": "904"
+        },
+        "Zac": {
+          "image": "Zac.png",
+          "sprite": "champion5",
+          "x": 240,
+          "y": 48,
+          "name": "Zac",
+          "key": "154"
+        },
+        "Zed": {
+          "image": "Zed.png",
+          "sprite": "champion5",
+          "x": 288,
+          "y": 48,
+          "name": "Zed",
+          "key": "238"
+        },
+        "Zeri": {
+          "image": "Zeri.png",
+          "sprite": "champion5",
+          "x": 336,
+          "y": 48,
+          "name": "Zeri",
+          "key": "221"
+        },
+        "Ziggs": {
+          "image": "Ziggs.png",
+          "sprite": "champion5",
+          "x": 384,
+          "y": 48,
+          "name": "Ziggs",
+          "key": "115"
+        },
+        "Zilean": {
+          "image": "Zilean.png",
+          "sprite": "champion5",
+          "x": 432,
+          "y": 48,
+          "name": "Zilean",
+          "key": "26"
+        },
+        "Zoe": {
+          "image": "Zoe.png",
+          "sprite": "champion5",
+          "x": 0,
+          "y": 96,
+          "name": "Zoe",
+          "key": "142"
+        },
+        "Zyra": {
+          "image": "Zyra.png",
+          "sprite": "champion5",
+          "x": 48,
+          "y": 96,
+          "name": "Zyra",
+          "key": "143"
+        }
+      }
+    },
+    "__N_SSG": true
+  },
+  "page": "/404",
+  "query": {},
+  "buildId": "E7UXDmSZ8d4ZY6xlBz9BM",
+  "isFallback": false,
+  "isExperimentalCompile": false,
+  "gsp": true,
+  "locale": "es",
+  "locales": [
+    "en",
+    "de",
+    "es",
+    "fr",
+    "ko",
+    "ja",
+    "pl",
+    "pt",
+    "zh",
+    "tr",
+    "ru"
+  ],
+  "defaultLocale": "en",
+  "scriptLoader": []
+}
