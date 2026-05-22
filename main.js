@@ -28,6 +28,7 @@ let appState = {
   lcuStatus: 'disconnected', // 'disconnected', 'scanning', 'connected'
   currentGameflowPhase: 'None',
   activeChampionId: 0,
+  activeSkinId: 0,
   activeChampionName: '',
   activeChampionImage: '',
   activeRole: 'default', // e.g. 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'
@@ -312,6 +313,7 @@ function resetWorkspace() {
   if (appState.activeChampionId !== 0) {
     console.log('[CLIENT] Resetting workspace back to Welcome screen.');
     appState.activeChampionId = 0;
+    appState.activeSkinId = 0;
     appState.activeChampionName = '';
     appState.activeChampionImage = '';
     appState.activeRole = 'default';
@@ -362,30 +364,40 @@ async function handleChampSelectUpdate(session) {
 
   // Find current player cell ID
   const localPlayerCellId = session.localPlayerCellId;
-  const activeAction = session.actions.flatMap(a => a).find(a => a.actorCellId === localPlayerCellId && a.isInProgress);
+  const actions = session.actions ? session.actions.flatMap(a => a) : [];
+  const activeAction = actions.find(a => a.actorCellId === localPlayerCellId && a.isInProgress);
+  
+  // A ban is active if either the player is currently executing a ban action,
+  // or if there are any incomplete ban actions in the session.
+  const isBanning = (activeAction && activeAction.type === 'ban') ||
+                    actions.some(a => a.type === 'ban' && !a.completed);
 
   // Find player's selected champion
   const player = session.myTeam.find(p => p.cellId === localPlayerCellId);
   let selectedChampId = 0;
+  const selectedSkinId = player ? (player.selectedSkinId || 0) : 0;
 
-  if (player) {
-    selectedChampId = player.championId || player.hoveredChampionId || 0;
-  }
+  if (!isBanning) {
+    if (player) {
+      selectedChampId = player.championId || player.hoveredChampionId || 0;
+    }
 
-  if (selectedChampId === 0 && activeAction) {
-    selectedChampId = activeAction.championId || 0;
+    if (selectedChampId === 0 && activeAction) {
+      selectedChampId = activeAction.championId || 0;
+    }
   }
 
   // If champion has changed
   if (selectedChampId !== appState.activeChampionId) {
     appState.activeChampionId = selectedChampId;
+    appState.activeSkinId = selectedSkinId;
 
     if (selectedChampId === 0) {
       appState.activeChampionName = '';
       appState.activeChampionImage = '';
       appState.activeRole = 'default';
       appState.scrapedData = null;
-      sendToRenderer('champ-select-update', { active: true, championId: 0 });
+      sendToRenderer('champ-select-update', { active: true, championId: 0, skinId: 0 });
       return;
     }
 
@@ -416,11 +428,17 @@ async function handleChampSelectUpdate(session) {
       championDisplayName: champInfo.displayName,
       championImage: champInfo.image,
       role: appState.activeRole,
+      skinId: selectedSkinId,
       ddragonVersion: scraper.ddragonVersion
     });
 
     // Start scraping runes & summoners
     triggerScrape(champInfo.name, appState.activeRole);
+  } else if (selectedChampId !== 0 && selectedSkinId !== appState.activeSkinId) {
+    // If the champion is identical but the skin changed
+    appState.activeSkinId = selectedSkinId;
+    console.log(`[CLIENT] Champion skin changed to ID: ${selectedSkinId}`);
+    sendToRenderer('skin-update', { skinId: selectedSkinId });
   }
 }
 

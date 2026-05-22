@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Onetricks Client</title>
   <!-- Google Fonts Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
   <!-- Ambient Cosmic Glow background layers -->
   <div class="ambient-glow-container">
@@ -33,48 +37,68 @@
         <span class="status-text" id="status-text">DESCONECTADO</span>
       </div>
       <button class="icon-btn" id="btn-toggle-sound" title="Silenciar Sonidos">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="feather">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
       </button>
       <button class="icon-btn" id="btn-settings" title="Ajustes">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="feather">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
       </button>
       <button class="window-btn minimize" id="btn-minimize">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
       </button>
       <button class="window-btn close" id="btn-close">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
     </div>
   </header>
 
   <!-- Main Content Wrapper -->
   <main class="app-body">
-    
+
     <!-- STATE 1: WELCOME SCREEN (NO ACTIVE CHAMP SELECT) -->
     <section class="screen active" id="screen-welcome">
       <div class="welcome-container glass-card">
         <div class="welcome-header">
           <div class="orb-glowing purple"></div>
           <h1>Preparado para Onetricks</h1>
-          <p>Entra en selección de campeones en League of Legends y buscaremos automáticamente las mejores runas y hechizos de los mejores One-tricks mundiales.</p>
+          <p>Entra en selección de campeones en League of Legends y buscaremos automáticamente las mejores runas y
+            hechizos de los mejores One-tricks mundiales.</p>
         </div>
-        
+
         <!-- Welcome Screen Player Profile Widget -->
         <div id="welcome-profile-container" class="profile-container-outer"></div>
-        
+
         <div class="feature-rows">
           <div class="feature-card">
             <div class="feat-icon blue">⚡</div>
             <div class="feat-info">
               <h3>Runas al Instante</h3>
-              <p>Detectamos tu campeón al hacer hover o fijarlo e importamos las runas recomendadas de onetricks.gg en menos de un segundo.</p>
+              <p>Detectamos tu campeón al hacer hover o fijarlo e importamos las runas recomendadas de onetricks.gg en
+                menos de un segundo.</p>
             </div>
           </div>
           <div class="feature-card">
             <div class="feat-icon purple">🔥</div>
             <div class="feat-info">
               <h3>Hechizos Auto</h3>
-              <p>Cambia automáticamente a los hechizos óptimos (como Destello y Prender) según lo que jueguen los mejores del mundo.</p>
+              <p>Cambia automáticamente a los hechizos óptimos (como Destello y Prender) según lo que jueguen los
+                mejores del mundo.</p>
             </div>
           </div>
           <div class="feature-card">
@@ -111,7 +135,7 @@
     <!-- STATE 2: CHAMPION SELECT WORKSPACE -->
     <section class="screen" id="screen-workspace">
       <div class="workspace-grid">
-        
+
         <!-- LEFT COLUMN: CHAMPION SPLASH BANNER -->
         <div class="champion-banner glass-card" id="champ-bg-banner">
           <div class="banner-overlay"></div>
@@ -128,7 +152,7 @@
               <button class="role-btn" data-role="support" title="Support">SUP</button>
             </div>
           </div>
-          
+
           <!-- Workspace Screen Player Profile Widget -->
           <div id="workspace-profile-container" class="profile-container-outer"></div>
         </div>
@@ -268,11 +292,7 @@
             </div>
           </div>
 
-          <!-- Bottom Action Area -->
-          <div class="action-footer">
-            <div class="action-status-indicator" id="action-status-indicator">
-            </div>
-          </div>
+
 
         </div>
       </div>
@@ -286,10 +306,14 @@
       <div class="settings-modal-header">
         <h2>Ajustes de Onetricks Client</h2>
         <button class="icon-btn" id="btn-settings-close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
-      
+
       <div class="settings-modal-body">
         <div class="settings-section">
           <h3>Comportamiento</h3>
@@ -370,7 +394,8 @@
           <div class="setting-item">
             <div class="setting-desc">
               <h4>Ruta de Instalación Personalizada</h4>
-              <p>Si la aplicación no detecta tu juego, introduce la ruta donde se encuentra el <b>lockfile</b> (habitualmente <code>C:\Riot Games\League of Legends</code>).</p>
+              <p>Si la aplicación no detecta tu juego, introduce la ruta donde se encuentra el <b>lockfile</b>
+                (habitualmente <code>C:\Riot Games\League of Legends</code>).</p>
             </div>
             <div class="custom-path-input-group">
               <input type="text" id="input-lol-path" placeholder="C:\Riot Games\League of Legends" />
@@ -380,13 +405,17 @@
           </div>
         </div>
       </div>
-      
+
       <div class="settings-modal-footer">
         <button class="btn btn-secondary" id="btn-settings-done">Cerrar</button>
       </div>
     </div>
   </div>
 
+  <!-- Hidden action status indicator: kept for JS compatibility, no visual space -->
+  <div class="action-status-indicator" id="action-status-indicator" style="position:fixed;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;"></div>
+
   <script src="renderer.js"></script>
 </body>
+
 </html>

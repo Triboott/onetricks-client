@@ -27,6 +27,9 @@ const lockfilePath = path.join(workspaceDir, 'lockfile');
 // Simulated Game State
 let isChampSelect = false;
 let selectedChampionId = 0; // 0 = none, 266 = Aatrox, 81 = Ezreal
+let selectedSkinNumber = 0;
+let isMockBanning = false;
+let isMockBanCompleted = false;
 let mockEditableRunePage = {
   id: 4567,
   name: 'Runas Preestablecidas',
@@ -251,6 +254,10 @@ server.listen(PORT, '127.0.0.1', () => {
 
 // Build standard Champion Select payload
 function getChampSelectSessionPayload() {
+  const isBanAction = isMockBanning;
+  const actionType = isBanAction ? 'ban' : 'pick';
+  const actionCompleted = isBanAction ? isMockBanCompleted : false;
+
   return {
     localPlayerCellId: 4,
     myTeam: [
@@ -258,7 +265,7 @@ function getChampSelectSessionPayload() {
       { cellId: 1, championId: 0, hoveredChampionId: 0, summonerId: 102 },
       { cellId: 2, championId: 0, hoveredChampionId: 0, summonerId: 103 },
       { cellId: 3, championId: 0, hoveredChampionId: 0, summonerId: 104 },
-      { cellId: 4, championId: selectedChampionId, hoveredChampionId: selectedChampionId, summonerId: 12345678, assignedPosition: selectedChampionId === 81 ? 'bottom' : 'top' }
+      { cellId: 4, championId: isBanAction ? 0 : selectedChampionId, hoveredChampionId: selectedChampionId, selectedSkinId: selectedChampionId ? (selectedChampionId * 1000 + selectedSkinNumber) : 0, summonerId: 12345678, assignedPosition: selectedChampionId === 81 ? 'bottom' : 'top' }
     ],
     actions: [
       [
@@ -266,8 +273,9 @@ function getChampSelectSessionPayload() {
           actorCellId: 4,
           championId: selectedChampionId,
           id: 1,
-          isInProgress: true,
-          type: 'pick'
+          isInProgress: !actionCompleted,
+          completed: actionCompleted,
+          type: actionType
         }
       ]
     ]
@@ -306,6 +314,11 @@ function showCLI() {
   console.log('[2] Hover Aatrox (ID 266) - Generará scraping de Onetricks');
   console.log('[3] Hover Ezreal (ID 81) - Generará scraping de Onetricks');
   console.log('[4] Salir de Champ Select / Partida iniciada');
+  console.log('[5] Cambiar a Skin Default (Skin ID 0)');
+  console.log('[6] Cambiar a Skin index 1 (Frosted Ezreal / Justicar Aatrox)');
+  console.log('[7] Cambiar a Skin index 2 (Nottingham Ezreal / Mecha Aatrox)');
+  console.log('[8] Iniciar Fase de Baneo (Hover Aatrox para Banear)');
+  console.log('[9] Confirmar Baneo (Lock Ban)');
   console.log('[q] Apagar simulador y borrar lockfile');
   console.log('Elija una opción: ');
 
@@ -314,23 +327,64 @@ function showCLI() {
     if (option === '1') {
       isChampSelect = true;
       selectedChampionId = 0;
+      selectedSkinNumber = 0;
+      isMockBanning = false;
+      isMockBanCompleted = false;
       console.log('\n[MOCK LCU] Entrando a Champ Select...');
       broadcastEvent('/lol-champ-select/v1/session', 'Create', getChampSelectSessionPayload());
     } else if (option === '2') {
       if (!isChampSelect) isChampSelect = true;
+      isMockBanning = false;
+      isMockBanCompleted = false;
       selectedChampionId = 266;
       console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Aatrox (266)');
       broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === '3') {
       if (!isChampSelect) isChampSelect = true;
+      isMockBanning = false;
+      isMockBanCompleted = false;
       selectedChampionId = 81;
       console.log('\n[MOCK LCU] Jugador seleccionando/hovereando: Ezreal (81)');
       broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === '4') {
       isChampSelect = false;
       selectedChampionId = 0;
+      selectedSkinNumber = 0;
+      isMockBanning = false;
+      isMockBanCompleted = false;
       console.log('\n[MOCK LCU] Champ Select cerrado.');
       broadcastEvent('/lol-champ-select/v1/session', 'Delete', null);
+    } else if (option === '5') {
+      selectedSkinNumber = 0;
+      console.log('\n[MOCK LCU] Skin cambiada a Default (0)');
+      if (isChampSelect) {
+        broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+      }
+    } else if (option === '6') {
+      selectedSkinNumber = 1;
+      console.log('\n[MOCK LCU] Skin cambiada a Skin index 1');
+      if (isChampSelect) {
+        broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+      }
+    } else if (option === '7') {
+      selectedSkinNumber = 2;
+      console.log('\n[MOCK LCU] Skin cambiada a Skin index 2');
+      if (isChampSelect) {
+        broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+      }
+    } else if (option === '8') {
+      if (!isChampSelect) isChampSelect = true;
+      isMockBanning = true;
+      isMockBanCompleted = false;
+      selectedChampionId = 266; // Aatrox hovered to ban
+      console.log('\n[MOCK LCU] Fase de Baneo: Hovereando Aatrox (266) para Banear');
+      broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
+    } else if (option === '9') {
+      if (!isChampSelect) isChampSelect = true;
+      isMockBanning = true;
+      isMockBanCompleted = true;
+      console.log('\n[MOCK LCU] Baneo Confirmado (Lock Ban)');
+      broadcastEvent('/lol-champ-select/v1/session', 'Update', getChampSelectSessionPayload());
     } else if (option === 'q') {
       cleanup();
       process.exit(0);

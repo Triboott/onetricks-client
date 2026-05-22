@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   onScrapeSuccess: (callback) => ipcRenderer.on('scrape-success', (event, data) => callback(data)),
   onScrapeError: (callback) => ipcRenderer.on('scrape-error', (event, data) => callback(data)),
   onDDragonReady: (callback) => ipcRenderer.on('ddragon-ready', (event, version) => callback(version)),
+  onSkinUpdate: (callback) => ipcRenderer.on('skin-update', (event, data) => callback(data)),
   
   // Triggers from Renderer Process (UI) to Main Process (Node.js)
   changeRole: (role) => ipcRenderer.send('change-role', role),

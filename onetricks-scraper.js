@@ -239,7 +239,7 @@ class OnetricksScraper {
               this.ddragonVersion = versions[0];
               resolve(true);
             }
-          } catch(e) {
+          } catch (e) {
             resolve(false);
           }
         });
@@ -328,7 +328,7 @@ class OnetricksScraper {
       if (diffMs < threeDaysMs) {
         try {
           return Promise.resolve(JSON.parse(fs.readFileSync(cachePath, 'utf8')));
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -341,7 +341,7 @@ class OnetricksScraper {
             const data = JSON.parse(raw);
             fs.writeFileSync(cachePath, raw, 'utf8');
             resolve(data);
-          } catch(e) {
+          } catch (e) {
             reject(e);
           }
         });
@@ -350,7 +350,7 @@ class OnetricksScraper {
         if (fs.existsSync(cachePath)) {
           try {
             return resolve(JSON.parse(fs.readFileSync(cachePath, 'utf8')));
-          } catch(e) {}
+          } catch (e) { }
         }
         reject(err);
       });
@@ -380,7 +380,7 @@ class OnetricksScraper {
       if (role && role !== 'default') {
         url += `?role=${role}`;
       }
-      
+
       const tempWindow = new BrowserWindow({
         width: 1280,
         height: 900,
@@ -477,7 +477,7 @@ class OnetricksScraper {
       // DEBUG: always save scraped JSON for inspection
       try {
         fs.writeFileSync(`${championName.toLowerCase()}_nextData.json`, JSON.stringify(nextData, null, 2), 'utf8');
-      } catch(e) {}
+      } catch (e) { }
       const pp = nextData.props.pageProps;
       if (pp.firstItemStats) {
         let bestPatchData = null;
@@ -600,12 +600,12 @@ class OnetricksScraper {
 
             for (const treeEntry of treeEntries) {
               let primaryStyleId = treeEntry[0];
-              let subStyleId     = treeEntry[1];
-              const keystoneId     = treeEntry[2];
+              let subStyleId = treeEntry[1];
+              const keystoneId = treeEntry[2];
 
               // Look for builds in allPatchData (global) first, then fall back to item-specific
               const globalKeystoneBuilds = allPatchData.popRunes && allPatchData.popRunes[keystoneId];
-              const localKeystoneBuilds  = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
+              const localKeystoneBuilds = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
               const keystoneBuilds = globalKeystoneBuilds || localKeystoneBuilds;
               if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
@@ -646,7 +646,7 @@ class OnetricksScraper {
                   if (chosenBuild) break;
                 }
               }
-              
+
               if (!chosenBuild) chosenBuild = keystoneBuilds[0]; // final fallback
 
               // Sync style IDs to the chosen build to prevent mismatching/empty style renders
@@ -661,10 +661,10 @@ class OnetricksScraper {
               // Sort runes properly: Primary tree first (sorted by slot), then Secondary tree (sorted by slot)
               const primaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === primaryStyleId);
               const secondaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === subStyleId);
-              
+
               primaryRunes.sort((a, b) => this.perksMap[a].slot - this.perksMap[b].slot);
               secondaryRunes.sort((a, b) => this.perksMap[a].slot - this.perksMap[b].slot);
-              
+
               const sortedPerks = [...primaryRunes, ...secondaryRunes, ...statShards];
 
               // Sum the playrates of all builds with this exact primaryStyleId and subStyleId under this keystoneId.
@@ -672,7 +672,7 @@ class OnetricksScraper {
               // relative to the most popular first item. Fall back to allPatchData if not found.
               let sumBuildPlayrates = 0;
               let hasBuilds = false;
-              
+
               // Primary: use the most popular item's popRunes (matches website display)
               const itemBuilds = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
               if (itemBuilds && Array.isArray(itemBuilds)) {
@@ -778,7 +778,7 @@ class OnetricksScraper {
                 });
               }
             });
-            
+
             if (rawSummonersOptions.length > 0) {
               console.log('[SCRAPER] Summoner options parsed:', rawSummonersOptions);
               rawSummoners = {
@@ -790,7 +790,7 @@ class OnetricksScraper {
 
           // 6. Extract Item Builds from JSON!
           const itemData = (nextData && nextData.props && nextData.props.pageProps && nextData.props.pageProps.itemData) || bestPatchData.itemData || {};
-          
+
           let startingBuild = [];
           if (bestPatchData.startingItems && bestPatchData.startingItems.length > 0) {
             const uniqueStarters = {};
@@ -863,7 +863,7 @@ class OnetricksScraper {
           if (bestPatchData.popularItems && bestPatchData.popularItems.length > 0) {
             const startingIds = startingBuild.map(i => i.id);
             const bootsIds = popularBoots.map(i => i.id);
-            
+
             // Try to extract from popClassicPath or popCore to get the purchase order sequence
             let sequentialIds = [];
             if (bestPatchData.popClassicPath && bestPatchData.popClassicPath.length > 0 && bestPatchData.popClassicPath[0][0]) {
@@ -916,7 +916,7 @@ class OnetricksScraper {
             // Map sequential items to rich item objects with playrate lookup
             const seqItems = cleanSequentialIds.map(id => {
               let rate = playratesMap[id];
-              
+
               // Búsqueda directa del playrate del primer objeto en el parche actual
               if (rate === undefined && bestPatchStatsData && bestPatchStatsData[id] && typeof bestPatchStatsData[id].playrate === 'number') {
                 let r = bestPatchStatsData[id].playrate;
@@ -925,7 +925,7 @@ class OnetricksScraper {
                 }
                 rate = Math.round(r);
               }
-              
+
               if (rate === undefined) {
                 if (bestPatchStatsData && bestPatchStatsData.all && bestPatchStatsData.all.popularItems) {
                   const entry = bestPatchStatsData.all.popularItems.find(x => x && x[0] && x[0].toString() === id);
@@ -982,8 +982,8 @@ class OnetricksScraper {
           if (skillSource && skillSource.length > 0) {
             // skillPaths[i] = [[{skillSlot: "3"}, ...per level], playrate]
             const topPath = skillSource[0]; // most played path (already sorted by server)
-            const levels  = topPath[0];     // array of per-level skill choices
-            let pathRate  = topPath[1] || 0;
+            const levels = topPath[0];     // array of per-level skill choices
+            let pathRate = topPath[1] || 0;
             if (pathRate > 0 && pathRate <= 1.0) pathRate = pathRate * 100;
 
             // Build Q/W/E/R level-up sequence
@@ -1250,7 +1250,7 @@ class OnetricksScraper {
   // Private helper: resolves one raw rune set object into a display-ready format
   _resolveRuneSet(rawRunes, styleMeta, shardMeta) {
     const primaryStyle = styleMeta[rawRunes.primaryStyleId] || { name: 'Primaria', icon: '' };
-    const subStyle     = styleMeta[rawRunes.subStyleId]     || { name: 'Secundaria', icon: '' };
+    const subStyle = styleMeta[rawRunes.subStyleId] || { name: 'Secundaria', icon: '' };
 
     const resolvedPerks = rawRunes.selectedPerkIds.map((id) => {
       if (shardMeta[id]) {
@@ -1263,15 +1263,15 @@ class OnetricksScraper {
       return { id, name: `Runa ${id}`, icon: '', desc: 'Desconocido', isShard: false };
     });
 
-    const allRunes   = resolvedPerks.filter(p => !p.isShard);
+    const allRunes = resolvedPerks.filter(p => !p.isShard);
     const shardsPerks = resolvedPerks.filter(p => p.isShard);
 
-    let primaryPerks   = allRunes.filter(p => this.perksMap[p.id]?.styleId === rawRunes.primaryStyleId);
+    let primaryPerks = allRunes.filter(p => this.perksMap[p.id]?.styleId === rawRunes.primaryStyleId);
     let secondaryPerks = allRunes.filter(p => this.perksMap[p.id]?.styleId === rawRunes.subStyleId);
 
     if (primaryPerks.length !== 4 || secondaryPerks.length !== 2) {
       console.log(`[SCRAPER] Dynamic grouping incomplete (Primary: ${primaryPerks.length}, Secondary: ${secondaryPerks.length}). Using index-based fallback.`);
-      primaryPerks   = allRunes.slice(0, 4);
+      primaryPerks = allRunes.slice(0, 4);
       secondaryPerks = allRunes.slice(4, 6);
     } else {
       // Ensure keystone is always first in primary list
@@ -1284,16 +1284,16 @@ class OnetricksScraper {
 
     return {
       raw: rawRunes,
-      primaryStyleId:   rawRunes.primaryStyleId,
+      primaryStyleId: rawRunes.primaryStyleId,
       primaryStyleName: primaryStyle.name,
       primaryStyleIcon: primaryStyle.icon,
-      subStyleId:       rawRunes.subStyleId,
-      subStyleName:     subStyle.name,
-      subStyleIcon:     subStyle.icon,
+      subStyleId: rawRunes.subStyleId,
+      subStyleName: subStyle.name,
+      subStyleIcon: subStyle.icon,
       primaryPerks,
       secondaryPerks,
       shardsPerks,
-      playrate:         rawRunes._playrate
+      playrate: rawRunes._playrate
     };
   }
 
@@ -1302,23 +1302,23 @@ class OnetricksScraper {
     if (!scraped) return null;
 
     const styleMeta = {
-      8000: { name: 'Precisión',  icon: 'perk-images/Styles/7201_Precision.png' },
+      8000: { name: 'Precisión', icon: 'perk-images/Styles/7201_Precision.png' },
       8100: { name: 'Dominación', icon: 'perk-images/Styles/7200_Domination.png' },
-      8200: { name: 'Brujería',   icon: 'perk-images/Styles/7202_Sorcery.png' },
-      8300: { name: 'Inspiración',icon: 'perk-images/Styles/7203_Whimsy.png' },
-      8400: { name: 'Valor',      icon: 'perk-images/Styles/7204_Resolve.png' }
+      8200: { name: 'Brujería', icon: 'perk-images/Styles/7202_Sorcery.png' },
+      8300: { name: 'Inspiración', icon: 'perk-images/Styles/7203_Whimsy.png' },
+      8400: { name: 'Valor', icon: 'perk-images/Styles/7204_Resolve.png' }
     };
 
     const shardMeta = {
-      5001: { name: 'Vida Escalar',           icon: 'perk-images/StatMods/StatModsHealthPlusIcon.png',    desc: 'Defensa' },
-      5002: { name: 'Armadura',               icon: 'perk-images/StatMods/StatModsArmorIcon.png',         desc: 'Defensa' },
-      5003: { name: 'Resistencia Mágica',     icon: 'perk-images/StatMods/StatModsMagicResIcon.png',      desc: 'Defensa' },
-      5005: { name: 'Velocidad de Ataque',    icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png',   desc: 'Ataque' },
-      5007: { name: 'Aceleración de Habilidad',icon: 'perk-images/StatMods/StatModsCDRScalingIcon.png',   desc: 'Flexibilidad' },
-      5008: { name: 'Fuerza Adaptable',       icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' },
+      5001: { name: 'Vida Escalar', icon: 'perk-images/StatMods/StatModsHealthPlusIcon.png', desc: 'Defensa' },
+      5002: { name: 'Armadura', icon: 'perk-images/StatMods/StatModsArmorIcon.png', desc: 'Defensa' },
+      5003: { name: 'Resistencia Mágica', icon: 'perk-images/StatMods/StatModsMagicResIcon.png', desc: 'Defensa' },
+      5005: { name: 'Velocidad de Ataque', icon: 'perk-images/StatMods/StatModsAttackSpeedIcon.png', desc: 'Ataque' },
+      5007: { name: 'Aceleración de Habilidad', icon: 'perk-images/StatMods/StatModsCDRScalingIcon.png', desc: 'Flexibilidad' },
+      5008: { name: 'Fuerza Adaptable', icon: 'perk-images/StatMods/StatModsAdaptiveForceIcon.png', desc: 'Ataque/Flex' },
       5010: { name: 'Velocidad de Movimiento', icon: 'perk-images/StatMods/StatModsMovementSpeedIcon.png', desc: 'Defensa' },
-      5011: { name: 'Vida',                    icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
-      5012: { name: 'Resistencia Escalar',     icon: 'perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png', desc: 'Defensa' },
+      5011: { name: 'Vida', icon: 'perk-images/StatMods/StatModsHealthScalingIcon.png', desc: 'Defensa' },
+      5012: { name: 'Resistencia Escalar', icon: 'perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png', desc: 'Defensa' },
       5013: { name: 'Tenacidad y Resistencia a Ralentizaciones', icon: 'perk-images/StatMods/StatModsTenacityIcon.png', desc: 'Defensa' }
     };
 
@@ -1331,14 +1331,14 @@ class OnetricksScraper {
     // Resolve Summoner Spells
     const summoners = scraped.summoners;
     const spell1 = this.spellsMap[summoners.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
-    const spell2 = this.spellsMap[summoners.spell2Id] || { name: 'Prender',  icon: 'summonerIgnite.png' };
+    const spell2 = this.spellsMap[summoners.spell2Id] || { name: 'Prender', icon: 'summonerIgnite.png' };
 
     // Resolve Summoner Spells Options (multiple paths)
     let summonersOptions = [];
     if (scraped.rawSummonersOptions && scraped.rawSummonersOptions.length > 0) {
       summonersOptions = scraped.rawSummonersOptions.map(opt => {
         const s1 = this.spellsMap[opt.spell1Id] || { name: 'Destello', icon: 'summonerFlash.png' };
-        const s2 = this.spellsMap[opt.spell2Id] || { name: 'Prender',  icon: 'summonerIgnite.png' };
+        const s2 = this.spellsMap[opt.spell2Id] || { name: 'Prender', icon: 'summonerIgnite.png' };
         return {
           raw: { spell1Id: opt.spell1Id, spell2Id: opt.spell2Id },
           spell1: { id: opt.spell1Id, name: s1.name, icon: s1.icon },

@@ -3,32 +3,32 @@
 // ==========================================================================
 const sfx = {
   ctx: null,
-  
+
   init() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
   },
-  
+
   playTick() {
     this.init();
     if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
     const now = this.ctx.currentTime;
-    
+
     // Low body thump (triangle wave sweep, 160Hz -> 80Hz)
     const osc = this.ctx.createOscillator();
     const oscGain = this.ctx.createGain();
-    
+
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(160, now);
     osc.frequency.exponentialRampToValueAtTime(80, now + 0.012);
-    
+
     oscGain.gain.setValueAtTime(0.015, now);
     oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
-    
+
     osc.connect(oscGain);
     oscGain.connect(this.ctx.destination);
-    
+
     // High switch click transient (5ms bandpass-filtered noise burst around 2.8kHz)
     try {
       const bufferSize = this.ctx.sampleRate * 0.005; // 5ms
@@ -39,26 +39,26 @@ const sfx = {
       }
       const noise = this.ctx.createBufferSource();
       noise.buffer = buffer;
-      
+
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(2800, now);
       filter.Q.setValueAtTime(4, now);
-      
+
       const noiseGain = this.ctx.createGain();
       noiseGain.gain.setValueAtTime(0.008, now);
       noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.005);
-      
+
       noise.connect(filter);
       filter.connect(noiseGain);
       noiseGain.connect(this.ctx.destination);
-      
+
       noise.start(now);
       noise.stop(now + 0.005);
     } catch (e) {
       console.warn("Click noise transient skipped:", e);
     }
-    
+
     osc.start(now);
     osc.stop(now + 0.012);
   },
@@ -67,34 +67,34 @@ const sfx = {
     this.init();
     if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
     const now = this.ctx.currentTime;
-    
+
     // 1. Warm low body tone sweep (triangle wave, 240Hz -> 150Hz)
     const osc = this.ctx.createOscillator();
     const oscGain = this.ctx.createGain();
-    
+
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(240, now);
     osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
-    
+
     oscGain.gain.setValueAtTime(0.008, now);
     oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-    
+
     osc.connect(oscGain);
     oscGain.connect(this.ctx.destination);
-    
+
     // 2. Soft delicate crystalline bell chime (sine wave, A5 - 880Hz)
     const bell = this.ctx.createOscillator();
     const bellGain = this.ctx.createGain();
-    
+
     bell.type = 'sine';
     bell.frequency.setValueAtTime(880, now);
-    
+
     bellGain.gain.setValueAtTime(0.003, now);
     bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-    
+
     bell.connect(bellGain);
     bellGain.connect(this.ctx.destination);
-    
+
     // 3. Gentle slide swoosh (150ms noise swept down by a bandpass filter)
     try {
       const bufferSize = this.ctx.sampleRate * 0.15; // 150ms
@@ -105,27 +105,27 @@ const sfx = {
       }
       const noise = this.ctx.createBufferSource();
       noise.buffer = buffer;
-      
+
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(600, now);
       filter.frequency.exponentialRampToValueAtTime(300, now + 0.15);
       filter.Q.setValueAtTime(2.0, now);
-      
+
       const noiseGain = this.ctx.createGain();
       noiseGain.gain.setValueAtTime(0.010, now);
       noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-      
+
       noise.connect(filter);
       filter.connect(noiseGain);
       noiseGain.connect(this.ctx.destination);
-      
+
       noise.start(now);
       noise.stop(now + 0.15);
     } catch (e) {
       console.warn("Switch whoosh noise skipped:", e);
     }
-    
+
     osc.start(now);
     osc.stop(now + 0.15);
     bell.start(now);
@@ -136,84 +136,84 @@ const sfx = {
     this.init();
     if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
     const now = this.ctx.currentTime;
-    
+
     // 1. Warm Sub-Bass (A2 - 110Hz) to ground the action
     const subOsc = this.ctx.createOscillator();
     const subGain = this.ctx.createGain();
-    
+
     subOsc.type = 'triangle';
     subOsc.frequency.setValueAtTime(110, now);
-    
+
     subGain.gain.setValueAtTime(0, now);
     subGain.gain.linearRampToValueAtTime(0.015, now + 0.05); // 50ms attack
     subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
-    
+
     subOsc.connect(subGain);
     subGain.connect(this.ctx.destination);
-    
+
     subOsc.start(now);
     subOsc.stop(now + 0.6);
-    
+
     // 2. Beautiful Staggered Crystalline Chime (A Major Chord: A4, C#5, E5, A5)
     // Runs through a lowpass filter at 1.5kHz to keep it incredibly warm and smooth.
     const chord = [440.00, 554.37, 659.25, 880.00];
-    
+
     chord.forEach((freq, index) => {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
       const start = now + (index * 0.035); // Stagger arpeggio
-      
+
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, start);
-      
+
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(1500, start);
-      
+
       gain.gain.setValueAtTime(0, start);
       gain.gain.linearRampToValueAtTime(0.008, start + 0.035); // Soft 35ms attack
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.50);
-      
+
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.start(start);
       osc.stop(start + 0.50);
     });
   },
-  
+
   playNotification() {
     this.init();
     if (!this.ctx || (appConfig && appConfig.enableSounds === false)) return;
     const now = this.ctx.currentTime;
-    
+
     // Soft, warm executive hotel chime (E5 -> A5 with soft attacks)
     const tones = [
       { freq: 659.25, offset: 0, duration: 0.4 },
       { freq: 880.00, offset: 0.08, duration: 0.5 }
     ];
-    
+
     tones.forEach(t => {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
       const start = now + t.offset;
-      
+
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(t.freq, start);
-      
+
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(1200, start);
-      
+
       gain.gain.setValueAtTime(0, start);
       gain.gain.linearRampToValueAtTime(0.012, start + 0.04); // Soft 40ms attack
       gain.gain.exponentialRampToValueAtTime(0.0001, start + t.duration);
-      
+
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.start(start);
       osc.stop(start + t.duration);
     });
@@ -288,6 +288,9 @@ const elBtnClose = document.getElementById('btn-close');
 
 // Local visual state data memory
 let activeScrapedData = null;
+let activeChampionName = '';
+let currentLoadingChamp = '';
+let currentLoadingSkin = -1;
 let activeRuneSetIndex = 0;
 let activeRuneSet = null;
 let runesReforged = [];
@@ -352,7 +355,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     sfx.playSwitch();
     elSettingsOverlay.classList.add('active');
   });
-  
+
   const closeSettings = () => {
     sfx.playSwitch();
     elSettingsOverlay.classList.remove('active');
@@ -385,10 +388,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig.debugBrowser = elSettingsCheckDebugBrowser.checked;
     appConfig.startAtLogin = elSettingsCheckStartLogin.checked;
     appConfig.enableSounds = elSettingsCheckSounds.checked;
-    
+
     updateSoundToggleButtonUI(appConfig.enableSounds);
     sfx.playTick(); // Tick will respect the updated enableSounds state immediately!
-    
+
     // Sync states
     elCheckAutoRunesWelcome.checked = appConfig.autoApplyRunes;
     elCheckAutoSpellsWelcome.checked = appConfig.autoApplySpells;
@@ -439,14 +442,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (Object.keys(buildToApply).length > 0) {
         window.api.applyBuild(buildToApply);
         sfx.playApply();
-        
+
         let componentsStr = '';
         if (appliedComponents.length === 1) {
           componentsStr = appliedComponents[0];
         } else {
           componentsStr = appliedComponents.slice(0, -1).join(', ') + ' y ' + appliedComponents[appliedComponents.length - 1];
         }
-        
+
         // Show temporary flashing success indicator
         showTemporaryStatus(`¡${componentsStr} aplicadas/os directamente al juego!`);
         return;
@@ -563,6 +566,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // 7. Bind champion portrait click to open onetricks.gg profile
+  const elPortraitContainer = document.querySelector('.portrait-container');
+  if (elPortraitContainer) {
+    elPortraitContainer.title = "Ver perfil del campeón en onetricks.gg";
+    elPortraitContainer.addEventListener('click', () => {
+      if (activeChampionName) {
+        const activeBtn = elRoleSelector.querySelector('.role-btn.active');
+        const role = activeBtn ? activeBtn.getAttribute('data-role') : 'default';
+        
+        let url = `https://www.onetricks.gg/es/champions/builds/${activeChampionName}`;
+        if (role && role !== 'default') {
+          url += `?role=${role}`;
+        }
+        sfx.playNotification();
+        window.open(url, '_blank');
+      }
+    });
+  }
 });
 
 // Sync visual toggle checkbox states
@@ -590,7 +612,7 @@ function updateConfigUI(config) {
 function updateSoundToggleButtonUI(enabled) {
   const elBtnToggleSound = document.getElementById('btn-toggle-sound');
   if (!elBtnToggleSound) return;
-  
+
   if (enabled) {
     elBtnToggleSound.classList.remove('muted');
     elBtnToggleSound.title = "Silenciar Sonidos";
@@ -635,9 +657,9 @@ function updatePinnedRoleUI(pinnedRole) {
 // Update connection pill visual styles in header
 function updateLcuStatusUI(status) {
   elStatusDot.className = 'status-dot ' + status;
-  
+
   if (status === 'connected') {
-    elStatusText.textContent = 'LCU CONECTADO';
+    elStatusText.textContent = 'LOL DETECTADO';
     elLcuPill.style.borderColor = 'rgba(16, 185, 129, 0.25)';
   } else if (status === 'scanning') {
     elStatusText.textContent = 'BUSCANDO CLIENTE...';
@@ -689,18 +711,18 @@ function updatePlayerProfileUI(playerInfo) {
   const rawTier = (playerInfo.tier || 'UNRANKED').toUpperCase();
   const tierClass = rawTier.toLowerCase();
   const translatedTier = TIER_TRANSLATIONS[rawTier] || rawTier;
-  
+
   const isApex = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(rawTier);
   const divisionStr = isApex ? '' : ` ${playerInfo.division || ''}`;
   const tierLabel = rawTier === 'UNRANKED' || rawTier === 'NONE'
     ? 'SIN CLASIFICAR'
     : `${translatedTier}${divisionStr} (${playerInfo.lp} LP)`;
-    
+
   const totalGames = playerInfo.wins + playerInfo.losses;
   const statsText = totalGames > 0
     ? `${playerInfo.winrate}% WR - ${totalGames} Partidas`
     : '0% WR - 0 Partidas';
-    
+
   const avatarUrl = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${playerInfo.profileIconId}.png`;
 
   // Format dynamic OP.GG URL supporting Riot Names with #taglines
@@ -759,10 +781,10 @@ function showTemporaryStatus(message) {
   if (temporaryStatusTimeout) {
     clearTimeout(temporaryStatusTimeout);
   }
-  
+
   elActionStatusIndicator.innerHTML = `<span class="indicator-green-text-intense"><span class="pulse-dot"></span>${message}</span>`;
   elActionStatusIndicator.classList.add('active');
-  
+
   temporaryStatusTimeout = setTimeout(() => {
     temporaryStatusTimeout = null;
     updateBottomActionLayout();
@@ -772,7 +794,7 @@ function showTemporaryStatus(message) {
 // Update bottom actions footer status indicator with dynamic info
 function updateBottomActionLayout() {
   if (temporaryStatusTimeout) return; // Don't interrupt showing temporary success state!
-  
+
   elActionStatusIndicator.innerHTML = '';
   elActionStatusIndicator.classList.remove('active');
 
@@ -790,7 +812,7 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
   if (newVersion) {
     ddragonVersion = newVersion;
   }
-  
+
   // Play chime on LCU online connection transition
   if (status === 'connected' && lastLcuStatus !== 'connected') {
     sfx.playNotification();
@@ -818,8 +840,36 @@ window.api.onDDragonReady((newVersion) => {
   }
 });
 
+// Preload and smoothly update background banner image without flashing to black
+function setBannerBackground(championName, skinNumber) {
+  if (!championName) {
+    elChampBgBanner.style.backgroundImage = 'none';
+    currentLoadingChamp = '';
+    currentLoadingSkin = -1;
+    return;
+  }
+
+  currentLoadingChamp = championName;
+  currentLoadingSkin = skinNumber;
+
+  const url = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_${skinNumber}.jpg`;
+  const img = new Image();
+  img.onload = () => {
+    if (currentLoadingChamp === championName && currentLoadingSkin === skinNumber && activeChampionName === championName) {
+      elChampBgBanner.style.backgroundImage = `url('${url}')`;
+    }
+  };
+  img.onerror = () => {
+    if (skinNumber !== 0) {
+      console.warn(`Failed to load skin ${skinNumber} for ${championName}, falling back to default.`);
+      setBannerBackground(championName, 0);
+    }
+  };
+  img.src = url;
+}
+
 // Champion selection changes listener
-window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role, ddragonVersion: newVersion }) => {
+window.api.onChampSelectUpdate(({ active, championName, championDisplayName, championImage, role, skinId, ddragonVersion: newVersion }) => {
   if (newVersion) {
     ddragonVersion = newVersion;
   }
@@ -831,6 +881,7 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
     elScreenWorkspace.classList.remove('active');
     elScreenWelcome.classList.add('active');
     activeScrapedData = null;
+    activeChampionName = '';
     updateAmbientGlowTheme(null);
   } else {
     // Screen workspace transition
@@ -841,21 +892,33 @@ window.api.onChampSelectUpdate(({ active, championName, championDisplayName, cha
     elScreenWorkspace.classList.add('active');
 
     if (championName && championImage) {
+      activeChampionName = championName;
       elChampName.textContent = championDisplayName.toUpperCase();
       elChampPortrait.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${championImage}`;
-      elChampBgBanner.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_0.jpg')`;
       
+      const skinNumber = skinId ? (skinId % 1000) : 0;
+      setBannerBackground(championName, skinNumber);
+
       // Update role selector active state
       updateActiveRoleUI(role || 'default');
     } else {
       // Hovering slot but no selection locked
+      activeChampionName = '';
       elChampName.textContent = 'SELECCIONANDO...';
       elChampPortrait.src = '';
-      elChampBgBanner.style.backgroundImage = 'none';
-      
+      setBannerBackground('', 0);
+
       // Reset role selector active state to default/ALL
       updateActiveRoleUI('default');
     }
+  }
+});
+
+// Skin selection changes listener
+window.api.onSkinUpdate(({ skinId }) => {
+  if (activeChampionName) {
+    const skinNumber = skinId ? (skinId % 1000) : 0;
+    setBannerBackground(activeChampionName, skinNumber);
   }
 });
 
@@ -876,13 +939,13 @@ function updateActiveRoleUI(activeRole) {
 function updateAmbientGlowTheme(primaryStyleId) {
   const container = document.querySelector('.ambient-glow-container');
   if (!container) return;
-  
+
   const layers = container.querySelectorAll('.ambient-glow');
   layers.forEach(layer => {
-    const isTarget = primaryStyleId 
+    const isTarget = primaryStyleId
       ? layer.classList.contains(`style-${primaryStyleId}`)
       : layer.classList.contains('style-default');
-    
+
     layer.classList.toggle('active', isTarget);
   });
 }
@@ -952,7 +1015,7 @@ function renderBuildDetails(data) {
   rawSets.forEach((set, originalIndex) => {
     const keystone = set.primaryPerks && set.primaryPerks[0];
     if (!keystone) return;
-    
+
     const keystoneId = keystone.id;
     if (!keystonesMap[keystoneId]) {
       keystonesMap[keystoneId] = {
@@ -963,14 +1026,14 @@ function renderBuildDetails(data) {
         sets: []
       };
     }
-    
+
     // Set the overall keystone playrate if available, otherwise sum set playrates
     if (set.keystonePlayrate !== undefined && set.keystonePlayrate !== null) {
       keystonesMap[keystoneId].playrateSum = set.keystonePlayrate;
     } else {
       keystonesMap[keystoneId].playrateSum += (set.playrate || 0);
     }
-    
+
     keystonesMap[keystoneId].sets.push({
       set,
       originalIndex
@@ -997,7 +1060,7 @@ function renderBuildDetails(data) {
 
   // 3. Draw Summoner Spells (Multiple options ordered by playrate)
   const summonerOpts = data.summonersOptions || [summoners];
-  const activeIdx = summonerOpts.findIndex(opt => 
+  const activeIdx = summonerOpts.findIndex(opt =>
     opt.raw.spell1Id === summoners.raw.spell1Id && opt.raw.spell2Id === summoners.raw.spell2Id
   );
   if (activeIdx !== -1) {
@@ -1016,14 +1079,14 @@ function renderBuildDetails(data) {
   // 5. Draw Skill Maxing Order
   if (items && items.skillOrder && items.skillOrder.maxOrder && items.skillOrder.maxOrder.length > 0) {
     elSkillOrderValue.innerHTML = '';
-    
+
     // Create badges for each skill (e.g. E, Q, W)
     items.skillOrder.maxOrder.forEach((skill, index) => {
       const badge = document.createElement('span');
       badge.className = 'skill-badge';
       badge.textContent = skill;
       elSkillOrderValue.appendChild(badge);
-      
+
       // If not the last skill, add an arrow separator
       if (index < items.skillOrder.maxOrder.length - 1) {
         const arrow = document.createElement('span');
@@ -1041,7 +1104,7 @@ function renderBuildDetails(data) {
       playrateBadge.title = 'Porcentaje de partidas usando este orden de habilidades';
       elSkillOrderValue.appendChild(playrateBadge);
     }
-    
+
     elSkillOrderBox.style.display = 'block';
   } else {
     elSkillOrderBox.style.display = 'none';
@@ -1060,44 +1123,44 @@ function renderBuildDetails(data) {
 function renderKeystoneTabs() {
   const container = document.getElementById('keystone-tabs');
   if (!container) return;
-  
+
   container.innerHTML = '';
-  
+
   activeKeystonesList.forEach((keystoneGroup, index) => {
     const tab = document.createElement('div');
     const isSelected = index === selectedKeystoneIndex;
-    
+
     tab.className = 'keystone-tab' + (isSelected ? ' active' : '');
     tab.title = keystoneGroup.name;
-    
+
     const img = document.createElement('img');
     img.src = `https://ddragon.leagueoflegends.com/cdn/img/${keystoneGroup.icon}`;
     img.className = 'keystone-tab-img';
     img.alt = keystoneGroup.name;
-    
+
     const info = document.createElement('div');
     info.className = 'keystone-tab-info';
-    
+
     const name = document.createElement('span');
     name.className = 'keystone-tab-name';
     name.textContent = keystoneGroup.name;
-    
+
     const playrate = document.createElement('span');
     playrate.className = 'keystone-tab-playrate';
     const formattedPr = Number(keystoneGroup.playrateSum.toFixed(1));
     playrate.textContent = `${formattedPr}% PR`;
-    
+
     info.appendChild(name);
     info.appendChild(playrate);
-    
+
     tab.appendChild(img);
     tab.appendChild(info);
-    
+
     tab.addEventListener('click', () => {
       sfx.playTick();
       selectRuneSet(index, 0);
     });
-    
+
     container.appendChild(tab);
   });
 }
@@ -1107,28 +1170,28 @@ function selectRuneSet(keystoneIndex, setIndex) {
   if (!activeKeystonesList[keystoneIndex]) return;
   const keystoneGroup = activeKeystonesList[keystoneIndex];
   if (!keystoneGroup.sets[setIndex]) return;
-  
+
   selectedKeystoneIndex = keystoneIndex;
   selectedSetIndex = setIndex;
-  
+
   const selectedObj = keystoneGroup.sets[setIndex];
   const runeSet = selectedObj.set;
   activeRuneSet = runeSet;
-  
+
   // Update the global index for backward-compatibility
   activeRuneSetIndex = selectedObj.originalIndex;
-  
+
   // Render the selected rune set in the complete grid!
   renderRuneSet(runeSet);
-  
+
   // Render the bottom card sets selector!
   renderRuneSetCards(keystoneGroup.sets, setIndex);
-  
+
   // Highlight the correct keystone tab as active!
   document.querySelectorAll('.keystone-tab').forEach((tab, i) => {
     tab.classList.toggle('active', i === keystoneIndex);
   });
-  
+
   // Auto-apply if enabled!
   if (appConfig.autoApplyRunes) {
     window.api.applyBuild({ runes: runeSet.raw });
@@ -1139,82 +1202,82 @@ function selectRuneSet(keystoneIndex, setIndex) {
 function renderRuneSetCards(sets, selectedIndex) {
   const container = document.getElementById('rune-sets-container');
   if (!container) return;
-  
+
   container.innerHTML = '';
-  
+
   sets.forEach((setItem, index) => {
     const set = setItem.set;
     const card = document.createElement('div');
     const isSelected = index === selectedIndex;
-    
+
     card.className = 'rune-set-card' + (isSelected ? ' active' : '');
     card.title = `${set.primaryStyleName} + ${set.subStyleName}`;
-    
+
     // Card header
     const header = document.createElement('div');
     header.className = 'rune-set-card-header';
-    
+
     const titleSpan = document.createElement('span');
     titleSpan.className = 'rune-set-card-title';
     titleSpan.textContent = `Set ${index + 1}`;
-    
+
     const iconsDiv = document.createElement('div');
     iconsDiv.className = 'rune-set-card-icons';
-    
+
     const primaryIcon = document.createElement('img');
     primaryIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${set.primaryStyleIcon}`;
     primaryIcon.className = 'rune-set-card-mini-icon';
     primaryIcon.alt = set.primaryStyleName;
-    
+
     const plusSpan = document.createElement('span');
     plusSpan.className = 'rune-set-card-plus';
     plusSpan.textContent = '+';
-    
+
     const subIcon = document.createElement('img');
     subIcon.src = `https://ddragon.leagueoflegends.com/cdn/img/${set.subStyleIcon}`;
     subIcon.className = 'rune-set-card-mini-icon';
     subIcon.alt = set.subStyleName;
-    
+
     iconsDiv.appendChild(primaryIcon);
     iconsDiv.appendChild(plusSpan);
     iconsDiv.appendChild(subIcon);
-    
+
     header.appendChild(titleSpan);
     header.appendChild(iconsDiv);
-    
+
     // Card body
     const body = document.createElement('div');
     body.className = 'rune-set-card-body';
-    
+
     const playrateLabel = document.createElement('div');
     playrateLabel.className = 'rune-set-card-playrate-label';
     playrateLabel.textContent = `${set.playrate}% Playrate`;
-    
+
     const progressWrapper = document.createElement('div');
     progressWrapper.className = 'rune-set-card-progress-wrapper';
-    
+
     const progressBar = document.createElement('div');
     progressBar.className = 'rune-set-card-progress-bar';
     progressBar.style.width = `${set.playrate}%`;
-    
+
     progressWrapper.appendChild(progressBar);
     body.appendChild(playrateLabel);
     body.appendChild(progressWrapper);
-    
+
     // Card footer
     const footer = document.createElement('div');
     footer.className = 'rune-set-card-footer';
     footer.textContent = `${set.subStyleName}`;
-    
+
     card.appendChild(header);
     card.appendChild(body);
     card.appendChild(footer);
-    
+
     card.addEventListener('click', () => {
       sfx.playTick();
       selectRuneSet(selectedKeystoneIndex, index);
     });
-    
+
     container.appendChild(card);
   });
 }
@@ -1243,7 +1306,7 @@ function reResolveAndRender(runeSet) {
   });
 
   const selectedIds = runeSet.raw.selectedPerkIds || [];
-  
+
   const primaryPerks = [];
   const secondaryPerks = [];
   const shardsPerks = [];
@@ -1340,27 +1403,27 @@ function renderRuneSet(runeSet) {
       if (slotIndex === 0) {
         rowDiv.classList.add('keystone-row');
       }
-      
+
       slot.runes.forEach(rune => {
         const itemDiv = document.createElement('div');
         const isActive = activePerkIds.has(rune.id);
-        
+
         itemDiv.className = `rune-grid-item style-${runeSet.primaryStyleId} clickable`;
         itemDiv.classList.add(isActive ? 'active' : 'inactive');
         itemDiv.title = `${rune.name}: ${rune.shortDesc}`;
-        
+
         const img = document.createElement('img');
         img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
         img.className = slotIndex === 0 ? 'keystone-img' : 'rune-img';
         img.alt = rune.name;
-        
+
         // click event listener
         itemDiv.addEventListener('click', () => {
           if (isActive) return;
-          
+
           const primaryStyle = runesReforged.find(style => style.id === runeSet.primaryStyleId);
           if (!primaryStyle || !primaryStyle.slots) return;
-          
+
           const newPrimaryIds = primaryStyle.slots.map((s, idx) => {
             if (idx === slotIndex) {
               return rune.id;
@@ -1368,19 +1431,19 @@ function renderRuneSet(runeSet) {
             const currentActive = runeSet.primaryPerks.find(p => s.runes.some(r => r.id === p.id));
             return currentActive ? currentActive.id : s.runes[0].id;
           });
-          
+
           const newSecondaryIds = runeSet.secondaryPerks.map(p => p.id);
           const newShardIds = (runeSet.shardsPerks || []).map(p => p.id);
-          
+
           runeSet.raw.selectedPerkIds = [
             ...newPrimaryIds,
             ...newSecondaryIds,
             ...newShardIds
           ];
-          
+
           reResolveAndRender(runeSet);
         });
-        
+
         itemDiv.appendChild(img);
         rowDiv.appendChild(itemDiv);
       });
@@ -1409,30 +1472,30 @@ function renderRuneSet(runeSet) {
       const slot = secondaryStyle.slots[slotIndex];
       const rowDiv = document.createElement('div');
       rowDiv.className = 'rune-row-grid';
-      
+
       slot.runes.forEach(rune => {
         const itemDiv = document.createElement('div');
         const isActive = activePerkIds.has(rune.id);
-        
+
         itemDiv.className = `rune-grid-item style-${runeSet.subStyleId} clickable`;
         itemDiv.classList.add(isActive ? 'active' : 'inactive');
         itemDiv.title = `${rune.name}: ${rune.shortDesc}`;
-        
+
         const img = document.createElement('img');
         img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
         img.className = 'rune-img';
         img.alt = rune.name;
-        
+
         // click event listener
         itemDiv.addEventListener('click', () => {
           let newSecondaryIds = runeSet.secondaryPerks.map(p => p.id);
-          
+
           if (isActive) {
             newSecondaryIds = newSecondaryIds.filter(id => id !== rune.id);
           } else {
             const slotRuneIds = slot.runes.map(r => r.id);
             const activeInSameSlot = newSecondaryIds.find(id => slotRuneIds.includes(id));
-            
+
             if (activeInSameSlot) {
               newSecondaryIds = newSecondaryIds.filter(id => id !== activeInSameSlot);
               newSecondaryIds.push(rune.id);
@@ -1445,13 +1508,13 @@ function renderRuneSet(runeSet) {
               }
             }
           }
-          
+
           // Auto-pad to always have exactly 2 active secondary runes in 2 different slots
           if (newSecondaryIds.length < 2) {
             const occupiedSlotIndex = newSecondaryIds.length === 1
               ? secondaryStyle.slots.findIndex(s => s && s.runes && s.runes.some(r => r.id === newSecondaryIds[0]))
               : -1;
-            
+
             for (let sIdx = 1; sIdx < secondaryStyle.slots.length; sIdx++) {
               if (sIdx !== occupiedSlotIndex) {
                 const fallbackRune = secondaryStyle.slots[sIdx].runes[0];
@@ -1462,25 +1525,25 @@ function renderRuneSet(runeSet) {
               }
             }
           }
-          
+
           newSecondaryIds.sort((a, b) => {
             const slotA = secondaryStyle.slots.findIndex(s => s && s.runes && s.runes.some(r => r.id === a));
             const slotB = secondaryStyle.slots.findIndex(s => s && s.runes && s.runes.some(r => r.id === b));
             return slotA - slotB;
           });
-          
+
           const newPrimaryIds = runeSet.primaryPerks.map(p => p.id);
           const newShardIds = (runeSet.shardsPerks || []).map(p => p.id);
-          
+
           runeSet.raw.selectedPerkIds = [
             ...newPrimaryIds,
             ...newSecondaryIds,
             ...newShardIds
           ];
-          
+
           reResolveAndRender(runeSet);
         });
-        
+
         itemDiv.appendChild(img);
         rowDiv.appendChild(itemDiv);
       });
@@ -1495,7 +1558,7 @@ function renderRuneSet(runeSet) {
 
   // Stat Shards 3x3 Grid
   elListShards.innerHTML = '';
-  
+
   const shardRowsOptions = [
     [5008, 5005, 5007], // Row 1: Adaptive Force, Attack Speed, Haste
     [5008, 5010, 5011], // Row 2: Adaptive Force, MS, Scaling Health
@@ -1505,40 +1568,40 @@ function renderRuneSet(runeSet) {
   const activeShards = runeSet.shardsPerks || [];
   const shardGridDiv = document.createElement('div');
   shardGridDiv.className = 'shards-grid';
-  
+
   for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
     const rowOptions = [...shardRowsOptions[rowIndex]];
     const activeShard = activeShards[rowIndex];
-    
+
     // Fallback swap if active shard is a legacy/non-standard choice
     if (activeShard && !rowOptions.includes(activeShard.id)) {
       rowOptions[2] = activeShard.id;
     }
-    
+
     const rowDiv = document.createElement('div');
     rowDiv.className = 'shard-row';
-    
+
     rowOptions.forEach(shardId => {
       const isSelected = activeShard && activeShard.id === shardId;
       const shardInfo = SHARD_META[shardId] || (activeShard && activeShard.id === shardId ? activeShard : { name: `Atributo ${shardId}`, icon: '' });
-      
+
       const shardItem = document.createElement('div');
       shardItem.className = 'shard-grid-item clickable';
       shardItem.classList.add(isSelected ? 'active' : 'inactive');
       shardItem.title = shardInfo.name;
-      
+
       const img = document.createElement('img');
       img.src = shardInfo.icon ? `https://ddragon.leagueoflegends.com/cdn/img/${shardInfo.icon}` : 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/StatMods/StatModsAdaptiveForceIcon.png';
       img.className = 'shard-img';
       img.alt = shardInfo.name;
-      
+
       // click event listener
       shardItem.addEventListener('click', () => {
         if (isSelected) return;
-        
+
         const newPrimaryIds = runeSet.primaryPerks.map(p => p.id);
         const newSecondaryIds = runeSet.secondaryPerks.map(p => p.id);
-        
+
         const newShardIds = [0, 1, 2].map(rIdx => {
           if (rIdx === rowIndex) {
             return shardId;
@@ -1546,16 +1609,16 @@ function renderRuneSet(runeSet) {
           const currentActive = activeShards[rIdx];
           return currentActive ? currentActive.id : shardRowsOptions[rIdx][0];
         });
-        
+
         runeSet.raw.selectedPerkIds = [
           ...newPrimaryIds,
           ...newSecondaryIds,
           ...newShardIds
         ];
-        
+
         reResolveAndRender(runeSet);
       });
-      
+
       shardItem.appendChild(img);
       rowDiv.appendChild(shardItem);
     });
@@ -1585,7 +1648,7 @@ function renderItemGroup(container, itemsList, showPlayrates = false) {
     img.src = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/item/${item.id}.png`;
     img.className = 'item-icon';
     img.alt = item.name;
-    
+
     img.onerror = () => {
       if (img.src.includes('ddragon.leagueoflegends.com')) {
         img.src = `https://d3liizu15b1tmi.cloudfront.net/onetricks/16.9.1/img/item/${item.id}.png`;
@@ -1600,7 +1663,7 @@ function renderItemGroup(container, itemsList, showPlayrates = false) {
     if (showPlayrates && item.playrate !== undefined && item.playrate !== null) {
       const badge = document.createElement('span');
       badge.className = 'item-playrate-badge';
-      
+
       let prText = item.playrate;
       if (typeof prText === 'number') {
         prText = Math.round(prText);
