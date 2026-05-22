@@ -532,11 +532,12 @@ class OnetricksScraper {
         }
 
         if (bestPatchData) {
+          const runePatchData = bestPatchData;
           // Bypassed mostPopularKeystone to always fetch all 4 main sets from popTree
-          if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
+          if (runePatchData.popTree && Array.isArray(runePatchData.popTree)) {
             // Compute total playrates/games sum first to determine if we need to convert to percentages
             let sumPlayrates = 0;
-            bestPatchData.popTree.forEach(entry => {
+            runePatchData.popTree.forEach(entry => {
               if (entry && typeof entry[3] === 'number') sumPlayrates += entry[3];
             });
 
@@ -545,14 +546,14 @@ class OnetricksScraper {
             const isDirectPercentage = sumPlayrates > 0 && sumPlayrates <= 105;
 
             // ── DEBUG: dump raw structure to understand playrate fields ──────────
-            console.log('[SCRAPER] RAW popTree:', JSON.stringify(bestPatchData.popTree));
+            console.log('[SCRAPER] RAW popTree:', JSON.stringify(runePatchData.popTree));
             // ─────────────────────────────────────────────────────────────────────
             // Build the list of tree entries based on the popKeystone order (matching the website's tabs)
             let treeEntries = [];
-            if (bestPatchData.popTree && Array.isArray(bestPatchData.popTree)) {
-              treeEntries = [...bestPatchData.popTree];
-              if (bestPatchData.popKeystone && Array.isArray(bestPatchData.popKeystone)) {
-                const keystoneOrder = bestPatchData.popKeystone.map(k => parseInt(k[0]));
+            if (runePatchData.popTree && Array.isArray(runePatchData.popTree)) {
+              treeEntries = [...runePatchData.popTree];
+              if (runePatchData.popKeystone && Array.isArray(runePatchData.popKeystone)) {
+                const keystoneOrder = runePatchData.popKeystone.map(k => parseInt(k[0]));
                 treeEntries.sort((a, b) => {
                   const idxA = keystoneOrder.indexOf(a[2]);
                   const idxB = keystoneOrder.indexOf(b[2]);
@@ -573,7 +574,7 @@ class OnetricksScraper {
               const subStyleId     = treeEntry[1];
               const keystoneId     = treeEntry[2];
 
-              const keystoneBuilds = bestPatchData.popRunes[keystoneId];
+              const keystoneBuilds = runePatchData.popRunes[keystoneId];
               if (!keystoneBuilds || keystoneBuilds.length === 0) continue;
 
               // Find the build that has the exact matching primary and secondary style
@@ -617,7 +618,7 @@ class OnetricksScraper {
               if (!chosenBuild) chosenBuild = keystoneBuilds[0]; // final fallback
 
               const runesList = chosenBuild[0];
-              const statShards = bestPatchData.popStat || [5005, 5008, 5002];
+              const statShards = runePatchData.popStat || [5005, 5008, 5002];
 
               // Sort runes properly: Primary tree first (sorted by slot), then Secondary tree (sorted by slot)
               const primaryRunes = runesList.filter(id => this.perksMap[id] && this.perksMap[id].styleId === primaryStyleId);
@@ -628,20 +629,64 @@ class OnetricksScraper {
               
               const sortedPerks = [...primaryRunes, ...secondaryRunes, ...statShards];
 
+              // Sum the playrates of all builds with this exact primaryStyleId and subStyleId under this keystoneId
+              let sumBuildPlayrates = 0;
+              let hasBuilds = false;
+              
+              // Prioritize global/all stats for calculating playrates to get webpage percentages
+              const globalSource = (bestPatchStatsData && bestPatchStatsData.all) || runePatchData;
+              const globalBuilds = globalSource.popRunes && globalSource.popRunes[keystoneId];
+              if (globalBuilds && Array.isArray(globalBuilds)) {
+                globalBuilds.forEach(build => {
+                  if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                    sumBuildPlayrates += build[1] || 0;
+                    hasBuilds = true;
+                  }
+                });
+              }
+
+              // Fallback 1: search in local builds if not found in global
+              if (!hasBuilds) {
+                const localBuilds = runePatchData.popRunes && runePatchData.popRunes[keystoneId];
+                if (localBuilds && Array.isArray(localBuilds)) {
+                  localBuilds.forEach(build => {
+                    if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                      sumBuildPlayrates += build[1] || 0;
+                      hasBuilds = true;
+                    }
+                  });
+                }
+              }
+
+              // Fallback 2: search in other items
+              if (!hasBuilds && bestPatchStatsData) {
+                for (const pKey of Object.keys(bestPatchStatsData)) {
+                  if (pKey !== 'all' && pKey !== 'top' && bestPatchStatsData[pKey] && bestPatchStatsData[pKey].popRunes && bestPatchStatsData[pKey].popRunes[keystoneId]) {
+                    bestPatchStatsData[pKey].popRunes[keystoneId].forEach(build => {
+                      if (build[2] && build[2][0] === primaryStyleId && build[2][1] === subStyleId) {
+                        sumBuildPlayrates += build[1] || 0;
+                        hasBuilds = true;
+                      }
+                    });
+                  }
+                  if (hasBuilds) break;
+                }
+              }
+
               // Try to find the keystone's overall playrate in popKeystone
               let keystonePlayrate = null;
-              if (bestPatchData.popKeystone && Array.isArray(bestPatchData.popKeystone)) {
-                const kEntry = bestPatchData.popKeystone.find(x => parseInt(x[0]) === keystoneId);
+              if (runePatchData.popKeystone && Array.isArray(runePatchData.popKeystone)) {
+                const kEntry = runePatchData.popKeystone.find(x => parseInt(x[0]) === keystoneId);
                 if (kEntry && typeof kEntry[1] === 'number') {
                   keystonePlayrate = kEntry[1];
                 }
               }
 
-              // Determine playrate count: try treeEntry[3] first (specific tree playrate), then chosenBuild[1], then fallback to keystonePlayrate
-              let playrateCount = typeof treeEntry[3] === 'number' ? treeEntry[3]
-                                  : typeof chosenBuild[1] === 'number' ? chosenBuild[1]
-                                  : keystonePlayrate !== null ? keystonePlayrate
-                                  : 0;
+              // Determine playrate count: try sumBuildPlayrates, then fallback to keystonePlayrate
+              let playrateCount = sumBuildPlayrates;
+              if (!hasBuilds && keystonePlayrate !== null) {
+                playrateCount = keystonePlayrate;
+              }
 
               let playratePercent = playrateCount;
               if (!isDirectPercentage && sumPlayrates > 0) {

@@ -1,11 +1,17 @@
 const fs = require('fs');
-const OnetricksScraper = require('./onetricks-scraper.js');
 
-// Mock a minimal electron app structure to satisfy the constructor
+// Mock Electron so we can load the scraper without Electron runtime errors
 const mockApp = {
   getPath: () => __dirname
 };
-const electronMock = require('electron');
+require.cache[require.resolve('electron')] = {
+  exports: {
+    app: mockApp,
+    BrowserWindow: class {}
+  }
+};
+
+const OnetricksScraper = require('./onetricks-scraper.js');
 
 async function test() {
   console.log('Loading OnetricksScraper...');
