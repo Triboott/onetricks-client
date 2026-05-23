@@ -455,6 +455,14 @@ app.whenReady().then(() => {
     });
   }, 5000);
 
+  // Check for updates periodically every 2 hours while the app is running
+  setInterval(() => {
+    console.log('[UPDATER] Periodic update check...');
+    autoUpdater.checkForUpdates().catch(err => {
+      console.warn('[UPDATER] Periodic update check failed:', err.message);
+    });
+  }, 2 * 60 * 60 * 1000);
+
   // Instantiate Modules
   scraper = new OnetricksScraper(mainWindow);
   connector = new LcuConnector({
