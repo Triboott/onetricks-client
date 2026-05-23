@@ -1,6 +1,6 @@
 {
   "name": "onetricks-client",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Onetricks.gg LoL Desktop Client",
   "main": "main.js",
   "scripts": {
@@ -36,9 +36,11 @@
     },
     "nsis": {
       "oneClick": true,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "uninstallDisplayName": "Onetricks Client"
     }
   }
 }
