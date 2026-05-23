@@ -13,6 +13,22 @@ let scraper = null;
 let tray = null;
 let isQuitting = false;
 
+// Request single instance lock to prevent duplicate app windows
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+  process.exit(0);
+}
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+  // Bring the already running instance to the front
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 // Default configuration settings
 let config = {
   autoApplyRunes: true,
