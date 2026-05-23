@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld('api', {
   applyBuild: (buildData) => ipcRenderer.send('apply-build', buildData),
   toggleAutoApply: (settings) => ipcRenderer.send('toggle-auto-apply', settings),
   saveCustomPath: (path) => ipcRenderer.send('save-custom-path', path),
+  saveCustomValPath: (path) => ipcRenderer.send('save-custom-val-path', path),
+  selectPath: (options) => ipcRenderer.invoke('select-path', options),
   getInitialState: () => ipcRenderer.invoke('get-initial-state'),
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   closeWindow: () => ipcRenderer.send('window-close'),

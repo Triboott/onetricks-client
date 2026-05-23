@@ -3,7 +3,8 @@ const path = require('path');
 const https = require('https');
 
 class ValorantConnector {
-  constructor({ onStatusChange, onGameStarted, onGameEnded }) {
+  constructor({ customPath, onStatusChange, onGameStarted, onGameEnded }) {
+    this.customPath = customPath || '';
     this.onStatusChange = onStatusChange || (() => {});
     this.onGameStarted = onGameStarted || (() => {});
     this.onGameEnded = onGameEnded || (() => {});
@@ -35,6 +36,13 @@ class ValorantConnector {
     this.lastKnownPath = null;
     this.namesCache = {}; // PUUID -> { gameName, tagLine, displayName }
     this.mmrCache = {};   // PUUID -> { rank, rr }
+  }
+
+  setCustomPath(newPath) {
+    this.customPath = newPath;
+    if (this.status !== 'connected') {
+      this.restartScan();
+    }
   }
 
   start() {
@@ -195,6 +203,13 @@ class ValorantConnector {
     // Cache reconnection first
     if (this.lastKnownPath) {
       possiblePaths.push(this.lastKnownPath);
+    }
+
+    if (this.customPath) {
+      possiblePaths.push(this.customPath); // if they selected lockfile itself
+      possiblePaths.push(path.join(this.customPath, 'lockfile')); // selected lockfile directory
+      possiblePaths.push(path.join(this.customPath, 'Riot Client', 'Config', 'lockfile'));
+      possiblePaths.push(path.join(this.customPath, 'Riot Games', 'Riot Client', 'Config', 'lockfile'));
     }
 
     // Default lockfile location for Riot Client
@@ -1037,7 +1052,7 @@ class ValorantConnector {
       const identity = this.namesCache[puuid] || { gameName: 'Agente', tagLine: 'VAL', displayName: 'Agente#VAL' };
 
       // Resolve Player Card ID from Local Chat Presences first (highly reliable and local!)
-      let playerCardId = '9fb348bc-41a0-91ad-8a3e-7880da3e70b4'; // default to standard default Player Card UUID
+      let playerCardId = '9fb348bc-41a0-91ad-8a3e-818035c4e561'; // default to standard default Player Card UUID
       try {
         const presences = await this.localRequest('GET', '/chat/v4/presences');
         if (presences && presences.presences) {
@@ -1054,7 +1069,7 @@ class ValorantConnector {
       }
 
       // If we still have the default card, try player-loadout as a remote fallback
-      if (playerCardId === '9fb348bc-41a0-91ad-8a3e-7880da3e70b4') {
+      if (playerCardId === '9fb348bc-41a0-91ad-8a3e-818035c4e561') {
         try {
           const loadout = await this.remoteRequest(
             'GET',

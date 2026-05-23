@@ -258,9 +258,6 @@ const elGameBuildBootsItems = document.getElementById('game-build-boots-items');
 const elGameBuildCoreItems = document.getElementById('game-build-core-items');
 const elGameBuildRecommendedItems = document.getElementById('game-build-recommended-items');
 
-const elCheckAutoRunesWelcome = document.getElementById('check-auto-runes-welcome');
-const elCheckAutoSpellsWelcome = document.getElementById('check-auto-spells-welcome');
-const elCheckAutoItemsWelcome = document.getElementById('check-auto-items-welcome');
 const elCheckAutoRunes = document.getElementById('check-auto-runes');
 const elCheckAutoSpells = document.getElementById('check-auto-spells');
 const elCheckAutoItems = document.getElementById('check-auto-items');
@@ -300,6 +297,11 @@ const elSettingsCheckFlashD = document.getElementById('settings-check-flash-d');
 const elSettingsCheckDebugBrowser = document.getElementById('settings-check-debug-browser');
 const elSettingsCheckStartLogin = document.getElementById('settings-check-start-login');
 const elSettingsCheckSounds = document.getElementById('settings-check-sounds');
+const elSettingsCheckLolDetection = document.getElementById('settings-check-lol-detection');
+const elSettingsCheckValorantDetection = document.getElementById('settings-check-valorant-detection');
+const elBtnZoomOut = document.getElementById('btn-zoom-out');
+const elBtnZoomIn = document.getElementById('btn-zoom-in');
+const elZoomValue = document.getElementById('zoom-value');
 const elListStartingItems = document.getElementById('list-starting-items');
 const elListBootsItems = document.getElementById('list-boots-items');
 const elListCoreItems = document.getElementById('list-core-items');
@@ -309,6 +311,12 @@ const elBtnSettingsDone = document.getElementById('btn-settings-done');
 const elInputLolPath = document.getElementById('input-lol-path');
 const elBtnSavePath = document.getElementById('btn-save-path');
 const elPathSuccessLbl = document.getElementById('path-success-lbl');
+
+const elInputValPath = document.getElementById('input-val-path');
+const elBtnSaveValPath = document.getElementById('btn-save-val-path');
+const elValPathSuccessLbl = document.getElementById('val-path-success-lbl');
+const elBtnBrowseLol = document.getElementById('btn-browse-lol');
+const elBtnBrowseVal = document.getElementById('btn-browse-val');
 
 const elBtnMinimize = document.getElementById('btn-minimize');
 const elBtnClose = document.getElementById('btn-close');
@@ -324,6 +332,7 @@ let runesReforged = [];
 let ddragonVersion = '14.10.1'; // Default fallback version
 let lastPlayerInfo = null; // Store last player info to allow re-rendering when DDragon loads
 let lastLcuStatus = 'disconnected'; // Track LCU status transitions for SFX cues
+let lastValStatus = 'disconnected'; // Track Valorant status
 let appVersion = '1.0.0'; // Default fallback version
 let appConfig = {
   autoApplyRunes: true,
@@ -334,8 +343,14 @@ let appConfig = {
   debugBrowser: false,
   startAtLogin: false,
   pinnedRole: 'default',
-  enableSounds: true
+  enableSounds: true,
+  enableLolDetection: true,
+  enableValorantDetection: true
 };
+
+const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3];
+
+
 
 // ==========================================================================
 // INITIAL STATE LOADING & BINDINGS
@@ -413,6 +428,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.api.closeWindow();
   });
 
+  // Bind connection status pills click events to toggle scan detections directly
+  const elLcuPill = document.getElementById('lcu-pill');
+  if (elLcuPill) {
+    elLcuPill.title = "Haz clic para activar o desactivar la detección de League of Legends";
+    elLcuPill.addEventListener('click', () => {
+      appConfig.enableLolDetection = !appConfig.enableLolDetection;
+      if (elSettingsCheckLolDetection) {
+        elSettingsCheckLolDetection.checked = appConfig.enableLolDetection;
+      }
+      sfx.playSwitch();
+      handleToggleChange();
+      updateLcuStatusUI(lastLcuStatus);
+    });
+  }
+
+  const elValPill = document.getElementById('val-pill');
+  if (elValPill) {
+    elValPill.title = "Haz clic para activar o desactivar la detección de Valorant";
+    elValPill.addEventListener('click', () => {
+      appConfig.enableValorantDetection = !appConfig.enableValorantDetection;
+      if (elSettingsCheckValorantDetection) {
+        elSettingsCheckValorantDetection.checked = appConfig.enableValorantDetection;
+      }
+      sfx.playSwitch();
+      handleToggleChange();
+      updateValorantStatusUI(lastValStatus);
+    });
+  }
+
   // 3. Bind Settings overlays openers/closers
   elBtnSettings.addEventListener('click', () => {
     sfx.playSwitch();
@@ -423,6 +467,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     sfx.playSwitch();
     elSettingsOverlay.classList.remove('active');
     elPathSuccessLbl.style.display = 'none';
+    if (elValPathSuccessLbl) {
+      elValPathSuccessLbl.style.display = 'none';
+    }
   };
   elBtnSettingsClose.addEventListener('click', closeSettings);
   elBtnSettingsDone.addEventListener('click', closeSettings);
@@ -438,6 +485,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 3000);
   });
 
+  if (elBtnSaveValPath) {
+    elBtnSaveValPath.addEventListener('click', () => {
+      sfx.playTick();
+      const pathStr = elInputValPath.value.trim();
+      window.api.saveCustomValPath(pathStr);
+      elValPathSuccessLbl.style.display = 'block';
+      setTimeout(() => {
+        elValPathSuccessLbl.style.display = 'none';
+      }, 3000);
+    });
+  }
+
+  if (elBtnBrowseLol) {
+    elBtnBrowseLol.addEventListener('click', async () => {
+      sfx.playTick();
+      const selected = await window.api.selectPath({
+        title: 'Seleccionar Carpeta o Lockfile de League of Legends',
+        defaultPath: elInputLolPath.value
+      });
+      if (selected) {
+        elInputLolPath.value = selected;
+        window.api.saveCustomPath(selected);
+        elPathSuccessLbl.style.display = 'block';
+        setTimeout(() => {
+          elPathSuccessLbl.style.display = 'none';
+        }, 3000);
+      }
+    });
+  }
+
+  if (elBtnBrowseVal) {
+    elBtnBrowseVal.addEventListener('click', async () => {
+      sfx.playTick();
+      const selected = await window.api.selectPath({
+        title: 'Seleccionar Carpeta o Lockfile de Valorant / Riot Client',
+        defaultPath: elInputValPath.value
+      });
+      if (selected) {
+        elInputValPath.value = selected;
+        window.api.saveCustomValPath(selected);
+        elValPathSuccessLbl.style.display = 'block';
+        setTimeout(() => {
+          elValPathSuccessLbl.style.display = 'none';
+        }, 3000);
+      }
+    });
+  }
+
   // Wire sync across all identical checkboxes in UI
   const handleToggleChange = () => {
     const prevAutoApplyRunes = appConfig.autoApplyRunes;
@@ -451,17 +546,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig.debugBrowser = elSettingsCheckDebugBrowser.checked;
     appConfig.startAtLogin = elSettingsCheckStartLogin.checked;
     appConfig.enableSounds = elSettingsCheckSounds.checked;
+    appConfig.enableLolDetection = elSettingsCheckLolDetection.checked;
+    appConfig.enableValorantDetection = elSettingsCheckValorantDetection.checked;
 
     updateSoundToggleButtonUI(appConfig.enableSounds);
     sfx.playTick(); // Tick will respect the updated enableSounds state immediately!
 
     // Sync states
-    elCheckAutoRunesWelcome.checked = appConfig.autoApplyRunes;
-    elCheckAutoSpellsWelcome.checked = appConfig.autoApplySpells;
-    elCheckAutoItemsWelcome.checked = appConfig.autoApplyItems;
     elSettingsCheckRunes.checked = appConfig.autoApplyRunes;
     elSettingsCheckSpells.checked = appConfig.autoApplySpells;
     elSettingsCheckItems.checked = appConfig.autoApplyItems;
+    elCheckAutoRunes.checked = appConfig.autoApplyRunes;
+    elCheckAutoSpells.checked = appConfig.autoApplySpells;
+    elCheckAutoItems.checked = appConfig.autoApplyItems;
 
     window.api.toggleAutoApply({
       autoApplyRunes: appConfig.autoApplyRunes,
@@ -470,7 +567,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashOnD: appConfig.flashOnD,
       debugBrowser: appConfig.debugBrowser,
       startAtLogin: appConfig.startAtLogin,
-      enableSounds: appConfig.enableSounds
+      enableSounds: appConfig.enableSounds,
+      enableLolDetection: appConfig.enableLolDetection,
+      enableValorantDetection: appConfig.enableValorantDetection
     });
 
     // If activeScrapedData is loaded and any of the settings transitioned from OFF to ON, apply directly!
@@ -526,6 +625,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   elSettingsCheckDebugBrowser.addEventListener('change', handleToggleChange);
   elSettingsCheckStartLogin.addEventListener('change', handleToggleChange);
   elSettingsCheckSounds.addEventListener('change', handleToggleChange);
+  elSettingsCheckLolDetection.addEventListener('change', handleToggleChange);
+  elSettingsCheckValorantDetection.addEventListener('change', handleToggleChange);
+
+  if (elBtnZoomOut) {
+    elBtnZoomOut.addEventListener('click', () => {
+      sfx.playTick();
+      const currentZoom = appConfig.zoomFactor !== undefined ? appConfig.zoomFactor : 1.0;
+      let currentIndex = ZOOM_LEVELS.indexOf(Math.round(currentZoom * 10) / 10);
+      if (currentIndex === -1) currentIndex = ZOOM_LEVELS.indexOf(1.0);
+      
+      if (currentIndex > 0) {
+        const nextZoom = ZOOM_LEVELS[currentIndex - 1];
+        appConfig.zoomFactor = nextZoom;
+        if (elZoomValue) elZoomValue.textContent = `${Math.round(nextZoom * 100)}%`;
+        window.api.toggleAutoApply({
+          autoApplyRunes: appConfig.autoApplyRunes,
+          autoApplySpells: appConfig.autoApplySpells,
+          autoApplyItems: appConfig.autoApplyItems,
+          flashOnD: appConfig.flashOnD,
+          debugBrowser: appConfig.debugBrowser,
+          startAtLogin: appConfig.startAtLogin,
+          enableSounds: appConfig.enableSounds,
+          enableLolDetection: appConfig.enableLolDetection,
+          enableValorantDetection: appConfig.enableValorantDetection,
+          zoomFactor: nextZoom
+        });
+      }
+    });
+  }
+
+  if (elBtnZoomIn) {
+    elBtnZoomIn.addEventListener('click', () => {
+      sfx.playTick();
+      const currentZoom = appConfig.zoomFactor !== undefined ? appConfig.zoomFactor : 1.0;
+      let currentIndex = ZOOM_LEVELS.indexOf(Math.round(currentZoom * 10) / 10);
+      if (currentIndex === -1) currentIndex = ZOOM_LEVELS.indexOf(1.0);
+      
+      if (currentIndex < ZOOM_LEVELS.length - 1) {
+        const nextZoom = ZOOM_LEVELS[currentIndex + 1];
+        appConfig.zoomFactor = nextZoom;
+        if (elZoomValue) elZoomValue.textContent = `${Math.round(nextZoom * 100)}%`;
+        window.api.toggleAutoApply({
+          autoApplyRunes: appConfig.autoApplyRunes,
+          autoApplySpells: appConfig.autoApplySpells,
+          autoApplyItems: appConfig.autoApplyItems,
+          flashOnD: appConfig.flashOnD,
+          debugBrowser: appConfig.debugBrowser,
+          startAtLogin: appConfig.startAtLogin,
+          enableSounds: appConfig.enableSounds,
+          enableLolDetection: appConfig.enableLolDetection,
+          enableValorantDetection: appConfig.enableValorantDetection,
+          zoomFactor: nextZoom
+        });
+      }
+    });
+  }
 
   if (elBtnToggleSound) {
     elBtnToggleSound.addEventListener('click', () => {
@@ -537,23 +692,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  [elCheckAutoRunesWelcome, elCheckAutoSpellsWelcome, elCheckAutoItemsWelcome, elCheckAutoRunes, elCheckAutoSpells, elCheckAutoItems, elSettingsCheckRunes, elSettingsCheckSpells, elSettingsCheckItems].forEach(box => {
+  [elCheckAutoRunes, elCheckAutoSpells, elCheckAutoItems, elSettingsCheckRunes, elSettingsCheckSpells, elSettingsCheckItems].forEach(box => {
     box.addEventListener('change', (e) => {
       // Sync identical checkboxes
-      if (box === elCheckAutoRunesWelcome || box === elSettingsCheckRunes) {
+      if (box === elSettingsCheckRunes) {
         elCheckAutoRunes.checked = e.target.checked;
-      } else if (box === elCheckAutoSpellsWelcome || box === elSettingsCheckSpells) {
+      } else if (box === elSettingsCheckSpells) {
         elCheckAutoSpells.checked = e.target.checked;
-      } else if (box === elCheckAutoItemsWelcome || box === elSettingsCheckItems) {
+      } else if (box === elSettingsCheckItems) {
         elCheckAutoItems.checked = e.target.checked;
       } else if (box === elCheckAutoRunes) {
-        elCheckAutoRunesWelcome.checked = e.target.checked;
         elSettingsCheckRunes.checked = e.target.checked;
       } else if (box === elCheckAutoSpells) {
-        elCheckAutoSpellsWelcome.checked = e.target.checked;
         elSettingsCheckSpells.checked = e.target.checked;
       } else if (box === elCheckAutoItems) {
-        elCheckAutoItemsWelcome.checked = e.target.checked;
         elSettingsCheckItems.checked = e.target.checked;
       }
       handleToggleChange();
@@ -652,9 +804,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Sync visual toggle checkbox states
 function updateConfigUI(config) {
-  elCheckAutoRunesWelcome.checked = config.autoApplyRunes;
-  elCheckAutoSpellsWelcome.checked = config.autoApplySpells;
-  elCheckAutoItemsWelcome.checked = config.autoApplyItems;
   elCheckAutoRunes.checked = config.autoApplyRunes;
   elCheckAutoSpells.checked = config.autoApplySpells;
   elCheckAutoItems.checked = config.autoApplyItems;
@@ -665,8 +814,18 @@ function updateConfigUI(config) {
   elSettingsCheckDebugBrowser.checked = !!config.debugBrowser;
   elSettingsCheckStartLogin.checked = !!config.startAtLogin;
   elSettingsCheckSounds.checked = config.enableSounds !== false;
+  elSettingsCheckLolDetection.checked = config.enableLolDetection !== false;
+  elSettingsCheckValorantDetection.checked = config.enableValorantDetection !== false;
   updateSoundToggleButtonUI(config.enableSounds !== false);
   elInputLolPath.value = config.customLoLPath || '';
+  if (elInputValPath) {
+    elInputValPath.value = config.customValPath || '';
+  }
+
+  const currentZoom = config.zoomFactor !== undefined ? config.zoomFactor : 1.0;
+  if (elZoomValue) {
+    elZoomValue.textContent = `${Math.round(currentZoom * 100)}%`;
+  }
 
   updatePinnedRoleUI(config.pinnedRole);
 }
@@ -719,6 +878,17 @@ function updatePinnedRoleUI(pinnedRole) {
 
 // Update connection pill visual styles in header
 function updateLcuStatusUI(status) {
+  if (appConfig && appConfig.enableLolDetection === false) {
+    elStatusDot.className = 'status-dot disconnected';
+    elStatusText.textContent = 'LOL DESACTIVADO';
+    elLcuPill.style.borderColor = 'rgba(239, 68, 68, 0.15)';
+    elLcuPill.style.opacity = '0.55';
+    elLcuPill.style.borderStyle = 'dashed';
+    return;
+  }
+
+  elLcuPill.style.opacity = '1.0';
+  elLcuPill.style.borderStyle = 'solid';
   elStatusDot.className = 'status-dot ' + status;
 
   if (status === 'connected') {
@@ -792,6 +962,8 @@ function updatePlayerProfileUI(playerInfo) {
   let gameName = (playerInfo.gameName || '').trim();
   let tagLine = (playerInfo.tagLine || '').trim();
   const displayName = (playerInfo.displayName || '').trim();
+
+
 
   // Robust parsing: if gameName or tagLine is missing but displayName contains '#', extract them
   if ((!gameName || !tagLine) && displayName.includes('#')) {
@@ -895,6 +1067,7 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
 });
 
 window.api.onValorantStatus(({ status, playerInfo }) => {
+  lastValStatus = status;
   updateValorantStatusUI(status);
   updateValorantPlayerProfileUI(playerInfo);
 });
@@ -1206,20 +1379,30 @@ window.api.onGameEnded(() => {
 function updateValorantStatusUI(status) {
   if (!elValStatusDot || !elValStatusText || !elValPill) return;
 
+  elValPill.style.display = 'flex';
+
+  if (appConfig && appConfig.enableValorantDetection === false) {
+    elValStatusDot.className = 'status-dot val disconnected';
+    elValStatusText.textContent = 'VAL DESACTIVADO';
+    elValPill.style.borderColor = 'rgba(255, 70, 85, 0.15)';
+    elValPill.style.opacity = '0.55';
+    elValPill.style.borderStyle = 'dashed';
+    return;
+  }
+
+  elValPill.style.opacity = '1.0';
+  elValPill.style.borderStyle = 'solid';
   elValStatusDot.className = 'status-dot val ' + status;
 
   if (status === 'connected') {
     elValStatusText.textContent = 'VALORANT DETECTADO';
     elValPill.style.borderColor = 'rgba(255, 70, 85, 0.35)'; // Valorant Red border
-    elValPill.style.display = 'flex';
   } else if (status === 'scanning') {
     elValStatusText.textContent = 'BUSCANDO VALORANT...';
     elValPill.style.borderColor = 'rgba(245, 158, 11, 0.25)'; // Orange border
-    elValPill.style.display = 'flex';
   } else {
     elValStatusText.textContent = 'VALORANT DESCONECTADO';
     elValPill.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-    elValPill.style.display = 'none'; // Hide if disconnected to keep header clean
   }
 }
 
@@ -2514,12 +2697,45 @@ function updateValorantPlayerProfileUI(playerInfo) {
     badgeHtml = `<span style="font-size: 14px;">❓</span>`;
   }
 
-  // Resolve avatar display icon from equipped Player Card (default to Jett displayIcon)
+  // Welcome Screen: Sleek wide banner card using Riot Player Card Wide Art
+  const bannerUrl = playerInfo.playerCardId
+    ? `https://media.valorant-api.com/playercards/${playerInfo.playerCardId}/wideart.png`
+    : 'https://media.valorant-api.com/playercards/9fb348bc-41a0-91ad-8a3e-818035c4e561/wideart.png';
+
+  const welcomeCardHtml = `
+    <div class="player-profile-card ${rankClass}" style="margin-top: 12px; height: 72px; position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 70, 85, 0.25); box-shadow: 0 4px 20px rgba(255, 70, 85, 0.1);">
+      <!-- Wide Banner Background -->
+      <img src="${bannerUrl}" onerror="this.onerror=null; this.src='https://media.valorant-api.com/playercards/9fb348bc-41a0-91ad-8a3e-818035c4e561/wideart.png';" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.45); z-index: 1; pointer-events: none;">
+      <div class="rank-bg-glow" style="z-index: 2;"></div>
+      
+      <div class="profile-card-content" style="position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; height: 100%; padding: 0 20px; box-sizing: border-box;">
+        <a class="profile-link-wrapper" href="${trackerUrl}" target="_blank" title="Ver perfil en Valorant-Tracker" style="display: flex; flex: 1; align-items: center; justify-content: space-between; text-decoration: none; color: inherit;">
+          <div class="profile-info" style="display: flex; flex-direction: column; gap: 2px;">
+            <span class="profile-name" style="font-size: 14px; font-weight: 800; font-family: var(--font-display); color: #fff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);">${playerInfo.displayName}</span>
+            <div class="rank-badge-row" style="display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
+              <span class="profile-stats" style="font-size: 10.5px; font-weight: 800; color: #ff4655; background: rgba(0, 0, 0, 0.6); padding: 2px 8px; border-radius: 4px; text-shadow: none; white-space: nowrap; border: 1px solid rgba(255, 70, 85, 0.25);">
+                ${playerInfo.games > 0 ? `${playerInfo.winrate}% WR` : '0% WR'}
+              </span>
+            </div>
+          </div>
+          <div class="player-rank" style="display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.65); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(4px); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);">
+            ${badgeHtml}
+            <div style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
+              <span class="rank-badge-text" style="font-size: 9.5px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.3px;">${playerInfo.tierName || 'UNRANKED'}</span>
+              ${playerInfo.tier > 0 ? `<span class="rank-lp" style="font-size: 8px; color: var(--text-secondary); font-weight: 600;">${playerInfo.lp} RR</span>` : ''}
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  `;
+
+  // Workspace: Compact layout with Agent Avatar fitting the left column
   const valLogoSrc = playerInfo.playerCardId
     ? `https://media.valorant-api.com/playercards/${playerInfo.playerCardId}/displayicon.png`
     : 'https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png';
 
-  const cardHtml = `
+  const workspaceCardHtml = `
     <div class="player-profile-card ${rankClass}" style="margin-top: 10px;">
       <div class="rank-bg-glow"></div>
       <div class="profile-card-content">
@@ -2556,10 +2772,10 @@ function updateValorantPlayerProfileUI(playerInfo) {
   `;
 
   if (elWelcomeValContainer) {
-    elWelcomeValContainer.innerHTML = cardHtml;
+    elWelcomeValContainer.innerHTML = welcomeCardHtml;
   }
   if (elWorkspaceValContainer) {
-    elWorkspaceValContainer.innerHTML = cardHtml;
+    elWorkspaceValContainer.innerHTML = workspaceCardHtml;
     elWorkspaceValContainer.style.display = 'block';
   }
 }

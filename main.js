@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -19,11 +19,15 @@ let config = {
   autoApplySpells: true,
   autoApplyItems: true,
   customLoLPath: '',
-  flashOnD: false,
+  customValPath: '',
+  flashOnD: true,
   debugBrowser: false,
   pinnedRole: 'default',
   startAtLogin: false,
-  enableSounds: true
+  enableSounds: true,
+  enableLolDetection: true,
+  enableValorantDetection: true,
+  zoomFactor: 1.0
 };
 
 // Global application state
@@ -325,9 +329,28 @@ async function fetchActiveGamePlayersInfo() {
 
 function createWindow() {
   const shouldStartHidden = process.argv.includes('--hidden');
+  
+  // Dynamically obtain screen dimensions to scale for low-resolution displays
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { height: scrHeight } = primaryDisplay.workAreaSize;
+  
+  let winWidth = 1280;
+  let winHeight = 800;
+  
+  // Scale down beautifully if running on lower vertical resolution screens (e.g. 1366x768)
+  if (scrHeight <= 768) {
+    winWidth = 1180;
+    winHeight = 680;
+  }
+
+  // Apply saved zoom factor multiplier to the window size on startup!
+  const initialZoom = config.zoomFactor !== undefined ? config.zoomFactor : 1.0;
+  winWidth = Math.round(winWidth * initialZoom);
+  winHeight = Math.round(winHeight * initialZoom);
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: winWidth,
+    height: winHeight,
     show: !shouldStartHidden,
     icon: path.join(__dirname, 'app_icon.png'), // Beautiful transparent vector rendering icon
     frame: false, // Borderless for premium custom header
@@ -348,6 +371,11 @@ function createWindow() {
   Menu.setApplicationMenu(null);
 
   mainWindow.loadFile('index.html');
+
+  // Set initial zoom factor after loading the page
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.setZoomFactor(config.zoomFactor || 1.0);
+  });
 
   // Intercept window close event to hide window instead of destroying it
   mainWindow.on('close', (event) => {
@@ -494,11 +522,16 @@ app.whenReady().then(() => {
     onGameflowPhaseUpdate: handleGameflowPhaseUpdate
   });
 
-  // Start scanning for LoL
-  connector.start();
+  // Start scanning for LoL only if enabled
+  if (config.enableLolDetection !== false) {
+    connector.start();
+  } else {
+    appState.lcuStatus = 'disconnected';
+  }
 
   // Instantiate and Start Valorant Connector
   valorantConnector = new ValorantConnector({
+    customPath: config.customValPath,
     onStatusChange: async (status) => {
       console.log(`[CLIENT] Valorant Status changed: ${status}`);
       appState.valorantStatus = status;
@@ -522,7 +555,13 @@ app.whenReady().then(() => {
       sendToRenderer('valorant-game-ended');
     }
   });
-  valorantConnector.start();
+  
+  // Start scanning for Valorant only if enabled
+  if (config.enableValorantDetection !== false) {
+    valorantConnector.start();
+  } else {
+    appState.valorantStatus = 'disconnected';
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -895,8 +934,11 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor }) => {
   const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
+  const lolDetectionChanged = (enableLolDetection !== undefined && enableLolDetection !== config.enableLolDetection);
+  const valDetectionChanged = (enableValorantDetection !== undefined && enableValorantDetection !== config.enableValorantDetection);
+  const zoomChanged = (zoomFactor !== undefined && zoomFactor !== config.zoomFactor);
 
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
@@ -916,7 +958,87 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   if (enableSounds !== undefined) {
     config.enableSounds = enableSounds;
   }
+  if (enableLolDetection !== undefined) {
+    config.enableLolDetection = enableLolDetection;
+  }
+  if (enableValorantDetection !== undefined) {
+    config.enableValorantDetection = enableValorantDetection;
+  }
+  if (zoomFactor !== undefined) {
+    const sanitizedZoom = Math.min(Math.max(zoomFactor, 0.7), 1.3);
+    config.zoomFactor = sanitizedZoom;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      try {
+        mainWindow.webContents.setZoomFactor(sanitizedZoom);
+
+        // Dynamically scale and resize the BrowserWindow itself!
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { height: scrHeight } = primaryDisplay.workAreaSize;
+
+        let baseWidth = 1280;
+        let baseHeight = 800;
+
+        if (scrHeight <= 768) {
+          baseWidth = 1180;
+          baseHeight = 680;
+        }
+
+        const newWidth = Math.round(baseWidth * sanitizedZoom);
+        const newHeight = Math.round(baseHeight * sanitizedZoom);
+
+        // Defensive Electron sizing wrapper for Windows borderless windows
+        mainWindow.setResizable(true);
+        mainWindow.setSize(newWidth, newHeight);
+        mainWindow.setResizable(false);
+        mainWindow.center(); // Center the window so it remains perfectly placed on screen
+
+        console.log(`[CONFIG] Zoom level updated dynamically to ${sanitizedZoom} and window resized to ${newWidth}x${newHeight}`);
+      } catch (err) {
+        console.error('Failed to set zoom level dynamically and resize:', err);
+      }
+    }
+  }
   saveConfig();
+
+  // If LoL detection status changed dynamically
+  if (lolDetectionChanged) {
+    if (config.enableLolDetection) {
+      console.log('[CONFIG] Enabling LoL detection dynamically');
+      if (connector) connector.start();
+    } else {
+      console.log('[CONFIG] Disabling LoL detection dynamically');
+      if (connector) {
+        connector.stop();
+        appState.lcuStatus = 'disconnected';
+        appState.activeGame = null;
+        resetWorkspace();
+        sendToRenderer('lcu-status', {
+          status: 'disconnected',
+          config,
+          playerInfo: null,
+          ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
+        });
+      }
+    }
+  }
+
+  // If Valorant detection status changed dynamically
+  if (valDetectionChanged) {
+    if (config.enableValorantDetection) {
+      console.log('[CONFIG] Enabling Valorant detection dynamically');
+      if (valorantConnector) valorantConnector.start();
+    } else {
+      console.log('[CONFIG] Disabling Valorant detection dynamically');
+      if (valorantConnector) {
+        valorantConnector.stop();
+        appState.valorantStatus = 'disconnected';
+        appState.activeValorantGame = null;
+        appState.valorantPlayerInfo = null;
+        sendToRenderer('valorant-status', { status: 'disconnected', playerInfo: null });
+        sendToRenderer('valorant-game-ended');
+      }
+    }
+  }
 
   // In-session dynamic update for Flash preference!
   if (appState.scrapedData) {
@@ -945,6 +1067,28 @@ ipcMain.on('save-custom-path', (event, pathStr) => {
   if (connector) {
     connector.setCustomPath(pathStr);
   }
+});
+
+ipcMain.on('save-custom-val-path', (event, pathStr) => {
+  config.customValPath = pathStr;
+  saveConfig();
+  if (valorantConnector) {
+    valorantConnector.setCustomPath(pathStr);
+  }
+});
+
+ipcMain.handle('select-path', async (event, { title, defaultPath }) => {
+  if (!mainWindow) return null;
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: title || 'Seleccionar Ubicación',
+    properties: ['openDirectory', 'openFile'],
+    defaultPath: defaultPath || undefined
+  });
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  return result.filePaths[0];
 });
 
 ipcMain.on('pin-role', (event, pinnedRole) => {

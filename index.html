@@ -77,62 +77,45 @@
 
     <!-- STATE 1: WELCOME SCREEN (NO ACTIVE CHAMP SELECT) -->
     <section class="screen active" id="screen-welcome">
-      <div class="welcome-container glass-card">
-        <div class="welcome-header">
-          <div class="orb-glowing purple"></div>
-          <h1>Preparado para Onetricks</h1>
-          <p>Entra en selección de campeones en League of Legends y buscaremos automáticamente las mejores runas y
-            hechizos de los mejores One-tricks mundiales.</p>
-        </div>
+      <div class="welcome-container welcome-cyber-card">
+        <!-- Cyber grid overlay background -->
+        <div class="cyber-grid-overlay"></div>
+        
+        <!-- Glowing decorative ambient orbs -->
+        <div class="orb-glowing purple-glow"></div>
+        <div class="orb-glowing blue-glow"></div>
 
-        <!-- Welcome Screen Player Profile Widget -->
-        <div id="welcome-profile-container" class="profile-container-outer"></div>
-        <div id="welcome-val-profile-container" class="profile-container-outer" style="margin-top: 10px; margin-bottom: 20px;"></div>
+        <div class="welcome-layout-flex">
+          
+          <!-- LEFT / MAIN: BRANDING & ACTIVE SEARCH RADAR -->
+          <div class="welcome-brand-area">
+            <div class="system-status-badge">
+              <span class="pulse-status-dot"></span>
+              Sincronización Activa
+            </div>
+            
+            <h1 class="welcome-title">
+              ONETRICKS <span class="gradient-text-accent">CLIENT</span>
+            </h1>
+            
+            <p class="welcome-desc">
+              El motor de análisis táctico de élite. Abre League of Legends o Valorant para comenzar la importación automatizada de perfiles y builds de One-tricks mundiales en tiempo real.
+            </p>
+            
 
-        <div class="feature-rows">
-          <div class="feature-card">
-            <div class="feat-icon blue">⚡</div>
-            <div class="feat-info">
-              <h3>Runas al Instante</h3>
-              <p>Detectamos tu campeón al hacer hover o fijarlo e importamos las runas recomendadas de onetricks.gg en
-                menos de un segundo.</p>
+          </div>
+          
+          <!-- RIGHT: LIVE PROFILES DOCK -->
+          <div class="welcome-profiles-dock">
+            <div class="dock-header">
+              <span class="dock-title">PERFILES ENLAZADOS</span>
+              <span class="dock-desc">Detección automática activa</span>
             </div>
+            
+            <div id="welcome-profile-container" class="profile-container-outer" style="width: 100%;"></div>
+            <div id="welcome-val-profile-container" class="profile-container-outer" style="width: 100%;"></div>
           </div>
-          <div class="feature-card">
-            <div class="feat-icon purple">🔥</div>
-            <div class="feat-info">
-              <h3>Hechizos Auto</h3>
-              <p>Cambia automáticamente a los hechizos óptimos (como Destello y Prender) según lo que jueguen los
-                mejores del mundo.</p>
-            </div>
-          </div>
-          <div class="feature-card">
-            <div class="feat-icon gold">🏆</div>
-            <div class="feat-info">
-              <h3>Datos de Elite</h3>
-              <p>No más estadísticas generales. Runas directas de los OTP en ELOs Challenger, Grandmaster y Master.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="quick-config-footer">
-          <div class="config-toggle-group">
-            <label class="switch-container">
-              <input type="checkbox" id="check-auto-runes-welcome" checked>
-              <span class="slider"></span>
-              <span class="switch-label">Auto-Runas</span>
-            </label>
-            <label class="switch-container">
-              <input type="checkbox" id="check-auto-spells-welcome" checked>
-              <span class="slider"></span>
-              <span class="switch-label">Auto-Hechizos</span>
-            </label>
-            <label class="switch-container">
-              <input type="checkbox" id="check-auto-items-welcome" checked>
-              <span class="slider"></span>
-              <span class="switch-label">Auto-Objetos</span>
-            </label>
-          </div>
+          
         </div>
       </div>
     </section>
@@ -474,21 +457,69 @@
               <span class="slider"></span>
             </label>
           </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Activar Detección de League of Legends</h4>
+              <p>Busca e importa datos automáticamente cuando juegues al LoL.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-lol-detection" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between">
+            <div class="setting-desc">
+              <h4>Activar Detección de Valorant</h4>
+              <p>Busca y muestra perfiles y rangos en tiempo real cuando juegues a Valorant.</p>
+            </div>
+            <label class="switch-container">
+              <input type="checkbox" id="settings-check-valorant-detection" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item flex-between" style="align-items: center;">
+            <div class="setting-desc">
+              <h4>Zoom de la Aplicación</h4>
+              <p>Ajusta el tamaño de la interfaz de la aplicación.</p>
+            </div>
+            <div class="zoom-controls" style="display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 20px;">
+              <button class="btn btn-secondary compact" id="btn-zoom-out" style="padding: 2px 10px; font-weight: bold; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">-</button>
+              <span id="zoom-value" style="font-family: var(--font-display); font-weight: 700; font-size: 13px; min-width: 44px; text-align: center; color: var(--rune-gold);">100%</span>
+              <button class="btn btn-secondary compact" id="btn-zoom-in" style="padding: 2px 8px; font-weight: bold; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">+</button>
+            </div>
+          </div>
         </div>
 
         <div class="settings-section">
           <h3>Ubicación de League of Legends</h3>
           <div class="setting-item">
             <div class="setting-desc">
-              <h4>Ruta de Instalación Personalizada</h4>
+              <h4>Ruta de Instalación de LoL / Lockfile</h4>
               <p>Si la aplicación no detecta tu juego, introduce la ruta donde se encuentra el <b>lockfile</b>
                 (habitualmente <code>C:\Riot Games\League of Legends</code>).</p>
             </div>
             <div class="custom-path-input-group">
               <input type="text" id="input-lol-path" placeholder="C:\Riot Games\League of Legends" />
-              <button class="btn btn-primary" id="btn-save-path">Guardar</button>
+              <button class="btn btn-secondary compact" id="btn-browse-lol" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Buscar</button>
+              <button class="btn btn-primary compact" id="btn-save-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Guardar</button>
             </div>
             <span class="path-success-lbl" id="path-success-lbl">Ruta guardada correctamente</span>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Ubicación de Valorant</h3>
+          <div class="setting-item">
+            <div class="setting-desc">
+              <h4>Ruta de Instalación de Valorant / Riot Client</h4>
+              <p>Introduce la ruta de instalación de Riot Client/Valorant si la detección no es automática (habitualmente se encuentra en <code>%LOCALAPPDATA%\Riot Games\Riot Client</code>).</p>
+            </div>
+            <div class="custom-path-input-group">
+              <input type="text" id="input-val-path" placeholder="C:\Users\...\AppData\Local\Riot Games" />
+              <button class="btn btn-secondary compact" id="btn-browse-val" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Buscar</button>
+              <button class="btn btn-primary compact" id="btn-save-val-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Guardar</button>
+            </div>
+            <span class="path-success-lbl" id="val-path-success-lbl">Ruta guardada correctamente</span>
           </div>
         </div>
 

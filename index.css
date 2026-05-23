@@ -660,6 +660,18 @@ body {
   letter-spacing: 0.5px;
   font-family: var(--font-display);
   transition: var(--transition-smooth);
+  cursor: pointer;
+}
+
+.connection-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.03);
+  transform: translateY(-1px);
+}
+
+.connection-pill:active {
+  transform: translateY(0);
 }
 
 .status-dot {
@@ -3711,5 +3723,783 @@ input:checked+.slider::before {
   50% {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 32px rgba(240, 230, 210, 0.3), 0 0 18px rgba(255, 70, 85, 0.35);
     border-color: rgba(255, 70, 85, 0.7);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM (1366x768 / SMALL SCREENS VERTICAL SCALING)
+   ========================================================================== */
+@media (max-height: 768px) {
+  /* Header scale-down */
+  .app-header {
+    height: 48px;
+  }
+  .connection-pill {
+    padding: 4px 10px;
+    font-size: 10px;
+    gap: 6px;
+  }
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .icon-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .window-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+  }
+  
+  /* Welcome Screen layout adjustments */
+  .app-body {
+    padding: 10px;
+  }
+  .screen {
+    inset: 10px;
+  }
+  .welcome-container {
+    padding: 16px 30px 20px;
+    margin: 0 auto;
+  }
+  .welcome-header {
+    margin-bottom: 12px;
+  }
+  .welcome-header h1 {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  .welcome-header p {
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 500px;
+  }
+  .profile-container-outer {
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+  }
+  .player-profile-card {
+    border-radius: 8px;
+  }
+  .profile-card-content {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  .avatar-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+  .profile-name {
+    font-size: 12px;
+  }
+  .profile-tier {
+    font-size: 8.5px;
+  }
+  .profile-stats {
+    font-size: 8px;
+    margin-top: 1px;
+  }
+  .feature-rows {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .feature-card {
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  .feat-icon {
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+  }
+  .feature-card h3 {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .feature-card p {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .quick-config-footer {
+    padding-top: 12px;
+  }
+  .config-toggle-group {
+    gap: 16px;
+  }
+  
+  /* Workspace Screen layout adjustments */
+  .workspace-grid {
+    grid-template-columns: 240px 1fr;
+    gap: 12px;
+  }
+  .champion-banner {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  .portrait-container {
+    width: 76px;
+    height: 76px;
+    border-width: 2px;
+    margin-bottom: 12px;
+  }
+  .champion-meta h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  .role-selector {
+    padding: 3px;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .role-btn {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  .details-panel {
+    padding: 12px 16px 14px;
+    border-radius: 12px;
+  }
+  .details-header {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .details-header h3 {
+    font-size: 15px;
+  }
+  .switch-container.compact {
+    padding: 4px 8px 4px 6px;
+    gap: 6px;
+  }
+  .switch-container.compact .slider {
+    width: 26px;
+    height: 14px;
+  }
+  .switch-container.compact .slider::before {
+    width: 10px;
+    height: 10px;
+    left: 1px;
+    bottom: 1px;
+  }
+  .switch-container.compact input:checked+.slider::before {
+    transform: translateX(12px);
+  }
+  .switch-container.compact .switch-label {
+    font-size: 9.5px;
+  }
+  
+  /* Keystone tab, runes trees, spells and shards scaling */
+  .keystone-tabs {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .keystone-tab {
+    padding: 6px 12px;
+    font-size: 10px;
+    border-radius: 6px;
+  }
+  .rune-trees-flex {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .rune-tree-box {
+    padding: 8px 10px;
+    min-width: 120px;
+    border-radius: 8px;
+  }
+  .tree-header {
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .tree-header span {
+    font-size: 11px;
+  }
+  .tree-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .rune-row {
+    padding: 4px 6px;
+    gap: 8px;
+    border-radius: 6px;
+  }
+  .rune-img-container {
+    width: 24px;
+    height: 24px;
+  }
+  .rune-row.keystone .rune-img-container {
+    width: 32px;
+    height: 32px;
+    border-width: 1.5px;
+  }
+  .rune-name {
+    font-size: 11px;
+  }
+  .rune-row.keystone .rune-name {
+    font-size: 12px;
+  }
+  .rune-desc {
+    font-size: 9px;
+  }
+  .shards-spells-column {
+    width: 130px;
+    gap: 8px;
+  }
+  .rune-tree-box.compact-box {
+    padding: 6px 8px;
+  }
+  .runes-list.horizontal .shard-icon-container {
+    width: 22px;
+    height: 22px;
+    border-width: 1px;
+  }
+  .runes-list.horizontal.large-icons .spell-icon-container {
+    width: 32px;
+    height: 32px;
+    border-width: 1.5px;
+    border-radius: 6px;
+  }
+  
+  /* Rune sets and item slots */
+  .rune-sets-container {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .rune-set-card {
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  .rune-set-title {
+    font-size: 11px;
+  }
+  .rune-set-playrate {
+    font-size: 9px;
+  }
+  .items-build-section {
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .items-row-container {
+    gap: 8px;
+  }
+  .item-group-box {
+    padding: 6px;
+    border-radius: 6px;
+  }
+  .group-label {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  .items-list-flex {
+    gap: 4px;
+  }
+  .item-icon-container {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+  }
+  
+  /* In-Game / Active Game Screen Scaling */
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .game-header {
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-bottom: 0px !important;
+  }
+  .game-header h2 {
+    font-size: 16px;
+  }
+  .game-header p {
+    font-size: 11px;
+  }
+  .teams-split-grid {
+    gap: 10px;
+  }
+  .team-column {
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+  .team-header {
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+  .team-header h3 {
+    font-size: 12px;
+  }
+  .team-side-indicator {
+    font-size: 8px;
+  }
+  .players-list {
+    gap: 6px;
+  }
+  .game-player-card {
+    padding: 6px 10px;
+    border-radius: 6px;
+    gap: 8px;
+  }
+  .player-champ-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .champion-icon-wrapper .player-level {
+    font-size: 7.5px;
+    padding: 0.5px 3.5px;
+    bottom: -3px;
+    right: -3px;
+  }
+  .player-riot-id .player-name {
+    font-size: 11px !important;
+  }
+  .player-riot-id .player-tag {
+    font-size: 9px !important;
+  }
+  .player-champ-name {
+    font-size: 9px !important;
+    margin-top: 1px;
+  }
+  .player-stats {
+    gap: 6px;
+  }
+  .player-rank .rank-badge-text {
+    font-size: 10px !important;
+  }
+  .player-rank .rank-lp {
+    font-size: 8px !important;
+  }
+  .player-winrate .wr-pct {
+    font-size: 10px !important;
+  }
+  .player-winrate .wr-games {
+    font-size: 8px !important;
+  }
+  
+  /* In-game recommended build card scale */
+  .game-champion-build {
+    margin-top: 8px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px;
+  }
+  .game-build-badge {
+    font-size: 8px;
+  }
+  .game-build-champ-name {
+    font-size: 12px !important;
+  }
+  .game-build-body-simple {
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .item-group-label {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  .game-items-flex {
+    gap: 4px;
+  }
+  .game-items-flex .item-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+  }
+  .skill-badge {
+    padding: 3px 6px;
+    font-size: 10px;
+    border-radius: 4px;
+  }
+  .skill-arrow {
+    font-size: 10px;
+  }
+  
+  /* Settings Overlay adjustments */
+  .settings-modal {
+    max-width: 580px;
+    max-height: 90vh;
+    border-radius: 12px;
+  }
+  .settings-modal-header {
+    padding: 12px 18px;
+    margin-bottom: 10px;
+  }
+  .settings-modal-header h2 {
+    font-size: 15px;
+  }
+  .settings-modal-body {
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .settings-section {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  .settings-section h3 {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .setting-item {
+    padding: 6px 0;
+  }
+  .setting-desc h4 {
+    font-size: 11.5px;
+  }
+  .setting-desc p {
+    font-size: 9.5px;
+  }
+  .custom-path-input-group input {
+    height: 28px;
+    font-size: 10.5px;
+    padding: 0 10px;
+    border-radius: 6px;
+  }
+  .custom-path-input-group .btn {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 10px;
+    border-radius: 6px;
+  }
+  .settings-modal-footer {
+    padding: 10px 18px;
+  }
+  .settings-modal-footer .btn {
+    padding: 6px 14px;
+    font-size: 10.5px;
+    border-radius: 6px;
+  }
+}
+
+/* ==========================================================================
+   PREMIUM CYBER WELCOME SCREEN CUSTOM STYLES (WOW EFFECT)
+   ========================================================================== */
+
+.welcome-cyber-card {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  background: rgba(10, 14, 23, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 24px;
+  padding: 40px 36px;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.5), 
+    0 0 40px rgba(138, 43, 226, 0.05) inset,
+    0 0 1px 1px rgba(255, 255, 255, 0.05) inset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* cybernetic grid lines */
+.cyber-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(circle at 50% 50%, black 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ambient glow orbs */
+.welcome-cyber-card .orb-glowing {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.welcome-cyber-card .purple-glow {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, #8a2be2 0%, rgba(138, 43, 226, 0) 70%);
+  top: -50px;
+  left: -50px;
+  animation: orbFloat 10s ease-in-out infinite alternate;
+}
+
+.welcome-cyber-card .blue-glow {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, #00bfff 0%, rgba(0, 191, 255, 0) 70%);
+  bottom: -50px;
+  right: -50px;
+  animation: orbFloat 12s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes orbFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(30px, 20px) scale(1.15);
+  }
+}
+
+/* Flex layout side-by-side */
+.welcome-layout-flex {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  z-index: 5;
+  position: relative;
+}
+
+/* Left branding area */
+.welcome-brand-area {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+
+.welcome-brand-area .system-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(168, 85, 247, 0.06);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--accent-purple-light);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.welcome-brand-area .pulse-status-dot {
+  width: 6px;
+  height: 6px;
+  background: #a855f7;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px #a855f7;
+  animation: pulse-green 1.5s infinite ease-in-out;
+}
+
+.welcome-title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  text-shadow: 0 0 40px rgba(168, 85, 247, 0.15);
+}
+
+.welcome-title .gradient-text-accent {
+  background: linear-gradient(90deg, #a855f7 0%, #00bfff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.2));
+}
+
+.welcome-desc {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 28px;
+  letter-spacing: 0.2px;
+}
+
+/* Active cyber sonar radar */
+.cyber-radar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 14px 18px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cyber-radar-scanner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(138, 43, 226, 0.05) 0%, rgba(138, 43, 226, 0.15) 100%);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.15);
+  flex-shrink: 0;
+}
+
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, rgba(168, 85, 247, 0.35) 0deg, rgba(168, 85, 247, 0) 180deg);
+  border-radius: 50%;
+  animation: radarRotate 2.5s linear infinite;
+  pointer-events: none;
+}
+
+.radar-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(168, 85, 247, 0.15);
+  border-radius: 50%;
+}
+
+.radar-circle.rc1 { width: 80%; height: 80%; }
+.radar-circle.rc2 { width: 55%; height: 55%; }
+.radar-circle.rc3 { 
+  width: 30%; 
+  height: 30%; 
+  border-style: solid;
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.radar-line-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.radar-line-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.radar-blip {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #00bfff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00bfff;
+  animation: sonarPulse 2s infinite ease-in-out;
+}
+
+.radar-blip.r-blip1 {
+  top: 30%;
+  left: 40%;
+  animation-delay: 0.3s;
+}
+
+.radar-blip.r-blip2 {
+  bottom: 35%;
+  right: 25%;
+  animation-delay: 1.1s;
+}
+
+@keyframes radarRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes sonarPulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.3; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #00bfff; }
+}
+
+.radar-status-text {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: pulseText 2s infinite ease-in-out;
+}
+
+@keyframes pulseText {
+  0%, 100% { color: var(--text-secondary); opacity: 0.8; }
+  50% { color: #ffffff; opacity: 1; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
+}
+
+/* Right profiles dock area */
+.welcome-profiles-dock {
+  flex: 0.9;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 320px;
+}
+
+.dock-header {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+}
+
+.dock-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--rune-gold);
+  text-transform: uppercase;
+}
+
+.dock-desc {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Responsive adjustment for vertical welcome flow */
+@media (max-width: 900px) {
+  .welcome-layout-flex {
+    flex-direction: column;
+    gap: 32px;
+  }
+  .welcome-brand-area {
+    align-items: center;
+    text-align: center;
+  }
+  .welcome-brand-area .system-status-badge {
+    align-self: center;
+  }
+  .welcome-desc {
+    max-width: 100%;
+  }
+  .welcome-profiles-dock {
+    max-width: 100%;
   }
 }
