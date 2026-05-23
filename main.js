@@ -406,6 +406,10 @@ function createTray() {
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true; // Auto-download when found
   
+  if (!app.isPackaged) {
+    autoUpdater.forceDevUpdateConfig = true;
+  }
+  
   autoUpdater.on('checking-for-update', () => {
     console.log('[UPDATER] Checking for update...');
     sendToRenderer('checking-for-update');
