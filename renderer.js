@@ -2190,10 +2190,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const elVersionLabel = document.getElementById('update-version-label');
   const elUpdateActionContainer = document.getElementById('update-action-container');
   
-  const elFloatingUpdateBanner = document.getElementById('floating-update-banner');
-  const elBtnUpdateRestart = document.getElementById('btn-update-restart');
-  const elBtnUpdateDismiss = document.getElementById('btn-update-dismiss');
-
   if (elVersionLabel) {
     elVersionLabel.textContent = `Versión actual: v${appVersion}`;
   }
@@ -2213,22 +2209,6 @@ document.addEventListener('DOMContentLoaded', () => {
       elBtnCheckUpdates.textContent = 'Buscando...';
       setUpdateStatus('Buscando actualizaciones...');
       window.api.checkForUpdates();
-    });
-  }
-
-  if (elBtnUpdateRestart) {
-    elBtnUpdateRestart.addEventListener('click', () => {
-      sfx.playApply();
-      window.api.restartAndInstall();
-    });
-  }
-
-  if (elBtnUpdateDismiss) {
-    elBtnUpdateDismiss.addEventListener('click', () => {
-      sfx.playTick();
-      if (elFloatingUpdateBanner) {
-        elFloatingUpdateBanner.classList.remove('active');
-      }
     });
   }
 
@@ -2288,22 +2268,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.api.onUpdateDownloaded((info) => {
       const newVersion = info ? info.version : '';
       console.log('[UI] Update downloaded:', info);
-      setUpdateStatus(`¡Versión <span style="color:var(--status-green);font-weight:700;">v${newVersion}</span> descargada con éxito!`);
+      setUpdateStatus(`¡Versión <span style="color:var(--status-green);font-weight:700;">v${newVersion}</span> lista! Se instalará automáticamente al cerrar el cliente.`);
       
-      // Play premium sound effect
-      sfx.playNotification();
-      
-      // Show floating premium banner!
-      if (elFloatingUpdateBanner) {
-        elFloatingUpdateBanner.classList.add('active');
-        // Update version in banner body if present
-        const bannerBodyP = elFloatingUpdateBanner.querySelector('.update-banner-body p');
-        if (bannerBodyP) {
-          bannerBodyP.innerHTML = `La versión <b>v${newVersion}</b> se ha descargado y está lista para instalar.`;
-        }
-      }
-
-      // Add a Restart button in Settings too
+      // Add a Restart button in Settings too (non-intrusive)
       if (elUpdateActionContainer) {
         elUpdateActionContainer.innerHTML = `
           <button class="btn btn-primary compact" id="btn-settings-restart" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; cursor: pointer;">Reiniciar</button>
