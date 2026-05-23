@@ -124,8 +124,8 @@ async function main() {
 
   // 5. Upload files to Release
   const filesToUpload = [
-    { name: `Onetricks Client Setup ${version}.exe`, path: `dist/Onetricks Client Setup ${version}.exe` },
-    { name: `Onetricks Client Setup ${version}.exe.blockmap`, path: `dist/Onetricks Client Setup ${version}.exe.blockmap` },
+    { name: `Onetricks-Client-Setup-${version}.exe`, path: `dist/Onetricks Client Setup ${version}.exe` },
+    { name: `Onetricks-Client-Setup-${version}.exe.blockmap`, path: `dist/Onetricks Client Setup ${version}.exe.blockmap` },
     { name: 'latest.yml', path: 'dist/latest.yml' }
   ];
 
