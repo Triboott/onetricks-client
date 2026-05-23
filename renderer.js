@@ -2248,7 +2248,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.api.onUpdateError) {
     window.api.onUpdateError((err) => {
       console.error('[UI] Update error:', err);
-      setUpdateStatus(`<span style="color:var(--status-red);">Error al buscar actualizaciones</span>`);
+      const errMsg = err ? `: ${err}` : '';
+      setUpdateStatus(`<span style="color:var(--status-red);">Error al buscar actualizaciones${errMsg}</span>`);
       restoreCheckButton();
     });
   }
