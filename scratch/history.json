@@ -1,0 +1,58 @@
+{
+  "Subject": "1739dd96-8755-59d4-9610-4887ccb5d2c3",
+  "BeginIndex": 0,
+  "EndIndex": 10,
+  "Total": 18,
+  "History": [
+    {
+      "MatchID": "60062b7b-df1a-4ca3-bd71-dcc32e30ed31",
+      "GameStartTime": 1779400208559,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "739eeb64-b224-4360-a64e-7579eafec2ea",
+      "GameStartTime": 1779398650075,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "78a423c0-4008-484b-86cc-4b169224f8ec",
+      "GameStartTime": 1779375228284,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "16d3b6e9-72f9-4d69-80a9-f541ce45137d",
+      "GameStartTime": 1779372167558,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "e35ae0d9-cb4d-4749-9beb-6ef4f5d32bb5",
+      "GameStartTime": 1779315310596,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "b9dcbbe2-48a2-415b-aea1-9180a77ab37e",
+      "GameStartTime": 1779205751043,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "76659856-0c20-4ea2-ba78-1c577d582e68",
+      "GameStartTime": 1779121822544,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "061011aa-5ae7-4153-bdc3-1da51dcee4b8",
+      "GameStartTime": 1778230368103,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "dec32ab1-d882-4cb8-9302-4cb69814384c",
+      "GameStartTime": 1778194672365,
+      "QueueID": "competitive"
+    },
+    {
+      "MatchID": "0b706399-36d1-4f87-8cbf-af590038bcb6",
+      "GameStartTime": 1777589773203,
+      "QueueID": "competitive"
+    }
+  ]
+}

@@ -225,6 +225,10 @@ const elStatusDot = document.getElementById('status-dot');
 const elStatusText = document.getElementById('status-text');
 const elLcuPill = document.getElementById('lcu-pill');
 
+const elValStatusDot = document.getElementById('val-status-dot');
+const elValStatusText = document.getElementById('val-status-text');
+const elValPill = document.getElementById('val-pill');
+
 const elWelcomeProfileContainer = document.getElementById('welcome-profile-container');
 const elWorkspaceProfileContainer = document.getElementById('workspace-profile-container');
 
@@ -362,6 +366,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateConfigUI(appConfig);
     updateLcuStatusUI(state.appState.lcuStatus);
+    
+    // Valorant Status UI Init
+    if (state.appState.valorantStatus) {
+      updateValorantStatusUI(state.appState.valorantStatus);
+    }
+    if (state.valorantPlayerInfo) {
+      updateValorantPlayerProfileUI(state.valorantPlayerInfo);
+    } else if (state.appState && state.appState.valorantPlayerInfo) {
+      updateValorantPlayerProfileUI(state.appState.valorantPlayerInfo);
+    }
+
     if (state.appState.lcuStatus === 'connected' && state.playerInfo) {
       updatePlayerProfileUI(state.playerInfo);
     } else {
@@ -377,6 +392,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (state.appState.scrapedData) {
         renderGameChampionBuild(state.appState.scrapedData);
       }
+    } else if (state.appState && state.appState.activeValorantGame) {
+      console.log('[RENDERER] Active Valorant game detected at startup. Rendering...');
+      elScreenWelcome.classList.remove('active');
+      elScreenWorkspace.classList.remove('active');
+      elScreenGame.classList.add('active');
+      renderValorantActiveGame(state.appState.activeValorantGame);
     }
   } catch (err) {
     console.error('Failed to get initial state:', err);
@@ -873,6 +894,19 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
   }
 });
 
+window.api.onValorantStatus(({ status, playerInfo }) => {
+  updateValorantStatusUI(status);
+  updateValorantPlayerProfileUI(playerInfo);
+});
+
+window.api.onValorantGameStarted((gameData) => {
+  renderValorantActiveGame(gameData);
+});
+
+window.api.onValorantGameEnded(() => {
+  handleValorantGameEnded();
+});
+
 // Listener for asynchronous Data Dragon version initialization
 window.api.onDDragonReady((newVersion) => {
   console.log(`[RENDERER] DDragon version ready: ${newVersion}`);
@@ -1163,6 +1197,158 @@ window.api.onGameEnded(() => {
   elScreenGame.classList.remove('active');
   elScreenWelcome.classList.add('active');
 });
+
+// ==========================================================================
+// VALORANT REAL-TIME INTEGRATION FUNCTIONS
+// ==========================================================================
+
+// Update Valorant connection pill indicator in header
+function updateValorantStatusUI(status) {
+  if (!elValStatusDot || !elValStatusText || !elValPill) return;
+
+  elValStatusDot.className = 'status-dot val ' + status;
+
+  if (status === 'connected') {
+    elValStatusText.textContent = 'VALORANT DETECTADO';
+    elValPill.style.borderColor = 'rgba(255, 70, 85, 0.35)'; // Valorant Red border
+    elValPill.style.display = 'flex';
+  } else if (status === 'scanning') {
+    elValStatusText.textContent = 'BUSCANDO VALORANT...';
+    elValPill.style.borderColor = 'rgba(245, 158, 11, 0.25)'; // Orange border
+    elValPill.style.display = 'flex';
+  } else {
+    elValStatusText.textContent = 'VALORANT DESCONECTADO';
+    elValPill.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+    elValPill.style.display = 'none'; // Hide if disconnected to keep header clean
+  }
+}
+
+// Render active game dashboard for Valorant
+function renderValorantActiveGame(gameData) {
+  if (!gameData) return;
+
+  console.log('[RENDERER] Rendering active Valorant match dashboard...');
+  
+  if (elGameStatusLbl) {
+    if (gameData.isPregame) {
+      elGameStatusLbl.textContent = 'Fase de Selección de Agente de Valorant - Visualizando estadísticas de tu equipo';
+    } else {
+      elGameStatusLbl.textContent = 'Partida activa de Valorant - Visualizando estadísticas de MMR y Agentes';
+    }
+  }
+
+  // Clear LoL specific layouts
+  if (elBtnOpenMultiOpgg) {
+    elBtnOpenMultiOpgg.style.display = 'none';
+  }
+  if (elGameChampionBuild) {
+    elGameChampionBuild.style.display = 'none';
+  }
+
+  // Clear player columns
+  if (elBlueTeamPlayers) elBlueTeamPlayers.innerHTML = '';
+  if (elRedTeamPlayers) elRedTeamPlayers.innerHTML = '';
+
+  const renderValorantPlayerList = (players, container) => {
+    if (!container || !players) return;
+    
+    players.forEach(p => {
+      const card = document.createElement('div');
+      card.className = `game-player-card rank-val-${p.tier}`;
+      card.setAttribute('title', `Ver perfil de ${p.displayName} en Valorant-Tracker`);
+
+      // Construct rank badge icon
+      let badgeHtml = '';
+      if (p.tierIcon) {
+        badgeHtml = `<img class="rank-badge-icon" src="${p.tierIcon}" alt="${p.tierName}" style="width: 22px; height: 22px; margin-right: 6px; object-fit: contain;">`;
+      }
+
+      // Tracker.gg URL
+      const trackerUrl = `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(p.displayName)}/`;
+
+      // Construct fallback image and alt tag cleanly to avoid broken text overlaps
+      const isSelecting = p.championDisplayName.includes('Eligiendo') || p.championDisplayName.includes('Seleccionando');
+      const altAttr = isSelecting ? '' : p.championDisplayName;
+      const defaultAgentIcon = 'https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png';
+      const agentIconSrc = p.championImage || defaultAgentIcon;
+
+      card.innerHTML = `
+        <div class="player-champion-area">
+          <div class="champion-icon-wrapper">
+            <img class="player-champ-icon val-agent-icon" src="${agentIconSrc}" alt="${altAttr}" onerror="this.onerror=null; this.src='${defaultAgentIcon}';">
+            <span class="player-level val-level">${p.summonerLevel}</span>
+          </div>
+        </div>
+        <div class="player-identity">
+          <div class="player-riot-id">
+            <span class="player-name" style="font-size: 13px;">${p.gameName}</span>
+            <span class="player-tag">#${p.tagLine}</span>
+          </div>
+          <span class="player-champ-name">${p.championDisplayName}</span>
+          <div class="rank-badge-row" style="display: flex; align-items: center; gap: 6px; margin-top: 3px; font-family: var(--font-display);">
+            <span class="profile-stats" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-top: 0; white-space: nowrap;">
+              ${p.games > 0 ? `${p.winrate}% WR (${p.games} Partidas)` : '0% WR (0 Partidas)'}
+            </span>
+            ${p.headshotPct > 0 ? `
+              <span style="font-size: 10px; color: rgba(255,255,255,0.15);">|</span>
+              <span style="font-size: 10px; color: #ff4655; font-weight: 800; letter-spacing: 0.3px; white-space: nowrap;">${p.headshotPct}% HS</span>
+            ` : ''}
+            ${p.adr > 0 ? `
+              <span style="font-size: 10px; color: rgba(255,255,255,0.15);">|</span>
+              <span style="font-size: 10px; color: var(--accent-blue); font-weight: 800; letter-spacing: 0.3px; white-space: nowrap;">${p.adr} ADR</span>
+            ` : ''}
+          </div>
+        </div>
+        <div class="player-stats">
+          <div class="player-rank" style="display: flex; align-items: center;">
+            ${badgeHtml}
+            <div style="display: flex; flex-direction: column; line-height: 1.2;">
+              <span class="rank-badge-text" style="font-size: 11px; font-weight: 700; color: #fff;">${p.tierName || 'UNRANKED'}</span>
+              ${p.tier > 0 ? `<span class="rank-lp" style="font-size: 9px; color: var(--text-secondary); font-weight: 600;">${p.lp} RR</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        sfx.playTick();
+        window.open(trackerUrl, '_blank');
+      });
+
+      container.appendChild(card);
+    });
+  };
+
+  // Render Allied and Enemy team columns
+  renderValorantPlayerList(gameData.blueTeam, elBlueTeamPlayers);
+  renderValorantPlayerList(gameData.redTeam, elRedTeamPlayers);
+
+  // Transition screen smoothly with SFX cue
+  if (elScreenWelcome.classList.contains('active') || elScreenWorkspace.classList.contains('active')) {
+    sfx.playSwitch();
+  }
+
+  elScreenWelcome.classList.remove('active');
+  elScreenWorkspace.classList.remove('active');
+  elScreenGame.classList.add('active');
+}
+
+// Handle transition back to Welcome screen when Valorant game ends
+function handleValorantGameEnded() {
+  console.log('[RENDERER] Valorant game ended, resetting dashboard...');
+  
+  if (elScreenGame.classList.contains('active')) {
+    sfx.playSwitch();
+  }
+
+  // Restore LoL specific elements for next game flow
+  if (elBtnOpenMultiOpgg) {
+    elBtnOpenMultiOpgg.style.display = 'block';
+  }
+
+  elScreenGame.classList.remove('active');
+  elScreenWelcome.classList.add('active');
+}
 
 // Helper to update active role button visual state
 function updateActiveRoleUI(activeRole) {
@@ -2296,3 +2482,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// Render dynamic Valorant player profile card on Welcome & Workspace screens
+function updateValorantPlayerProfileUI(playerInfo) {
+  const elWelcomeValContainer = document.getElementById('welcome-val-profile-container');
+  const elWorkspaceValContainer = document.getElementById('workspace-val-profile-container');
+
+  if (!playerInfo) {
+    if (elWelcomeValContainer) elWelcomeValContainer.innerHTML = '';
+    if (elWorkspaceValContainer) {
+      elWorkspaceValContainer.innerHTML = '';
+      elWorkspaceValContainer.style.display = 'none';
+    }
+    return;
+  }
+
+  const rankClass = `rank-val-${playerInfo.tier}`;
+  const translatedTier = playerInfo.tierName || 'UNRANKED';
+
+  const tierLabel = playerInfo.tier === 0
+    ? 'SIN CLASIFICAR'
+    : `${translatedTier} (${playerInfo.lp} RR)`;
+
+  // Tracker.gg URL
+  const trackerUrl = `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(playerInfo.displayName)}/`;
+
+  let badgeHtml = '';
+  if (playerInfo.tierIcon) {
+    badgeHtml = `<img class="rank-badge-icon" src="${playerInfo.tierIcon}" alt="${playerInfo.tierName}" style="width: 20px; height: 20px; object-fit: contain;">`;
+  } else {
+    badgeHtml = `<span style="font-size: 14px;">❓</span>`;
+  }
+
+  // Resolve avatar display icon from equipped Player Card (default to Jett displayIcon)
+  const valLogoSrc = playerInfo.playerCardId
+    ? `https://media.valorant-api.com/playercards/${playerInfo.playerCardId}/displayicon.png`
+    : 'https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png';
+
+  const cardHtml = `
+    <div class="player-profile-card ${rankClass}" style="margin-top: 10px;">
+      <div class="rank-bg-glow"></div>
+      <div class="profile-card-content">
+        <div class="avatar-wrapper">
+          <img class="profile-avatar val-agent-icon" src="${valLogoSrc}" alt="Valorant Profile" onerror="this.onerror=null; this.src='https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png';" style="border-color: rgba(255, 255, 255, 0.15); padding: 1px; border-radius: 50%;">
+        </div>
+        <a class="profile-link-wrapper" href="${trackerUrl}" target="_blank" title="Ver perfil en Valorant-Tracker" style="display: flex; flex: 1; align-items: center; justify-content: space-between;">
+          <div class="profile-info">
+            <span class="profile-name" style="font-size: 13.5px;">${playerInfo.displayName}</span>
+            <div class="rank-badge-row" style="display: flex; align-items: center; gap: 8px; margin-top: 3px; font-family: var(--font-display);">
+              <span class="profile-stats" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-top: 0; white-space: nowrap;">
+                ${playerInfo.games > 0 ? `${playerInfo.winrate}% WR (${playerInfo.games} Partidas)` : '0% WR (0 Partidas)'}
+              </span>
+              ${playerInfo.headshotPct > 0 ? `
+                <span style="font-size: 10px; color: rgba(255,255,255,0.15);">|</span>
+                <span style="font-size: 10px; color: #ff4655; font-weight: 800; letter-spacing: 0.3px; white-space: nowrap;">${playerInfo.headshotPct}% HS</span>
+              ` : ''}
+              ${playerInfo.adr > 0 ? `
+                <span style="font-size: 10px; color: rgba(255,255,255,0.15);">|</span>
+                <span style="font-size: 10px; color: var(--accent-blue); font-weight: 800; letter-spacing: 0.3px; white-space: nowrap;">${playerInfo.adr} ADR</span>
+              ` : ''}
+            </div>
+          </div>
+          <div class="player-rank" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.25); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+            ${badgeHtml}
+            <div style="display: flex; flex-direction: column; line-height: 1.1; text-align: left;">
+              <span class="rank-badge-text" style="font-size: 9.5px; font-weight: 800; color: #fff; text-transform: uppercase;">${playerInfo.tierName || 'UNRANKED'}</span>
+              ${playerInfo.tier > 0 ? `<span class="rank-lp" style="font-size: 8px; color: var(--text-secondary); font-weight: 600;">${playerInfo.lp} RR</span>` : ''}
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  `;
+
+  if (elWelcomeValContainer) {
+    elWelcomeValContainer.innerHTML = cardHtml;
+  }
+  if (elWorkspaceValContainer) {
+    elWorkspaceValContainer.innerHTML = cardHtml;
+    elWorkspaceValContainer.style.display = 'block';
+  }
+}

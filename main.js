@@ -4,9 +4,11 @@ const path = require('path');
 const fs = require('fs');
 const LcuConnector = require('./lcu-connector');
 const OnetricksScraper = require('./onetricks-scraper');
+const ValorantConnector = require('./valorant-connector');
 
 let mainWindow = null;
 let connector = null;
+let valorantConnector = null;
 let scraper = null;
 let tray = null;
 let isQuitting = false;
@@ -34,7 +36,10 @@ let appState = {
   activeChampionImage: '',
   activeRole: 'default', // e.g. 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'
   scrapedData: null,
-  activeGame: null
+  activeGame: null,
+  valorantStatus: 'disconnected', // 'disconnected', 'scanning', 'connected'
+  activeValorantGame: null,
+  valorantPlayerInfo: null
 };
 
 // Load configuration
@@ -492,6 +497,33 @@ app.whenReady().then(() => {
   // Start scanning for LoL
   connector.start();
 
+  // Instantiate and Start Valorant Connector
+  valorantConnector = new ValorantConnector({
+    onStatusChange: async (status) => {
+      console.log(`[CLIENT] Valorant Status changed: ${status}`);
+      appState.valorantStatus = status;
+      let valPlayerInfo = null;
+      if (status === 'connected') {
+        valPlayerInfo = await valorantConnector.getLocalPlayerProfile();
+        appState.valorantPlayerInfo = valPlayerInfo;
+      } else {
+        appState.valorantPlayerInfo = null;
+      }
+      sendToRenderer('valorant-status', { status, playerInfo: valPlayerInfo });
+    },
+    onGameStarted: (gameData) => {
+      console.log(`[CLIENT] Valorant Game started! Dispatched event to renderer.`);
+      appState.activeValorantGame = gameData;
+      sendToRenderer('valorant-game-started', gameData);
+    },
+    onGameEnded: () => {
+      console.log(`[CLIENT] Valorant Game ended! Dispatched event to renderer.`);
+      appState.activeValorantGame = null;
+      sendToRenderer('valorant-game-ended');
+    }
+  });
+  valorantConnector.start();
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -499,11 +531,13 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  if (valorantConnector) valorantConnector.stop();
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     if (connector) connector.stop();
+    if (valorantConnector) valorantConnector.stop();
     app.quit();
   }
 });
@@ -814,11 +848,17 @@ ipcMain.handle('get-initial-state', async () => {
       }
     }
   }
+  let valorantPlayerInfo = null;
+  if (valorantConnector && valorantConnector.status === 'connected') {
+    valorantPlayerInfo = await valorantConnector.getLocalPlayerProfile();
+    appState.valorantPlayerInfo = valorantPlayerInfo;
+  }
   return {
     appState,
     config,
     ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1',
     playerInfo,
+    valorantPlayerInfo,
     version: app.getVersion()
   };
 });

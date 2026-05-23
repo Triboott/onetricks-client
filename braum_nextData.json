@@ -2417,7 +2417,7 @@
       "matchupId": "",
       "filters": {
         "region": "",
-        "role": "bot",
+        "role": "jungle",
         "matchup": "",
         "twitch": ""
       },
@@ -2429,16 +2429,16 @@
       "bans": [],
       "sponsoredGuide": null,
       "vodCount": 0,
-      "key": "Braum--bot--"
+      "key": "Braum--jungle--"
     },
     "__N_SSP": true
   },
   "page": "/champions/builds/[id]",
   "query": {
-    "role": "bot",
+    "role": "jungle",
     "id": "Braum"
   },
-  "buildId": "E7UXDmSZ8d4ZY6xlBz9BM",
+  "buildId": "SYO15mnTD8tO7Qg97MjIa",
   "isFallback": false,
   "isExperimentalCompile": false,
   "gssp": true,

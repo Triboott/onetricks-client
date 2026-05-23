@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('api', {
   onSkinUpdate: (callback) => ipcRenderer.on('skin-update', (event, data) => callback(data)),
   onGameStarted: (callback) => ipcRenderer.on('game-started', (event, data) => callback(data)),
   onGameEnded: (callback) => ipcRenderer.on('game-ended', (event, data) => callback(data)),
+  onValorantStatus: (callback) => ipcRenderer.on('valorant-status', (event, data) => callback(data)),
+  onValorantGameStarted: (callback) => ipcRenderer.on('valorant-game-started', (event, data) => callback(data)),
+  onValorantGameEnded: (callback) => ipcRenderer.on('valorant-game-ended', (event) => callback()),
   
   // Auto-Updater Listeners from Main Process (Node.js) to Renderer Process (UI)
   onCheckingForUpdate: (callback) => ipcRenderer.on('checking-for-update', (event) => callback()),
