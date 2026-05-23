@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const LcuConnector = require('./lcu-connector');
@@ -399,10 +400,60 @@ function createTray() {
   });
 }
 
+// ==========================================================================
+// ELECTRON AUTO-UPDATER CONFIGURATION & EVENTS
+// ==========================================================================
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true; // Auto-download when found
+  
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[UPDATER] Checking for update...');
+    sendToRenderer('checking-for-update');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[UPDATER] Update available:', info);
+    sendToRenderer('update-available', info);
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('[UPDATER] Update not available:', info);
+    sendToRenderer('update-not-available', info);
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('[UPDATER] Error in auto-updater:', err);
+    sendToRenderer('update-error', err ? err.message : 'Error desconocido');
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    sendToRenderer('download-progress', {
+      percent: Math.round(progressObj.percent),
+      bytesPerSecond: progressObj.bytesPerSecond,
+      transferred: progressObj.transferred,
+      total: progressObj.total
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[UPDATER] Update downloaded:', info);
+    sendToRenderer('update-downloaded', info);
+  });
+}
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
   updateLoginItemSettings();
+  setupAutoUpdater();
+
+  // Check for updates on startup (after 5 seconds)
+  setTimeout(() => {
+    console.log('[UPDATER] Initial update check...');
+    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+      console.warn('[UPDATER] Initial update check failed:', err.message);
+    });
+  }, 5000);
 
   // Instantiate Modules
   scraper = new OnetricksScraper(mainWindow);
@@ -755,7 +806,8 @@ ipcMain.handle('get-initial-state', async () => {
     appState,
     config,
     ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1',
-    playerInfo
+    playerInfo,
+    version: app.getVersion()
   };
 });
 
@@ -857,3 +909,18 @@ ipcMain.on('window-minimize', () => {
 ipcMain.on('window-close', () => {
   if (mainWindow) mainWindow.close();
 });
+
+// Auto-updater control handlers
+ipcMain.on('check-for-updates', () => {
+  console.log('[UPDATER] Manual check requested by renderer');
+  autoUpdater.checkForUpdates().catch(err => {
+    console.error('[UPDATER] Failed manual update check:', err);
+    sendToRenderer('update-error', err ? err.message : 'Error desconocido');
+  });
+});
+
+ipcMain.on('restart-and-install', () => {
+  console.log('[UPDATER] Restart and install requested by renderer');
+  autoUpdater.quitAndInstall();
+});
+

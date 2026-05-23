@@ -12,6 +12,14 @@ contextBridge.exposeInMainWorld('api', {
   onGameStarted: (callback) => ipcRenderer.on('game-started', (event, data) => callback(data)),
   onGameEnded: (callback) => ipcRenderer.on('game-ended', (event, data) => callback(data)),
   
+  // Auto-Updater Listeners from Main Process (Node.js) to Renderer Process (UI)
+  onCheckingForUpdate: (callback) => ipcRenderer.on('checking-for-update', (event) => callback()),
+  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (event, info) => callback(info)),
+  onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (event, info) => callback(info)),
+  onUpdateError: (callback) => ipcRenderer.on('update-error', (event, err) => callback(err)),
+  onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (event, progressObj) => callback(progressObj)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (event, info) => callback(info)),
+  
   // Triggers from Renderer Process (UI) to Main Process (Node.js)
   changeRole: (role) => ipcRenderer.send('change-role', role),
   pinRole: (role) => ipcRenderer.send('pin-role', role),
@@ -20,5 +28,9 @@ contextBridge.exposeInMainWorld('api', {
   saveCustomPath: (path) => ipcRenderer.send('save-custom-path', path),
   getInitialState: () => ipcRenderer.invoke('get-initial-state'),
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
-  closeWindow: () => ipcRenderer.send('window-close')
+  closeWindow: () => ipcRenderer.send('window-close'),
+  
+  // Auto-Updater Actions
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  restartAndInstall: () => ipcRenderer.send('restart-and-install')
 });

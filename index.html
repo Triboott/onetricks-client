@@ -485,10 +485,38 @@
             <span class="path-success-lbl" id="path-success-lbl">Ruta guardada correctamente</span>
           </div>
         </div>
+
+        <div class="settings-section" id="settings-updates-section">
+          <h3>Actualización Automática</h3>
+          <div class="setting-item flex-between" style="align-items: center; gap: 16px;">
+            <div class="setting-desc" style="flex: 1;">
+              <h4 id="update-version-label">Versión actual: v1.0.0</h4>
+              <p id="update-status-message">La aplicación se encuentra en su versión más reciente.</p>
+            </div>
+            <div class="update-action-btn-container" id="update-action-container" style="flex-shrink: 0;">
+              <button class="btn btn-primary compact" id="btn-check-updates" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; cursor: pointer; transition: var(--transition-smooth);">Buscar actualizaciones</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="settings-modal-footer">
         <button class="btn btn-secondary" id="btn-settings-done">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Update Alert Banner -->
+  <div class="floating-update-banner" id="floating-update-banner">
+    <div class="update-banner-content">
+      <div class="update-banner-icon-area">🚀</div>
+      <div class="update-banner-body">
+        <h4>¡Actualización Lista!</h4>
+        <p>Una nueva versión se ha descargado y está lista para instalar.</p>
+      </div>
+      <div class="update-banner-actions">
+        <button class="btn btn-primary compact" id="btn-update-restart">Reiniciar</button>
+        <button class="btn btn-secondary compact" id="btn-update-dismiss">Más tarde</button>
       </div>
     </div>
   </div>
@@ -498,5 +526,4 @@
 
   <script src="renderer.js"></script>
 </body>
-
 </html>

@@ -3364,3 +3364,180 @@ input:checked+.slider::before {
   border-color: var(--accent-blue) !important;
   box-shadow: 0 3px 8px rgba(0, 191, 255, 0.25) !important;
 }
+
+/* ==========================================================================
+   AUTO-UPDATER PREMIUM UI ELEMENTS
+   ========================================================================== */
+
+/* Settings Updater Section Styles */
+#settings-updates-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+#update-status-message {
+  font-size: 11px !important;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  transition: var(--transition-smooth);
+}
+
+.update-progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.update-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--accent-purple-glow);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Floating Update Alert Banner Styles */
+.floating-update-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 380px;
+  z-index: 9999;
+  transform: translateY(150px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-update-banner.active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.update-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(10, 12, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(138, 43, 226, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+/* High premium glowing 1px border gradient */
+.update-banner-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.update-banner-icon-area {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.18) 0%, rgba(0, 191, 255, 0.08) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  border: 1px solid rgba(138, 43, 226, 0.25);
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.15);
+}
+
+.update-banner-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.update-banner-body h4 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.update-banner-body p {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.update-banner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.update-banner-actions .btn {
+  width: 90px;
+  text-align: center;
+  justify-content: center;
+  padding: 6px 0;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.update-banner-actions .btn.btn-primary {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.2);
+}
+
+.update-banner-actions .btn.btn-primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 15px rgba(138, 43, 226, 0.35);
+  filter: brightness(1.1);
+}
+
+.update-banner-actions .btn.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.update-banner-actions .btn.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}

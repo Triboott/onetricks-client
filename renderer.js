@@ -320,6 +320,7 @@ let runesReforged = [];
 let ddragonVersion = '14.10.1'; // Default fallback version
 let lastPlayerInfo = null; // Store last player info to allow re-rendering when DDragon loads
 let lastLcuStatus = 'disconnected'; // Track LCU status transitions for SFX cues
+let appVersion = '1.0.0'; // Default fallback version
 let appConfig = {
   autoApplyRunes: true,
   autoApplySpells: true,
@@ -351,6 +352,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig = state.config;
     if (state.ddragonVersion) {
       ddragonVersion = state.ddragonVersion;
+    }
+    if (state.version) {
+      appVersion = state.version;
+      const elVersionLabel = document.getElementById('update-version-label');
+      if (elVersionLabel) {
+        elVersionLabel.textContent = `Versión actual: v${appVersion}`;
+      }
     }
     updateConfigUI(appConfig);
     updateLcuStatusUI(state.appState.lcuStatus);
@@ -2172,3 +2180,151 @@ function selectSummonersOption(idx) {
     window.api.applyBuild({ summoners: selectedOpt.raw });
   }
 }
+
+// ==========================================================================
+// AUTO-UPDATER EVENTS & UI LOGIC BINDINGS
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const elBtnCheckUpdates = document.getElementById('btn-check-updates');
+  const elUpdateStatusMsg = document.getElementById('update-status-message');
+  const elVersionLabel = document.getElementById('update-version-label');
+  const elUpdateActionContainer = document.getElementById('update-action-container');
+  
+  const elFloatingUpdateBanner = document.getElementById('floating-update-banner');
+  const elBtnUpdateRestart = document.getElementById('btn-update-restart');
+  const elBtnUpdateDismiss = document.getElementById('btn-update-dismiss');
+
+  if (elVersionLabel) {
+    elVersionLabel.textContent = `Versión actual: v${appVersion}`;
+  }
+
+  // Helper to update settings status area
+  function setUpdateStatus(text) {
+    if (elUpdateStatusMsg) {
+      elUpdateStatusMsg.innerHTML = text;
+    }
+  }
+
+  // Bind click handlers
+  if (elBtnCheckUpdates) {
+    elBtnCheckUpdates.addEventListener('click', () => {
+      sfx.playTick();
+      elBtnCheckUpdates.disabled = true;
+      elBtnCheckUpdates.textContent = 'Buscando...';
+      setUpdateStatus('Buscando actualizaciones...');
+      window.api.checkForUpdates();
+    });
+  }
+
+  if (elBtnUpdateRestart) {
+    elBtnUpdateRestart.addEventListener('click', () => {
+      sfx.playApply();
+      window.api.restartAndInstall();
+    });
+  }
+
+  if (elBtnUpdateDismiss) {
+    elBtnUpdateDismiss.addEventListener('click', () => {
+      sfx.playTick();
+      if (elFloatingUpdateBanner) {
+        elFloatingUpdateBanner.classList.remove('active');
+      }
+    });
+  }
+
+  // Auto-updater event hookups from preload IPC
+  if (window.api.onCheckingForUpdate) {
+    window.api.onCheckingForUpdate(() => {
+      console.log('[UI] Checking for updates...');
+      setUpdateStatus('Buscando actualizaciones en el servidor...');
+    });
+  }
+
+  if (window.api.onUpdateAvailable) {
+    window.api.onUpdateAvailable((info) => {
+      console.log('[UI] Update available:', info);
+      const newVersion = info ? info.version : '';
+      setUpdateStatus(`Nueva versión disponible: <span style="color:var(--accent-blue);font-weight:700;">v${newVersion}</span>. Descargando...`);
+      
+      // Inject download progress bar inside update-action-container!
+      if (elUpdateActionContainer) {
+        elUpdateActionContainer.innerHTML = `
+          <div class="update-progress-bar-container" style="width: 140px;">
+            <div class="update-progress-bar-fill" id="update-progress-fill" style="width: 0%;"></div>
+          </div>
+        `;
+      }
+    });
+  }
+
+  if (window.api.onUpdateNotAvailable) {
+    window.api.onUpdateNotAvailable((info) => {
+      console.log('[UI] Already up to date:', info);
+      setUpdateStatus('La aplicación se encuentra en su versión más reciente.');
+      restoreCheckButton();
+    });
+  }
+
+  if (window.api.onUpdateError) {
+    window.api.onUpdateError((err) => {
+      console.error('[UI] Update error:', err);
+      setUpdateStatus(`<span style="color:var(--status-red);">Error al buscar actualizaciones</span>`);
+      restoreCheckButton();
+    });
+  }
+
+  if (window.api.onDownloadProgress) {
+    window.api.onDownloadProgress((progress) => {
+      const percent = progress.percent || 0;
+      setUpdateStatus(`Descargando actualización... <span style="font-weight:700;color:var(--accent-purple-light);">${percent}%</span>`);
+      const fill = document.getElementById('update-progress-fill');
+      if (fill) {
+        fill.style.width = `${percent}%`;
+      }
+    });
+  }
+
+  if (window.api.onUpdateDownloaded) {
+    window.api.onUpdateDownloaded((info) => {
+      const newVersion = info ? info.version : '';
+      console.log('[UI] Update downloaded:', info);
+      setUpdateStatus(`¡Versión <span style="color:var(--status-green);font-weight:700;">v${newVersion}</span> descargada con éxito!`);
+      
+      // Play premium sound effect
+      sfx.playNotification();
+      
+      // Show floating premium banner!
+      if (elFloatingUpdateBanner) {
+        elFloatingUpdateBanner.classList.add('active');
+        // Update version in banner body if present
+        const bannerBodyP = elFloatingUpdateBanner.querySelector('.update-banner-body p');
+        if (bannerBodyP) {
+          bannerBodyP.innerHTML = `La versión <b>v${newVersion}</b> se ha descargado y está lista para instalar.`;
+        }
+      }
+
+      // Add a Restart button in Settings too
+      if (elUpdateActionContainer) {
+        elUpdateActionContainer.innerHTML = `
+          <button class="btn btn-primary compact" id="btn-settings-restart" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; cursor: pointer;">Reiniciar</button>
+        `;
+        const btnSettingsRestart = document.getElementById('btn-settings-restart');
+        if (btnSettingsRestart) {
+          btnSettingsRestart.addEventListener('click', () => {
+            sfx.playApply();
+            window.api.restartAndInstall();
+          });
+        }
+      }
+    });
+  }
+
+  function restoreCheckButton() {
+    if (elUpdateActionContainer && elBtnCheckUpdates) {
+      elUpdateActionContainer.innerHTML = '';
+      elUpdateActionContainer.appendChild(elBtnCheckUpdates);
+      elBtnCheckUpdates.disabled = false;
+      elBtnCheckUpdates.textContent = 'Buscar actualizaciones';
+    }
+  }
+});
