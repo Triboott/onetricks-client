@@ -39,6 +39,9 @@ class LcuConnector {
   stop() {
     this.stopScan();
     this.disconnectWs();
+    this.port = null;
+    this.password = null;
+    this.status = 'disconnected';
   }
 
   restartScan() {
@@ -239,7 +242,8 @@ class LcuConnector {
     this.ws.on('message', (message) => {
       try {
         const [id, eventName, payload] = JSON.parse(message);
-        console.log(`[LCU] WS Message: eventName=${eventName}, uri=${payload.uri}, eventType=${payload.eventType}`);
+        // Cleaned up verbose LCU WS logging to save CPU during active gameplay
+        // console.log(`[LCU] WS Message: eventName=${eventName}, uri=${payload.uri}, eventType=${payload.eventType}`);
         if (eventName === 'OnJsonApiEvent') {
           if (payload.uri === '/lol-champ-select/v1/session') {
             if (payload.eventType === 'Delete') {

@@ -43,7 +43,8 @@ let config = {
   enableSounds: true,
   enableLolDetection: true,
   enableValorantDetection: true,
-  zoomFactor: 1.0
+  zoomFactor: 1.0,
+  enableLowPerf: false
 };
 
 // Global application state
@@ -526,6 +527,10 @@ app.whenReady().then(() => {
       let playerInfo = null;
       if (status === 'connected') {
         playerInfo = await fetchPlayerInfo();
+        if (playerInfo) {
+          config.lastLolProfile = playerInfo;
+          saveConfig();
+        }
       }
       sendToRenderer('lcu-status', {
         status,
@@ -555,10 +560,14 @@ app.whenReady().then(() => {
       if (status === 'connected') {
         valPlayerInfo = await valorantConnector.getLocalPlayerProfile();
         appState.valorantPlayerInfo = valPlayerInfo;
+        if (valPlayerInfo) {
+          config.lastValProfile = valPlayerInfo;
+          saveConfig();
+        }
       } else {
         appState.valorantPlayerInfo = null;
       }
-      sendToRenderer('valorant-status', { status, playerInfo: valPlayerInfo });
+      sendToRenderer('valorant-status', { status, playerInfo: valPlayerInfo, config });
     },
     onGameStarted: (gameData) => {
       console.log(`[CLIENT] Valorant Game started! Dispatched event to renderer.`);
@@ -895,6 +904,10 @@ ipcMain.handle('get-initial-state', async () => {
   let playerInfo = null;
   if (connector && connector.status === 'connected') {
     playerInfo = await fetchPlayerInfo();
+    if (playerInfo) {
+      config.lastLolProfile = playerInfo;
+      saveConfig();
+    }
     // If game is active, let's fetch in-game info too!
     if (['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
       appState.activeGame = await fetchActiveGamePlayersInfo();
@@ -907,6 +920,10 @@ ipcMain.handle('get-initial-state', async () => {
   if (valorantConnector && valorantConnector.status === 'connected') {
     valorantPlayerInfo = await valorantConnector.getLocalPlayerProfile();
     appState.valorantPlayerInfo = valorantPlayerInfo;
+    if (valorantPlayerInfo) {
+      config.lastValProfile = valorantPlayerInfo;
+      saveConfig();
+    }
   }
   return {
     appState,
@@ -950,7 +967,7 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf }) => {
   const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
   const lolDetectionChanged = (enableLolDetection !== undefined && enableLolDetection !== config.enableLolDetection);
   const valDetectionChanged = (enableValorantDetection !== undefined && enableValorantDetection !== config.enableValorantDetection);
@@ -973,6 +990,9 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   }
   if (enableSounds !== undefined) {
     config.enableSounds = enableSounds;
+  }
+  if (enableLowPerf !== undefined) {
+    config.enableLowPerf = enableLowPerf;
   }
   if (enableLolDetection !== undefined) {
     config.enableLolDetection = enableLolDetection;

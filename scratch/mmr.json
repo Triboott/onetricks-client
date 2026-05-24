@@ -1,5 +1,5 @@
 {
-  "Version": 1779531055230,
+  "Version": 1779532903010,
   "Subject": "1739dd96-8755-59d4-9610-4887ccb5d2c3",
   "LatestCompetitiveUpdate": {
     "MatchID": "60062b7b-df1a-4ca3-bd71-dcc32e30ed31",
@@ -245,15 +245,15 @@
       }
     },
     "deathmatch": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -266,15 +266,15 @@
       }
     },
     "dodgeball": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -287,15 +287,15 @@
       }
     },
     "ggteam": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -308,15 +308,15 @@
       }
     },
     "hurm": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -329,15 +329,15 @@
       }
     },
     "onefa": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -371,15 +371,15 @@
       }
     },
     "skirmish2v2": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -392,15 +392,15 @@
       }
     },
     "snowball": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -413,15 +413,15 @@
       }
     },
     "spikerush": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,
@@ -828,15 +828,15 @@
       }
     },
     "valaram": {
-      "TotalGamesNeededForRating": 4,
-      "TotalGamesNeededForLeaderboard": 49,
+      "TotalGamesNeededForRating": 1,
+      "TotalGamesNeededForLeaderboard": 46,
       "CurrentSeasonGamesNeededForRating": 0,
       "SeasonalInfoBySeasonID": {
         "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22": {
           "SeasonID": "ce2783e8-44fc-dd48-3da3-33b5ba6c4a22",
           "NumberOfWins": 0,
           "NumberOfWinsWithPlacements": 0,
-          "NumberOfGames": 1,
+          "NumberOfGames": 4,
           "Rank": 0,
           "CapstoneWins": 0,
           "LeaderboardRank": 0,

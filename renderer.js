@@ -299,6 +299,7 @@ const elSettingsCheckStartLogin = document.getElementById('settings-check-start-
 const elSettingsCheckSounds = document.getElementById('settings-check-sounds');
 const elSettingsCheckLolDetection = document.getElementById('settings-check-lol-detection');
 const elSettingsCheckValorantDetection = document.getElementById('settings-check-valorant-detection');
+const elSettingsCheckLowPerf = document.getElementById('settings-check-low-perf');
 const elBtnZoomOut = document.getElementById('btn-zoom-out');
 const elBtnZoomIn = document.getElementById('btn-zoom-in');
 const elZoomValue = document.getElementById('zoom-value');
@@ -348,6 +349,20 @@ let appConfig = {
   enableValorantDetection: true
 };
 
+// Toggle low performance overrides strictly based on active game screen and config
+function updateLowPerfClass() {
+  const shouldApply = (appConfig && appConfig.enableLowPerf === true) && elScreenGame && elScreenGame.classList.contains('active');
+  document.body.classList.toggle('low-perf', shouldApply);
+}
+
+// Reactive screen observer to apply low-performance overrides as soon as in-game screen activates/deactivates
+const lowPerfObserver = new MutationObserver(() => {
+  updateLowPerfClass();
+});
+if (elScreenGame) {
+  lowPerfObserver.observe(elScreenGame, { attributes: true, attributeFilter: ['class'] });
+}
+
 const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3];
 
 
@@ -390,10 +405,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateValorantPlayerProfileUI(state.valorantPlayerInfo);
     } else if (state.appState && state.appState.valorantPlayerInfo) {
       updateValorantPlayerProfileUI(state.appState.valorantPlayerInfo);
+    } else if (appConfig && appConfig.lastValProfile) {
+      updateValorantPlayerProfileUI({ ...appConfig.lastValProfile, isCached: true });
     }
 
     if (state.appState.lcuStatus === 'connected' && state.playerInfo) {
       updatePlayerProfileUI(state.playerInfo);
+    } else if (appConfig && appConfig.lastLolProfile) {
+      updatePlayerProfileUI({ ...appConfig.lastLolProfile, isCached: true });
     } else {
       updatePlayerProfileUI(null);
     }
@@ -548,7 +567,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig.enableSounds = elSettingsCheckSounds.checked;
     appConfig.enableLolDetection = elSettingsCheckLolDetection.checked;
     appConfig.enableValorantDetection = elSettingsCheckValorantDetection.checked;
+    if (elSettingsCheckLowPerf) {
+      appConfig.enableLowPerf = elSettingsCheckLowPerf.checked;
+    }
 
+    updateLowPerfClass();
     updateSoundToggleButtonUI(appConfig.enableSounds);
     sfx.playTick(); // Tick will respect the updated enableSounds state immediately!
 
@@ -569,7 +592,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       startAtLogin: appConfig.startAtLogin,
       enableSounds: appConfig.enableSounds,
       enableLolDetection: appConfig.enableLolDetection,
-      enableValorantDetection: appConfig.enableValorantDetection
+      enableValorantDetection: appConfig.enableValorantDetection,
+      enableLowPerf: appConfig.enableLowPerf
     });
 
     // If activeScrapedData is loaded and any of the settings transitioned from OFF to ON, apply directly!
@@ -627,6 +651,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   elSettingsCheckSounds.addEventListener('change', handleToggleChange);
   elSettingsCheckLolDetection.addEventListener('change', handleToggleChange);
   elSettingsCheckValorantDetection.addEventListener('change', handleToggleChange);
+  if (elSettingsCheckLowPerf) {
+    elSettingsCheckLowPerf.addEventListener('change', handleToggleChange);
+  }
 
   if (elBtnZoomOut) {
     elBtnZoomOut.addEventListener('click', () => {
@@ -649,7 +676,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           enableSounds: appConfig.enableSounds,
           enableLolDetection: appConfig.enableLolDetection,
           enableValorantDetection: appConfig.enableValorantDetection,
-          zoomFactor: nextZoom
+          zoomFactor: nextZoom,
+          enableLowPerf: appConfig.enableLowPerf
         });
       }
     });
@@ -676,7 +704,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           enableSounds: appConfig.enableSounds,
           enableLolDetection: appConfig.enableLolDetection,
           enableValorantDetection: appConfig.enableValorantDetection,
-          zoomFactor: nextZoom
+          zoomFactor: nextZoom,
+          enableLowPerf: appConfig.enableLowPerf
         });
       }
     });
@@ -816,6 +845,10 @@ function updateConfigUI(config) {
   elSettingsCheckSounds.checked = config.enableSounds !== false;
   elSettingsCheckLolDetection.checked = config.enableLolDetection !== false;
   elSettingsCheckValorantDetection.checked = config.enableValorantDetection !== false;
+  if (elSettingsCheckLowPerf) {
+    elSettingsCheckLowPerf.checked = config.enableLowPerf === true;
+  }
+  updateLowPerfClass();
   updateSoundToggleButtonUI(config.enableSounds !== false);
   elInputLolPath.value = config.customLoLPath || '';
   if (elInputValPath) {
@@ -979,8 +1012,9 @@ function updatePlayerProfileUI(playerInfo) {
     opggUrl = `https://op.gg/es/lol/summoners/search?q=${encodeURIComponent(displayName || gameName)}&region=euw`;
   }
 
+  const cachedStyle = playerInfo.isCached ? 'opacity: 0.65; filter: grayscale(0.2); transition: all 0.3s ease;' : '';
   const cardHtml = `
-    <div class="player-profile-card rank-${tierClass}">
+    <div class="player-profile-card rank-${tierClass}" style="${cachedStyle}">
       <div class="rank-bg-glow"></div>
       <div class="profile-card-content">
         <div class="avatar-wrapper">
@@ -1047,6 +1081,10 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
   if (newVersion) {
     ddragonVersion = newVersion;
   }
+  if (config) {
+    appConfig = config;
+    updateConfigUI(config);
+  }
 
   // Play chime on LCU online connection transition
   if (status === 'connected' && lastLcuStatus !== 'connected') {
@@ -1056,20 +1094,32 @@ window.api.onLcuStatus(({ status, config, playerInfo, ddragonVersion: newVersion
 
   updateLcuStatusUI(status);
   if (status !== 'connected') {
-    updatePlayerProfileUI(null);
+    if (appConfig && appConfig.lastLolProfile) {
+      updatePlayerProfileUI({ ...appConfig.lastLolProfile, isCached: true });
+    } else {
+      updatePlayerProfileUI(null);
+    }
   } else if (playerInfo) {
     updatePlayerProfileUI(playerInfo);
   }
+});
+
+window.api.onValorantStatus(({ status, playerInfo, config }) => {
   if (config) {
     appConfig = config;
     updateConfigUI(config);
   }
-});
-
-window.api.onValorantStatus(({ status, playerInfo }) => {
   lastValStatus = status;
   updateValorantStatusUI(status);
-  updateValorantPlayerProfileUI(playerInfo);
+  if (status !== 'connected') {
+    if (appConfig && appConfig.lastValProfile) {
+      updateValorantPlayerProfileUI({ ...appConfig.lastValProfile, isCached: true });
+    } else {
+      updateValorantPlayerProfileUI(null);
+    }
+  } else {
+    updateValorantPlayerProfileUI(playerInfo);
+  }
 });
 
 window.api.onValorantGameStarted((gameData) => {
@@ -2698,12 +2748,13 @@ function updateValorantPlayerProfileUI(playerInfo) {
   }
 
   // Welcome Screen: Sleek wide banner card using Riot Player Card Wide Art
-  const bannerUrl = playerInfo.playerCardId
-    ? `https://media.valorant-api.com/playercards/${playerInfo.playerCardId}/wideart.png`
-    : 'https://media.valorant-api.com/playercards/9fb348bc-41a0-91ad-8a3e-818035c4e561/wideart.png';
+  const cardId = (playerInfo.playerCardId || '9fb348bc-41a0-91ad-8a3e-818035c4e561').toLowerCase();
 
+  const bannerUrl = `https://media.valorant-api.com/playercards/${cardId}/wideart.png`;
+
+  const cachedStyle = playerInfo.isCached ? 'opacity: 0.65; filter: grayscale(0.2); transition: all 0.3s ease;' : '';
   const welcomeCardHtml = `
-    <div class="player-profile-card ${rankClass}" style="margin-top: 12px; height: 72px; position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 70, 85, 0.25); box-shadow: 0 4px 20px rgba(255, 70, 85, 0.1);">
+    <div class="player-profile-card ${rankClass}" style="margin-top: 12px; height: 72px; position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 70, 85, 0.25); box-shadow: 0 4px 20px rgba(255, 70, 85, 0.1); ${cachedStyle}">
       <!-- Wide Banner Background -->
       <img src="${bannerUrl}" onerror="this.onerror=null; this.src='https://media.valorant-api.com/playercards/9fb348bc-41a0-91ad-8a3e-818035c4e561/wideart.png';" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.45); z-index: 1; pointer-events: none;">
       <div class="rank-bg-glow" style="z-index: 2;"></div>
@@ -2731,9 +2782,7 @@ function updateValorantPlayerProfileUI(playerInfo) {
   `;
 
   // Workspace: Compact layout with Agent Avatar fitting the left column
-  const valLogoSrc = playerInfo.playerCardId
-    ? `https://media.valorant-api.com/playercards/${playerInfo.playerCardId}/displayicon.png`
-    : 'https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png';
+  const valLogoSrc = `https://media.valorant-api.com/playercards/${cardId}/displayicon.png`;
 
   const workspaceCardHtml = `
     <div class="player-profile-card ${rankClass}" style="margin-top: 10px;">
@@ -2775,7 +2824,7 @@ function updateValorantPlayerProfileUI(playerInfo) {
     elWelcomeValContainer.innerHTML = welcomeCardHtml;
   }
   if (elWorkspaceValContainer) {
-    elWorkspaceValContainer.innerHTML = workspaceCardHtml;
-    elWorkspaceValContainer.style.display = 'block';
+    elWorkspaceValContainer.innerHTML = '';
+    elWorkspaceValContainer.style.display = 'none';
   }
 }

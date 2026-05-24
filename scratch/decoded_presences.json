@@ -1,0 +1,254 @@
+[
+  {
+    "puuid": "632c4ae2-9fe6-5bab-a735-650032fc9c74",
+    "name": "",
+    "product": "valorant",
+    "decodedPrivate": {
+      "isIdle": false,
+      "isValid": true,
+      "matchPresenceData": {
+        "matchMap": "/Game/Maps/Pitt/Pitt",
+        "provisioningFlow": "Matchmaking",
+        "queueId": "competitive",
+        "sessionLoopState": "PREGAME"
+      },
+      "maxPartySize": 5,
+      "partyId": "53d9ae67-5b28-4700-9d27-a9066f87149f",
+      "partyOwnerMatchScoreAllyTeam": 0,
+      "partyOwnerMatchScoreEnemyTeam": 0,
+      "partyPresenceData": {
+        "customGameName": "",
+        "customGameTeam": "",
+        "isPartyCrossPlayEnabled": false,
+        "isPartyOwner": false,
+        "isPlayerCrossPlayEnabled": false,
+        "maxPartySize": 5,
+        "partyAccessibility": "CLOSED",
+        "partyClientVersion": "release-12.09-shipping-26-4704114",
+        "partyId": "53d9ae67-5b28-4700-9d27-a9066f87149f",
+        "partyLFM": false,
+        "partyOwnerMatchMap": "/Game/Maps/Pitt/Pitt",
+        "partyOwnerMatchScoreAllyTeam": 0,
+        "partyOwnerMatchScoreEnemyTeam": 0,
+        "partyOwnerProvisioningFlow": "Matchmaking",
+        "partyOwnerSessionLoopState": "MENUS",
+        "partyPrecisePlatformTypes": 1,
+        "partySize": 2,
+        "partyState": "MATCHMADE_GAME_STARTING",
+        "partyVersion": 1779652583268,
+        "queueEntryTime": "2026.05.24-19.54.36",
+        "rosterId": "",
+        "tournamentId": ""
+      },
+      "partySize": 2,
+      "playerPresenceData": {
+        "accountLevel": 202,
+        "competitiveTier": 14,
+        "leaderboardPosition": 0,
+        "platformOverride": "PC",
+        "playerCardId": "fca03251-4672-df99-e0cb-b59746877174",
+        "playerTitleId": "0bd2b029-496a-b3f4-417b-1cb4b06f2ad7"
+      },
+      "premierPresenceData": {
+        "division": 14,
+        "plating": 0,
+        "rosterId": "c3fbd719-7b86-46c1-9210-37e3e86421a1",
+        "rosterName": "M4c4C0s",
+        "rosterTag": "P3eN3",
+        "rosterType": "NONE",
+        "score": 0,
+        "showAura": false,
+        "showPlating": false,
+        "showTag": false
+      },
+      "provisioningFlow": "Matchmaking",
+      "queueId": "competitive"
+    }
+  },
+  {
+    "puuid": "041fdb67-eed1-5ebe-9c4c-af2ff35e6ed1",
+    "name": "",
+    "product": "league_of_legends",
+    "decodedPrivate": "m��z�\u001dI�^rם��Z�W�����Z���zP�\u0000Í\r�Z�W����{l��{��Z�W������I�^rםr\u0016��*'!�7��&���r\u001d�m4�WZ��\u001eJH�!�x�M7���!������}���2�^\b�\u0012H��jg���O*^D\u0003J\u0010?�8���\u001e`jg���n�)�jg�r�ν��ע���z��nW�,�^���j��j�^�$�����i^��x�ɚ��u�f�JH�!�x�V�z��W�zW���i����\u001c�~���n�'t�W�o��y�u���{�\\�Ϛg�ߗ�y�j��!�6Ҷ���Ky�.x8��Ȩ��\b���y��j\u000b�B�y\u0010\r(@�H����y���y��j\u000b�N'�\u0018�í��y��ǬҶ���O���y�(�8��Ȩ��+jy\u001et�޽'���Ӊ��8��jy\u001eu*e��^���-�ޗJڞG�Z)��ށ�bi�����ʗ�r���<�{k\u001e��-y��z�b��z�u��\"�V�����}�ӛ$�yڙ�Z��)y�Z���{,�\u001a�G�I��P}�\u000e\u0000�n@"
+  },
+  {
+    "puuid": "1739dd96-8755-59d4-9610-4887ccb5d2c3",
+    "name": "",
+    "product": "league_of_legends",
+    "decodedPrivate": "r\u0016��*'!�(������w^v�M�jf�y)\"��uۍ4�\u0006�y\u000b�����\u001a��j۬��N|f�z'(��ޮ��z˦��ެ�(�W�zwZ�#\u001a�׫�'(��4�W�z^��f�!ٚ�)\"��z��~)^!�'�]���w^���}��;矹��>��t��<��\u001b�ݜ޶���Ky�.x8��Ȩ��+jy\u001et���琹�D\u0003J\u0010?�8���\u001ekjy\u001et���瓉��,\u0004�5C+jy\u001et�,��4���y��z��j�'\u000e+�*' �+jy\u001et�޽'���Ӊ��,\u0004�5C+jy\u001eu*e��^���-�ޗJڞG�Z)��Mkz\u0006���ڞw�O*^��޲���lzW���O��-�\u0007���-��\"�V�����H����"
+  },
+  {
+    "puuid": "993f035e-5b49-5695-97f7-44d0c1474118",
+    "name": "",
+    "product": "valorant",
+    "decodedPrivate": {
+      "isIdle": false,
+      "isValid": true,
+      "matchPresenceData": {
+        "matchMap": "",
+        "provisioningFlow": "Invalid",
+        "queueId": "competitive",
+        "sessionLoopState": "MENUS"
+      },
+      "maxPartySize": 5,
+      "partyId": "7c9ce016-f3a9-4f5d-bd14-60cf1fb8dfb8",
+      "partyOwnerMatchScoreAllyTeam": 0,
+      "partyOwnerMatchScoreEnemyTeam": 0,
+      "partyPresenceData": {
+        "customGameName": "",
+        "customGameTeam": "",
+        "isPartyCrossPlayEnabled": false,
+        "isPartyOwner": false,
+        "isPlayerCrossPlayEnabled": false,
+        "maxPartySize": 5,
+        "partyAccessibility": "CLOSED",
+        "partyClientVersion": "release-12.09-shipping-26-4704114",
+        "partyId": "7c9ce016-f3a9-4f5d-bd14-60cf1fb8dfb8",
+        "partyLFM": false,
+        "partyOwnerMatchMap": "",
+        "partyOwnerMatchScoreAllyTeam": 0,
+        "partyOwnerMatchScoreEnemyTeam": 0,
+        "partyOwnerProvisioningFlow": "Invalid",
+        "partyOwnerSessionLoopState": "MENUS",
+        "partyPrecisePlatformTypes": 1,
+        "partySize": 2,
+        "partyState": "DEFAULT",
+        "partyVersion": 1779652176860,
+        "queueEntryTime": "2026.05.24-19.00.49",
+        "rosterId": "",
+        "tournamentId": ""
+      },
+      "partySize": 2,
+      "playerPresenceData": {
+        "accountLevel": 353,
+        "competitiveTier": 21,
+        "leaderboardPosition": 0,
+        "platformOverride": "PC",
+        "playerCardId": "a372c539-41c7-6a41-7064-80a61ccd597b",
+        "playerTitleId": "108229d2-4650-d7cb-ea58-adab1c02e709"
+      },
+      "premierPresenceData": {
+        "division": 0,
+        "plating": 0,
+        "rosterId": "",
+        "rosterName": "",
+        "rosterTag": "",
+        "rosterType": "CL",
+        "score": 0,
+        "showAura": false,
+        "showPlating": false,
+        "showTag": false
+      },
+      "provisioningFlow": "Invalid",
+      "queueId": "competitive"
+    }
+  },
+  {
+    "puuid": "1739dd96-8755-59d4-9610-4887ccb5d2c3",
+    "name": "",
+    "product": "valorant",
+    "decodedPrivate": {
+      "isIdle": false,
+      "isValid": true,
+      "matchPresenceData": {
+        "matchMap": "/Game/Maps/Ascent/Ascent",
+        "provisioningFlow": "Invalid",
+        "queueId": "unrated",
+        "sessionLoopState": "MENUS"
+      },
+      "maxPartySize": 12,
+      "partyId": "3141a8cb-cfd1-4b7c-8d9b-981b80c609de",
+      "partyOwnerMatchScoreAllyTeam": 0,
+      "partyOwnerMatchScoreEnemyTeam": 0,
+      "partyPresenceData": {
+        "customGameName": "",
+        "customGameTeam": "TeamOne",
+        "isPartyCrossPlayEnabled": false,
+        "isPartyOwner": true,
+        "isPlayerCrossPlayEnabled": false,
+        "maxPartySize": 12,
+        "partyAccessibility": "CLOSED",
+        "partyClientVersion": "release-12.09-shipping-26-4704114",
+        "partyId": "3141a8cb-cfd1-4b7c-8d9b-981b80c609de",
+        "partyLFM": false,
+        "partyOwnerMatchMap": "/Game/Maps/Ascent/Ascent",
+        "partyOwnerMatchScoreAllyTeam": 0,
+        "partyOwnerMatchScoreEnemyTeam": 0,
+        "partyOwnerProvisioningFlow": "Invalid",
+        "partyOwnerSessionLoopState": "MENUS",
+        "partyPrecisePlatformTypes": 1,
+        "partySize": 1,
+        "partyState": "CUSTOM_GAME_SETUP",
+        "partyVersion": 1779651980487,
+        "queueEntryTime": "0001.01.01-00.00.00",
+        "rosterId": "",
+        "tournamentId": ""
+      },
+      "partySize": 1,
+      "playerPresenceData": {
+        "accountLevel": 118,
+        "competitiveTier": 12,
+        "leaderboardPosition": 0,
+        "platformOverride": "PC",
+        "playerCardId": "d6dbc61e-49f4-c28e-baa2-79b23cdb6499",
+        "playerTitleId": "abb03247-4478-1b95-50b3-648f4338aca9"
+      },
+      "premierPresenceData": {
+        "division": 14,
+        "plating": 0,
+        "rosterId": "c3fbd719-7b86-46c1-9210-37e3e86421a1",
+        "rosterName": "M4c4C0s",
+        "rosterTag": "P3eN3",
+        "rosterType": "NONE",
+        "score": 0,
+        "showAura": false,
+        "showPlating": false,
+        "showTag": false
+      },
+      "provisioningFlow": "Invalid",
+      "queueId": "unrated"
+    }
+  },
+  {
+    "puuid": "104792f9-2f8f-54c7-b9e5-8fa2274d5a13",
+    "name": "",
+    "product": "riot_client",
+    "decodedPrivate": null
+  },
+  {
+    "puuid": "041fdb67-eed1-5ebe-9c4c-af2ff35e6ed1",
+    "name": "",
+    "product": "riot_client",
+    "decodedPrivate": null
+  },
+  {
+    "puuid": "1739dd96-8755-59d4-9610-4887ccb5d2c3",
+    "name": "",
+    "product": "riot_client",
+    "decodedPrivate": null
+  },
+  {
+    "puuid": "632c4ae2-9fe6-5bab-a735-650032fc9c74",
+    "name": "",
+    "product": "riot_client",
+    "decodedPrivate": null
+  },
+  {
+    "puuid": "104792f9-2f8f-54c7-b9e5-8fa2274d5a13",
+    "name": "",
+    "product": "league_of_legends",
+    "decodedPrivate": "m��z�\u001dI�^rם��Z�W�����Z���zP�\u0000Í\r�Z�W����{l׽���Z�W������I�^rם�M��~��M:�M��W!jjb�r\u001dr��jx���w�֦j\u0007��)�wX\u001a��.z�ʗ�jg���n���9�蜢s�z��u�^���j��j�^�$�����y^��w㙚��fj���r\u001d�zek'�N+ey'�y�^w}Z㷞��6տ��n>i�z��\u001a�ל׎[r��~)^!�'�N}��w]8�ݟ��������o׹����n�w��޶���Ky�.x8��Ȩ��ڞG�-根�.z�\u0000҄\u000f�,��ǚڞG�-根��z��\u0000Í\u000e����K��\u001e�JڞG�>��I欢p�+\"�r\b���y��z��j�'N'�\f�\f8��jy\u001eu*e��^���-�ޗJڞG�Z)��ށ�bi�����ʗ�r���<�{[\u001e��-y��z�b��z�u��\"�V�����H����"
+  },
+  {
+    "puuid": "12324c9b-0270-5e8a-927f-cf08e23f7eca",
+    "name": "",
+    "product": "league_of_legends",
+    "decodedPrivate": null
+  },
+  {
+    "puuid": "25cb4033-5749-51a9-8fc3-a40c2191fa6f",
+    "name": "",
+    "product": "league_of_legends",
+    "decodedPrivate": null
+  }
+]

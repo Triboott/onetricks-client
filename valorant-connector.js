@@ -53,6 +53,14 @@ class ValorantConnector {
   stop() {
     this.stopScan();
     this.stopPolling();
+    this.port = null;
+    this.password = null;
+    this.accessToken = null;
+    this.entitlementsToken = null;
+    this.puuid = null;
+    this.isInGame = false;
+    this.currentMatchId = null;
+    this.status = 'disconnected';
   }
 
   restartScan() {
@@ -494,13 +502,18 @@ class ValorantConnector {
           this.isInGame = true;
           this.currentMatchId = matchId;
           this.matchType = currentType;
-        }
-        
-        // Always compile and broadcast on every poll interval to keep the UI in sync in real-time!
-        if (isCoreGame) {
-          await this.compileAndBroadcastActiveGame(matchId);
+
+          if (isCoreGame) {
+            await this.compileAndBroadcastActiveGame(matchId);
+          } else {
+            await this.compileAndBroadcastPregame(matchId);
+          }
         } else {
-          await this.compileAndBroadcastPregame(matchId);
+          // If we are already in-game, we do NOT need to re-compile or re-broadcast every 5 seconds because match data is static!
+          // We only re-compile for pre-game (agent select phase) to track lock/hover changes.
+          if (!isCoreGame) {
+            await this.compileAndBroadcastPregame(matchId);
+          }
         }
       }
     } catch (err) {
@@ -1056,11 +1069,15 @@ class ValorantConnector {
       try {
         const presences = await this.localRequest('GET', '/chat/v4/presences');
         if (presences && presences.presences) {
-          const selfPresence = presences.presences.find(p => p.puuid === puuid);
+          const selfPresence = presences.presences.find(p => p.puuid === puuid && p.product === 'valorant');
           if (selfPresence && selfPresence.private) {
             const decoded = JSON.parse(Buffer.from(selfPresence.private, 'base64').toString('utf8'));
-            if (decoded && decoded.playerPresenceData && decoded.playerPresenceData.playerCardId) {
-              playerCardId = decoded.playerPresenceData.playerCardId;
+            if (decoded) {
+              if (decoded.playerCardId) {
+                playerCardId = decoded.playerCardId;
+              } else if (decoded.playerPresenceData && decoded.playerPresenceData.playerCardId) {
+                playerCardId = decoded.playerPresenceData.playerCardId;
+              }
             }
           }
         }
@@ -1097,7 +1114,7 @@ class ValorantConnector {
         tierName: resolvedRank.name,
         tierIcon: resolvedRank.icon,
         lp: stats.rr,
-        playerCardId: playerCardId,
+        playerCardId: playerCardId.toLowerCase(),
         winrate: stats.winrate || 0,
         wins: stats.wins || 0,
         games: stats.games || 0,

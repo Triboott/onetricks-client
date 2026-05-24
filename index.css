@@ -4503,3 +4503,55 @@ input:checked+.slider::before {
     max-width: 100%;
   }
 }
+
+/* ==========================================================================
+   LOW PERFORMANCE MODE (AHORRO CPU)
+   ========================================================================== */
+.low-perf *,
+.low-perf *::before,
+.low-perf *::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.low-perf body {
+  animation: none !important;
+  background-color: var(--bg-primary, #06080d) !important;
+  background-image: linear-gradient(180deg, #06080d 0%, #030407 100%) !important;
+}
+
+.low-perf .ambient-glow-container,
+.low-perf .ambient-glow,
+.low-perf .orb-glowing,
+.low-perf .pulse-status-dot,
+.low-perf .radar-blip,
+.low-perf .radar-status-text,
+.low-perf .logo-accent,
+.low-perf .welcome-cyber-card,
+.low-perf .cyber-grid-overlay {
+  animation: none !important;
+  background-image: none;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+.low-perf .ambient-glow,
+.low-perf .orb-glowing,
+.low-perf .radar-blip,
+.low-perf .cyber-grid-overlay {
+  display: none !important;
+}
+
+.low-perf .app-header {
+  background-color: #06080d !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.low-perf .logo-accent {
+  background: linear-gradient(90deg, #a855f7 0%, #00bfff 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
