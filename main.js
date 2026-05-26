@@ -73,6 +73,8 @@ if (fs.existsSync(configPath)) {
     console.error('Failed to load config:', e);
   }
 }
+// Force CPU saving / Low Performance mode to be always enabled
+config.enableLowPerf = true;
 
 function saveConfig() {
   try {
@@ -606,16 +608,18 @@ app.whenReady().then(() => {
       appState.activeValorantGame = gameData;
       sendToRenderer('valorant-game-started', gameData);
       
-      // Stop LoL detection when Valorant match starts to save CPU
-      if (connector) {
-        console.log('[CLIENT] Valorant game started. Stopping LoL detection to save CPU.');
-        connector.stop();
-        sendToRenderer('lcu-status', {
-          status: 'disconnected',
-          config,
-          playerInfo: null,
-          ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
-        });
+      // Stop LoL detection ONLY when actual match is in progress (not pre-game agent select)
+      if (gameData && !gameData.isPregame) {
+        if (connector) {
+          console.log('[CLIENT] Valorant active match in progress. Stopping LoL detection to save CPU.');
+          connector.stop();
+          sendToRenderer('lcu-status', {
+            status: 'disconnected',
+            config,
+            playerInfo: null,
+            ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
+          });
+        }
       }
     },
     onGameEnded: () => {

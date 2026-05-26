@@ -3142,7 +3142,8 @@ function updateValorantPlayerProfileUI(playerInfo) {
   }
 
   // Welcome Screen: Sleek wide banner card using Riot Player Card Wide Art
-  const cardId = (playerInfo.playerCardId || '9fb348bc-41a0-91ad-8a3e-818035c4e561').toLowerCase();
+  const rawCardId = playerInfo.playerCardId || '9fb348bc-41a0-91ad-8a3e-818035c4e561';
+  const cardId = (rawCardId === '00000000-0000-0000-0000-000000000000' ? '9fb348bc-41a0-91ad-8a3e-818035c4e561' : rawCardId).toLowerCase();
 
   const bannerUrl = `https://media.valorant-api.com/playercards/${cardId}/wideart.png`;
 
