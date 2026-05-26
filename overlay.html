@@ -8,8 +8,65 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="overlay.css">
+  <style>
+    /* ── Preview / Calibration Mode ── */
+    #preview-done-wrap {
+      display: none;
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      z-index: 99999;
+      pointer-events: auto !important;
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    body.preview-mode #preview-done-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    #btn-end-preview {
+      background: linear-gradient(135deg, #c89b3c 0%, #f0bc4a 100%);
+      color: #0a0c10;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      box-shadow: 0 4px 18px rgba(200,155,60,0.45);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #btn-end-preview:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(200,155,60,0.6);
+    }
+    #preview-hint {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      text-align: right;
+      letter-spacing: 0.3px;
+    }
+    /* In preview mode, ALL elements accept pointer events so dragging works without hovering */
+    body.preview-mode .team-comparison-header,
+    body.preview-mode .matchup-indicator,
+    body.preview-mode .matchup-row {
+      pointer-events: auto !important;
+      cursor: move !important;
+    }
+  </style>
 </head>
 <body>
+  <!-- Preview Mode: floating Done button (hidden by default) -->
+  <div id="preview-done-wrap">
+    <button id="btn-end-preview">✓ Done Calibrating</button>
+    <span id="preview-hint">Drag the elements to reposition them</span>
+  </div>
+
   <!-- Highly Compact Scoreboard Header Gold Widget -->
   <div class="team-comparison-header" id="team-header">
     <div class="team-info blue-team">
@@ -30,7 +87,46 @@
 
   <!-- Vertical Matchups Column (Centered exactly on the divider line) -->
   <div class="matchups-vertical-column" id="matchups-column">
-    <!-- Generated dynamically in javascript -->
+    <div class="matchup-row" id="matchup-row-0" style="display: none;">
+      <div class="matchup-indicator even" id="matchup-indicator-0">
+        <div class="indicator-diamond">
+          <span class="indicator-arrow" id="matchup-arrow-0">=</span>
+        </div>
+        <div class="indicator-value" id="matchup-val-0"></div>
+      </div>
+    </div>
+    <div class="matchup-row" id="matchup-row-1" style="display: none;">
+      <div class="matchup-indicator even" id="matchup-indicator-1">
+        <div class="indicator-diamond">
+          <span class="indicator-arrow" id="matchup-arrow-1">=</span>
+        </div>
+        <div class="indicator-value" id="matchup-val-1"></div>
+      </div>
+    </div>
+    <div class="matchup-row" id="matchup-row-2" style="display: none;">
+      <div class="matchup-indicator even" id="matchup-indicator-2">
+        <div class="indicator-diamond">
+          <span class="indicator-arrow" id="matchup-arrow-2">=</span>
+        </div>
+        <div class="indicator-value" id="matchup-val-2"></div>
+      </div>
+    </div>
+    <div class="matchup-row" id="matchup-row-3" style="display: none;">
+      <div class="matchup-indicator even" id="matchup-indicator-3">
+        <div class="indicator-diamond">
+          <span class="indicator-arrow" id="matchup-arrow-3">=</span>
+        </div>
+        <div class="indicator-value" id="matchup-val-3"></div>
+      </div>
+    </div>
+    <div class="matchup-row" id="matchup-row-4" style="display: none;">
+      <div class="matchup-indicator even" id="matchup-indicator-4">
+        <div class="indicator-diamond">
+          <span class="indicator-arrow" id="matchup-arrow-4">=</span>
+        </div>
+        <div class="indicator-value" id="matchup-val-4"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -75,55 +171,53 @@
         headerDiffBadge.className = "header-difference-badge enemies-ahead";
       }
 
-      // Generate matchup rows vertically (Diamond indicators)
-      matchupsColumn.innerHTML = '';
+      // Update matchup rows vertically (Diamond indicators)
       if (data.matchups && data.matchups.length > 0) {
         data.matchups.forEach((m, idx) => {
-          const row = document.createElement('div');
-          row.className = 'matchup-row';
-          row.id = 'matchup-row-' + idx;
+          if (idx >= 5) return;
 
-          const diffVal = m.difference;
-          let diffClass = 'even';
-          let arrowSymbol = '=';
-          let diffText = '';
+          const row = document.getElementById('matchup-row-' + idx);
+          const indicator = document.getElementById('matchup-indicator-' + idx);
+          const arrow = document.getElementById('matchup-arrow-' + idx);
+          const val = document.getElementById('matchup-val-' + idx);
 
-          if (diffVal > 0) {
-            diffClass = 'ahead';
-            arrowSymbol = '◀';
-            diffText = formatGold(diffVal);
-          } else if (diffVal < 0) {
-            diffClass = 'behind';
-            arrowSymbol = '▶';
-            diffText = formatGold(Math.abs(diffVal));
+          if (row && indicator && arrow && val) {
+            const diffVal = m.difference;
+            let diffClass = 'even';
+            let arrowSymbol = '=';
+            let diffText = '';
+
+            if (diffVal > 0) {
+              diffClass = 'ahead';
+              arrowSymbol = '◀';
+              diffText = formatGold(diffVal);
+            } else if (diffVal < 0) {
+              diffClass = 'behind';
+              arrowSymbol = '▶';
+              diffText = formatGold(Math.abs(diffVal));
+            }
+
+            indicator.className = `matchup-indicator ${diffClass}`;
+            arrow.textContent = arrowSymbol;
+            val.textContent = diffVal !== 0 ? diffText : '';
+            
+            row.style.display = 'flex';
           }
-
-          row.innerHTML = `
-            <div class="matchup-indicator ${diffClass}" id="matchup-indicator-${idx}">
-              <div class="indicator-diamond">
-                <span class="indicator-arrow">${arrowSymbol}</span>
-              </div>
-              <div class="indicator-value">${diffVal !== 0 ? diffText : ''}</div>
-            </div>
-          `;
-          matchupsColumn.appendChild(row);
         });
 
-        // Dynamically wire drag and hover listeners for each new lane indicator row!
-        const len = data.matchups.length;
-        for (let i = 0; i < len; i++) {
-          const indicator = document.getElementById('matchup-indicator-' + i);
-          if (indicator) {
-            indicator.addEventListener('mouseenter', () => {
-              ipcRenderer.send('set-click-through', false);
-            });
-            indicator.addEventListener('mouseleave', () => {
-              if (!rowDraggingFlags[i]) {
-                ipcRenderer.send('set-click-through', true);
-              }
-            });
-
-            setupDraggable(indicator, 'row' + i, () => rowOffsets[i].x, () => rowOffsets[i].y, (val) => { rowDraggingFlags[i] = val; });
+        // Hide unused rows
+        for (let i = data.matchups.length; i < 5; i++) {
+          const row = document.getElementById('matchup-row-' + i);
+          if (row) {
+            row.style.display = 'none';
+          }
+        }
+      } else {
+        // Hide all rows if no matchups
+        for (let i = 0; i < 5; i++) {
+          const row = document.getElementById('matchup-row-' + i);
+          if (row) {
+            row.style.display = 'none';
           }
         }
       }
@@ -237,6 +331,52 @@
     }
 
     setupDraggable(teamHeader, 'header', () => headerX, () => headerY, (val) => { isDraggingHeader = val; });
+
+    // Wire static matchup listeners once at startup!
+    for (let i = 0; i < 5; i++) {
+      const indicator = document.getElementById('matchup-indicator-' + i);
+      if (indicator) {
+        setupDraggable(indicator, 'row' + i, () => rowOffsets[i].x, () => rowOffsets[i].y, (val) => { rowDraggingFlags[i] = val; });
+
+        indicator.addEventListener('mouseenter', () => {
+          if (!document.body.classList.contains('preview-mode')) {
+            ipcRenderer.send('set-click-through', false);
+          }
+        });
+        indicator.addEventListener('mouseleave', () => {
+          if (!document.body.classList.contains('preview-mode') && !rowDraggingFlags[i]) {
+            ipcRenderer.send('set-click-through', true);
+          }
+        });
+      }
+    }
+
+    // Also suppress click-through changes on teamHeader during preview
+    teamHeader.addEventListener('mouseenter', () => {
+      if (!document.body.classList.contains('preview-mode')) {
+        ipcRenderer.send('set-click-through', false);
+      }
+    });
+    teamHeader.addEventListener('mouseleave', () => {
+      if (!document.body.classList.contains('preview-mode') && !isDraggingHeader) {
+        ipcRenderer.send('set-click-through', true);
+      }
+    });
+
+    // ── Preview / Calibration Mode ──
+    ipcRenderer.on('start-preview', () => {
+      document.body.classList.add('preview-mode');
+    });
+
+    ipcRenderer.on('end-preview', () => {
+      document.body.classList.remove('preview-mode');
+    });
+
+    document.getElementById('btn-end-preview').addEventListener('click', () => {
+      document.body.classList.remove('preview-mode');
+      ipcRenderer.send('end-preview');
+    });
   </script>
 </body>
 </html>
+

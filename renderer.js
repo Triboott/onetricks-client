@@ -290,6 +290,17 @@ const TRANSLATIONS = {
     SETTING_VAL_DETECTION_DESC: "Automatically detects and displays profiles and ranks in real-time when you play Valorant.",
     SETTING_GOLD_OVERLAY_TITLE: "Gold Overlay (Tab Scoreboard)",
     SETTING_GOLD_OVERLAY_DESC: "Shows total spent gold difference overlay when you press the TAB key in-game (100% compliant with Riot policies).",
+    SETTING_OVERLAY_CAL_TITLE: "Manual Overlay Positioning",
+    SETTING_OVERLAY_CAL_DESC: "If you cannot drag the overlay in-game (because the game captures mouse input), use these controls to set the pixel offset for each element.",
+    CAL_SELECT_ELEMENT: "Select Target Element:",
+    CAL_OPT_HEADER: "Header (Total Gold Difference)",
+    CAL_OPT_ROW0: "Row 1 — Top",
+    CAL_OPT_ROW1: "Row 2 — Jungle",
+    CAL_OPT_ROW2: "Row 3 — Mid",
+    CAL_OPT_ROW3: "Row 4 — ADC",
+    CAL_OPT_ROW4: "Row 5 — Support",
+    CAL_RESET_ALL: "Reset All Positions",
+    CAL_PREVIEW: "Preview Overlay (4s)",
     SETTING_LOW_PERF_TITLE: "CPU Saving / Low Performance Mode",
     SETTING_LOW_PERF_DESC: "Disables animations, transitions, and glowing backgrounds when the game is active to save CPU and RAM.",
     SETTING_ZOOM_TITLE: "Application Zoom",
@@ -426,6 +437,17 @@ const TRANSLATIONS = {
     SETTING_VAL_DETECTION_DESC: "Detecta y muestra perfiles y rangos automáticamente en tiempo real cuando juegas a Valorant.",
     SETTING_GOLD_OVERLAY_TITLE: "Superposición de Oro (Tabulador)",
     SETTING_GOLD_OVERLAY_DESC: "Muestra la diferencia de oro total y por rol al mantener pulsado el TABULADOR en partida (100% permitido por Riot).",
+    SETTING_OVERLAY_CAL_TITLE: "Posicionamiento Manual del Overlay",
+    SETTING_OVERLAY_CAL_DESC: "Si no puedes arrastrar el overlay dentro de la partida (porque el juego captura el ratón), usa estos controles para ajustar el desplazamiento en píxeles de cada elemento.",
+    CAL_SELECT_ELEMENT: "Seleccionar Elemento:",
+    CAL_OPT_HEADER: "Cabecera (Diferencia Total de Oro)",
+    CAL_OPT_ROW0: "Fila 1 — Top",
+    CAL_OPT_ROW1: "Fila 2 — Jungla",
+    CAL_OPT_ROW2: "Fila 3 — Mid",
+    CAL_OPT_ROW3: "Fila 4 — ADC",
+    CAL_OPT_ROW4: "Fila 5 — Support",
+    CAL_RESET_ALL: "Resetear Todas las Posiciones",
+    CAL_PREVIEW: "Vista Previa del Overlay (4s)",
     SETTING_LOW_PERF_TITLE: "Ahorro de CPU / Modo de Bajo Rendimiento",
     SETTING_LOW_PERF_DESC: "Desactiva las animaciones, transiciones y brillos de fondo cuando la partida está activa para ahorrar CPU y RAM.",
     SETTING_ZOOM_TITLE: "Zoom de la Aplicación",
@@ -1106,6 +1128,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ==========================================================================
+  // OVERLAY CALIBRATION PANEL LOGIC
+  // ==========================================================================
+  const elCalBtnResetAll = document.getElementById('cal-btn-reset-all');
+  const elCalBtnPreview  = document.getElementById('cal-btn-preview');
+
+  // Reset ALL elements to (0, 0)
+  if (elCalBtnResetAll) {
+    elCalBtnResetAll.addEventListener('click', () => {
+      sfx.playTick();
+      const allTypes = ['header', 'row0', 'row1', 'row2', 'row3', 'row4'];
+      allTypes.forEach(type => {
+        if (window.api && window.api.saveElementOffset) {
+          window.api.saveElementOffset({ type, x: 0, y: 0 });
+        }
+      });
+    });
+  }
+
+  // Calibrate button: show overlay fully interactive so user can drag elements directly
+  if (elCalBtnPreview) {
+    elCalBtnPreview.addEventListener('click', () => {
+      sfx.playTick();
+      if (window.api && window.api.previewOverlay) {
+        window.api.previewOverlay();
+        elCalBtnPreview.textContent = '⏳ Calibrating... (click ✓ Done on overlay)';
+        elCalBtnPreview.disabled = true;
+        // Re-enable the button after a safety timeout in case user closes overlay externally
+        setTimeout(() => {
+          elCalBtnPreview.textContent = TRANSLATIONS[currentLang].CAL_BTN_ENTER || '🎯 Calibrate Overlay';
+          elCalBtnPreview.disabled = false;
+        }, 60000);
+      }
+    });
+  }
+
   if (elBtnToggleSound) {
     elBtnToggleSound.addEventListener('click', () => {
       const newState = !(appConfig.enableSounds !== false);
@@ -1115,6 +1173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       handleToggleChange();
     });
   }
+
 
   [elCheckAutoRunes, elCheckAutoSpells, elCheckAutoItems, elSettingsCheckRunes, elSettingsCheckSpells, elSettingsCheckItems].forEach(box => {
     box.addEventListener('change', (e) => {

@@ -21,11 +21,13 @@ let overlayWindow = null; // transparent scoreboard overlay
 let tabListenerProcess = null; // C# Tab key listener child process
 let liveGamePollInterval = null; // live client data polling interval
 let selectedCalibrationElement = 'header'; // tracks element currently selected for arrow keys
+let isPreviewMode = false; // true while calibration preview is active
 let connector = null;
 let valorantConnector = null;
 let scraper = null;
 let tray = null;
 let isQuitting = false;
+
 
 // Request single instance lock to prevent duplicate app windows
 const gotTheLock = app.requestSingleInstanceLock();
@@ -1426,16 +1428,79 @@ ipcMain.on('save-element-offset', (event, { type, x, y }) => {
     };
   };
 
-  if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+  // Always send update to overlay (visible or not) so next show picks up new offsets immediately
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
   }
 });
 
+ipcMain.on('preview-overlay', (event) => {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    createOverlayWindow();
+  }
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    const getOffsetsPayload = () => {
+      const globalX = config.overlayOffsetX || 0;
+      const globalY = config.overlayOffsetY || 0;
+      return {
+        globalX, globalY,
+        headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
+        headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
+        columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
+        columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
+        row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
+        row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
+        row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
+        row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
+        row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
+        row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
+        row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
+        row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
+        row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
+        row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
+      };
+    };
+
+    const fakeGold = {
+      alliesTotalGold: 12450, enemiesTotalGold: 10820,
+      teamGoldDifference: 1630,
+      matchups: [
+        { role: 'TOP',     allyGold: 2500, enemyGold: 2100, difference: 400 },
+        { role: 'JUNGLE',  allyGold: 2800, enemyGold: 2300, difference: 500 },
+        { role: 'MID',     allyGold: 2650, enemyGold: 2700, difference: -50 },
+        { role: 'ADC',     allyGold: 2700, enemyGold: 2100, difference: 600 },
+        { role: 'SUPPORT', allyGold: 1800, enemyGold: 1620, difference: 180 }
+      ]
+    };
+
+    // Make FULLY interactive so all elements can be dragged without hovering first
+    isPreviewMode = true;
+    overlayWindow.setIgnoreMouseEvents(false);
+    overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+    overlayWindow.webContents.send('update-gold', fakeGold);
+    overlayWindow.webContents.send('start-preview');
+    overlayWindow.showInactive();
+  }
+});
+
+ipcMain.on('end-preview', () => {
+  isPreviewMode = false;
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.webContents.send('end-preview');
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    overlayWindow.hide();
+  }
+});
+
 ipcMain.on('set-click-through', (event, ignore) => {
+  // Don't interfere with click-through state while in preview/calibration mode
+  if (isPreviewMode) return;
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setIgnoreMouseEvents(ignore, { forward: true });
   }
 });
+
+
 
 ipcMain.on('change-role', async (event, newRole) => {
   appState.activeRole = newRole;

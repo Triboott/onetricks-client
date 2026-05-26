@@ -489,7 +489,8 @@
             </label>
           </div>
 
-          <div class="setting-item flex-between">
+
+          <div class="setting-item flex-between" id="setting-item-gold-overlay">
             <div class="setting-desc">
               <h4 data-translate="SETTING_GOLD_OVERLAY_TITLE">Gold Overlay (Tab Scoreboard)</h4>
               <p data-translate="SETTING_GOLD_OVERLAY_DESC">Shows total spent gold difference overlay when you press the TAB key in-game (100% compliant with Riot policies).</p>
@@ -499,6 +500,20 @@
               <span class="slider"></span>
             </label>
           </div>
+
+          <!-- Section: Overlay Calibration Panel -->
+          <div class="setting-item flex-between" id="cal-panel-item" style="flex-direction: column; align-items: stretch; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 14px;">
+            <div class="setting-desc">
+              <h4 data-translate="SETTING_OVERLAY_CAL_TITLE">Manual Overlay Positioning</h4>
+              <p data-translate="SETTING_OVERLAY_CAL_DESC">If you cannot click and drag the overlay inside the game, use these controls to adjust the exact pixel offsets for each individual element.</p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 6px;">
+              <button class="btn btn-primary" id="cal-btn-preview" style="flex: 1; padding: 10px 14px; font-size: 12px; border-radius: 8px; border: 1px solid rgba(200,155,60,0.5); background: linear-gradient(135deg, rgba(200,155,60,0.22) 0%, rgba(200,155,60,0.08) 100%); color: #c89b3c; cursor:pointer; font-weight: 700; font-family: var(--font-display); letter-spacing: 0.5px; transition: all 0.2s;" data-translate="CAL_BTN_ENTER">🎯 Calibrate Overlay</button>
+              <button class="btn btn-secondary compact" id="cal-btn-reset-all" style="padding: 10px 12px; font-size: 10px; border-radius: 8px; border: 1px solid rgba(255,74,74,0.2); background: rgba(255,74,74,0.06); color: #ff4a4a; cursor:pointer; font-weight: 700; font-family: var(--font-display); letter-spacing: 0.5px;" data-translate="CAL_RESET_ALL">↺ Reset</button>
+            </div>
+          </div>
+
 
 
           <div class="setting-item flex-between" style="align-items: center;">
