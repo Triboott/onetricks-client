@@ -18,20 +18,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const mockupShell = document.querySelector('.app-mockup-shell');
   const mockupWrapper = document.querySelector('.app-mockup-wrapper');
 
-  // 1. Fetch Latest Release from GitHub API
+  // 1. Fetch Latest Release and total downloads from GitHub API
   async function fetchLatestRelease() {
     try {
-      const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`);
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch release: ${response.status}`);
+        throw new Error(`Failed to fetch releases: ${response.status}`);
       }
 
-      const data = await response.json();
-      const version = data.tag_name;
+      const releases = await response.json();
+      if (!releases || releases.length === 0) {
+        throw new Error("No releases found");
+      }
+
+      // Find the latest non-draft release
+      const latestRelease = releases.find(r => !r.draft && !r.prerelease) || releases[0];
+      const version = latestRelease.tag_name;
       
-      // Look for the .exe asset
-      const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
+      // Look for the .exe asset in the latest release
+      const exeAsset = latestRelease.assets.find(asset => asset.name.endsWith('.exe'));
       
       if (exeAsset) {
         const downloadUrl = exeAsset.browser_download_url;
@@ -44,13 +50,51 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log(`[API] Successfully loaded latest release: ${version} (${sizeInMb} MB)`);
       } else {
-        // Fallback if no .exe asset is found in the release
         useFallbackLink(version);
       }
+
+      // Calculate total downloads across all releases for active users baseline
+      let totalDownloads = 0;
+      releases.forEach(release => {
+        if (release.assets) {
+          release.assets.forEach(asset => {
+            if (asset.name.endsWith('.exe')) {
+              totalDownloads += (asset.download_count || 0);
+            }
+          });
+        }
+      });
+
+      initMockupUserCounter(totalDownloads);
     } catch (error) {
-      console.warn('[API] Error fetching release from GitHub API, using fallback:', error.message);
+      console.warn('[API] Error fetching releases from GitHub API, using fallback:', error.message);
       useFallbackLink(FALLBACK_VERSION);
+      initMockupUserCounter(0);
     }
+  }
+
+  // Active user counter logic for the website mockup screen
+  function initMockupUserCounter(totalDownloads) {
+    const elMockupCounter = document.getElementById('mockup-active-user-count');
+    if (!elMockupCounter) return;
+
+    let activeUsers = 138; // Default fallback baseline
+    if (totalDownloads > 0) {
+      const ratio = 0.07 + Math.random() * 0.02;
+      activeUsers = Math.floor(totalDownloads * ratio);
+      activeUsers = Math.max(25, activeUsers);
+    }
+
+    elMockupCounter.textContent = activeUsers.toLocaleString('es-ES');
+
+    // Fluctuate count smoothly every 5 seconds
+    setInterval(() => {
+      const elUpdate = document.getElementById('mockup-active-user-count');
+      if (!elUpdate) return;
+      const delta = Math.floor(Math.random() * 7) - 3; // -3, -2, -1, 0, 1, 2, 3
+      activeUsers = Math.max(15, activeUsers + delta);
+      elUpdate.textContent = activeUsers.toLocaleString('es-ES');
+    }, 5000);
   }
 
   // Fallback setup helper

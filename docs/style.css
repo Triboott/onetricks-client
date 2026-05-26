@@ -611,6 +611,13 @@ body {
   max-width: 440px;
 }
 
+.welcome-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
 .system-status-badge {
   display: inline-flex;
   align-items: center;
@@ -622,9 +629,48 @@ body {
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-family: var(--font-display);
   letter-spacing: 0.5px;
+}
+
+.user-counter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 191, 255, 0.08);
+  border: 1px solid rgba(0, 191, 255, 0.2);
+  color: var(--accent-blue);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+}
+
+.pulse-blue-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(0, 191, 255, 0.4);
+  animation: pulse-blue-dot-anim 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-blue-dot-anim {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(0, 191, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.5;
+    box-shadow: 0 0 10px rgba(0, 191, 255, 0.6);
+  }
 }
 
 .welcome-title {

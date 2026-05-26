@@ -371,6 +371,9 @@ const ZOOM_LEVELS = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3];
 // INITIAL STATE LOADING & BINDINGS
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize dynamic active user counter
+  initActiveUserCounter();
+
   // Load runesReforged.json from local cache
   try {
     const res = await fetch('ddragon_cache/runesReforged.json');
@@ -2827,4 +2830,57 @@ function updateValorantPlayerProfileUI(playerInfo) {
     elWorkspaceValContainer.innerHTML = '';
     elWorkspaceValContainer.style.display = 'none';
   }
+}
+
+// Dynamic active user presence counter logic
+async function initActiveUserCounter() {
+  const elCounter = document.getElementById('active-user-count');
+  if (!elCounter) return;
+
+  const DEFAULT_ACTIVE_USERS = 138;
+  let activeUsers = DEFAULT_ACTIVE_USERS;
+
+  try {
+    // Fetch all releases from Triboott/onetricks-client
+    const response = await fetch('https://api.github.com/repos/Triboott/onetricks-client/releases');
+    if (response.ok) {
+      const data = await response.json();
+      let totalDownloads = 0;
+      data.forEach(release => {
+        if (release.assets) {
+          release.assets.forEach(asset => {
+            if (asset.name.endsWith('.exe')) {
+              totalDownloads += (asset.download_count || 0);
+            }
+          });
+        }
+      });
+
+      if (totalDownloads > 0) {
+        // Calculate a realistic active user count: e.g. 7% to 9% of total downloads
+        const ratio = 0.07 + Math.random() * 0.02;
+        activeUsers = Math.floor(totalDownloads * ratio);
+        // Ensure at least some baseline
+        activeUsers = Math.max(25, activeUsers);
+        console.log(`[COUNTER] Calculated active users: ${activeUsers} based on ${totalDownloads} total downloads.`);
+      }
+    }
+  } catch (err) {
+    console.warn('[COUNTER] Failed to fetch total downloads, using baseline active count:', err.message);
+  }
+
+  // Display initial count
+  elCounter.textContent = activeUsers.toLocaleString('es-ES');
+
+  // Start smooth real-time fluctuation interval every 5 seconds
+  setInterval(() => {
+    const elCounterUpdate = document.getElementById('active-user-count');
+    if (!elCounterUpdate) return;
+
+    // Small natural fluctuations (+/- 3 users)
+    const delta = Math.floor(Math.random() * 7) - 3; // -3, -2, -1, 0, 1, 2, 3
+    activeUsers = Math.max(15, activeUsers + delta);
+
+    elCounterUpdate.textContent = activeUsers.toLocaleString('es-ES');
+  }, 5000);
 }
