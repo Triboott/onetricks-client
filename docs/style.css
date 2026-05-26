@@ -168,14 +168,17 @@ body {
   height: 100%;
 }
 
-.logo-area {
+.logo-area,
+.logo-area:hover,
+.logo-area:focus,
+.logo-area:active {
   display: flex;
   align-items: center;
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 24px;
   letter-spacing: 0.5px;
-  text-decoration: none;
+  text-decoration: none !important;
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
