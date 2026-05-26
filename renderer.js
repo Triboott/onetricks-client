@@ -225,7 +225,7 @@ const sfx = {
 // ==========================================================================
 const TRANSLATIONS = {
   en: {
-    STATUS_DISCONNECTED: "DISCONNECTED",
+    STATUS_DISCONNECTED: "LOL DISCONNECTED",
     STATUS_VAL_DISCONNECTED: "VALORANT DISCONNECTED",
     PILL_LOL_DETECTION: "Click to enable/disable League of Legends detection",
     PILL_VALORANT_DETECTION: "Click to enable/disable Valorant detection",
@@ -291,6 +291,8 @@ const TRANSLATIONS = {
     SETTING_VAL_DETECTION_DESC: "Automatically detects and displays profiles and ranks in real-time when you play Valorant.",
     SETTING_ZOOM_TITLE: "Application Zoom",
     SETTING_ZOOM_DESC: "Adjusts the scale of the application interface.",
+    SETTING_LANG_TITLE: "Application Language",
+    SETTING_LANG_DESC: "Changes the interface language between English and Spanish.",
     SETTINGS_SEC_LOL_PATH: "League of Legends Location",
     SETTING_LOL_PATH_TITLE: "LoL Installation Path / Lockfile",
     SETTING_LOL_PATH_DESC: "If the app does not detect your game, enter the path where the <b>lockfile</b> is located (usually <code>C:\\Riot Games\\League of Legends</code>).",
@@ -309,7 +311,7 @@ const TRANSLATIONS = {
     LOL_DISABLED: "LOL DISABLED",
     LOL_ENABLED_CONNECTED: "LOL DETECTED",
     LOL_ENABLED_SCANNING: "SEARCHING FOR CLIENT...",
-    LOL_ENABLED_DISCONNECTED: "DISCONNECTED",
+    LOL_ENABLED_DISCONNECTED: "LOL DISCONNECTED",
     VAL_DISABLED: "VAL DISABLED",
     VAL_ENABLED_CONNECTED: "VALORANT DETECTED",
     VAL_ENABLED_SCANNING: "SEARCHING VALORANT...",
@@ -355,7 +357,7 @@ const TRANSLATIONS = {
     UNRANKED_LABEL: "UNRANKED"
   },
   es: {
-    STATUS_DISCONNECTED: "DESCONECTADO",
+    STATUS_DISCONNECTED: "LOL DESCONECTADO",
     STATUS_VAL_DISCONNECTED: "VALORANT DESCONECTADO",
     PILL_LOL_DETECTION: "Haz clic para activar o desactivar la detección de League of Legends",
     PILL_VALORANT_DETECTION: "Haz clic para activar o desactivar la detección de Valorant",
@@ -421,6 +423,8 @@ const TRANSLATIONS = {
     SETTING_VAL_DETECTION_DESC: "Detecta y muestra perfiles y rangos automáticamente en tiempo real cuando juegas a Valorant.",
     SETTING_ZOOM_TITLE: "Zoom de la Aplicación",
     SETTING_ZOOM_DESC: "Ajusta la escala de la interfaz de la aplicación.",
+    SETTING_LANG_TITLE: "Idioma de la Aplicación",
+    SETTING_LANG_DESC: "Cambia el idioma de la interfaz entre Inglés y Español.",
     SETTINGS_SEC_LOL_PATH: "Ubicación de League of Legends",
     SETTING_LOL_PATH_TITLE: "Ruta de Instalación de LoL / Lockfile",
     SETTING_LOL_PATH_DESC: "Si la app no detecta tu juego, introduce la ruta donde se encuentra el archivo <b>lockfile</b> (normalmente <code>C:\\Riot Games\\League of Legends</code>).",
@@ -439,7 +443,7 @@ const TRANSLATIONS = {
     LOL_DISABLED: "LOL DESACTIVADO",
     LOL_ENABLED_CONNECTED: "LOL DETECTADO",
     LOL_ENABLED_SCANNING: "BUSCANDO CLIENTE...",
-    LOL_ENABLED_DISCONNECTED: "DESCONECTADO",
+    LOL_ENABLED_DISCONNECTED: "LOL DESCONECTADO",
     VAL_DISABLED: "VAL DESACTIVADO",
     VAL_ENABLED_CONNECTED: "VALORANT DETECTADO",
     VAL_ENABLED_SCANNING: "BUSCANDO VALORANT...",
@@ -521,6 +525,12 @@ function applyTranslations(lang) {
       el.title = TRANSLATIONS[lang][key];
     }
   });
+
+  // Update language toggle button text dynamically
+  const elLangBtnText = document.getElementById('lang-btn-text');
+  if (elLangBtnText) {
+    elLangBtnText.textContent = lang.toUpperCase();
+  }
 
   // Update dynamic content as well
   updateLcuStatusUI(lastLcuStatus);
@@ -1814,7 +1824,7 @@ function updateValorantStatusUI(status) {
 
   if (appConfig && appConfig.enableValorantDetection === false) {
     elValStatusDot.className = 'status-dot val disconnected';
-    elValStatusText.textContent = 'VAL DESACTIVADO';
+    elValStatusText.textContent = TRANSLATIONS[currentLang].VAL_DISABLED;
     elValPill.style.borderColor = 'rgba(255, 70, 85, 0.15)';
     elValPill.style.opacity = '0.55';
     elValPill.style.borderStyle = 'dashed';
@@ -1826,13 +1836,13 @@ function updateValorantStatusUI(status) {
   elValStatusDot.className = 'status-dot val ' + status;
 
   if (status === 'connected') {
-    elValStatusText.textContent = 'VALORANT DETECTADO';
+    elValStatusText.textContent = TRANSLATIONS[currentLang].VAL_ENABLED_CONNECTED;
     elValPill.style.borderColor = 'rgba(255, 70, 85, 0.35)'; // Valorant Red border
   } else if (status === 'scanning') {
-    elValStatusText.textContent = 'BUSCANDO VALORANT...';
+    elValStatusText.textContent = TRANSLATIONS[currentLang].VAL_ENABLED_SCANNING;
     elValPill.style.borderColor = 'rgba(245, 158, 11, 0.25)'; // Orange border
   } else {
-    elValStatusText.textContent = 'VALORANT DESCONECTADO';
+    elValStatusText.textContent = TRANSLATIONS[currentLang].VAL_ENABLED_DISCONNECTED;
     elValPill.style.borderColor = 'rgba(255, 255, 255, 0.05)';
   }
 }

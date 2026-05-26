@@ -47,15 +47,6 @@
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
         </svg>
       </button>
-      <!-- Language Toggle Button -->
-      <button class="icon-btn" id="btn-toggle-lang" data-translate-title="BTN_LANG" title="Change Language / Cambiar Idioma">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="feather">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="2" y1="12" x2="22" y2="12"></line>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-      </button>
       <button class="icon-btn" id="btn-settings" data-translate-title="BTN_SETTINGS" title="Settings">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" class="feather">
@@ -105,7 +96,7 @@
               </div>
               <div class="user-counter-badge" style="margin-bottom: 0;">
                 <span class="pulse-blue-dot"></span>
-                <span id="active-user-count" data-translate="LOADING">Loading...</span> <span data-translate="WELCOME_BADGE_USERS">active users</span>
+                <span id="active-user-count">Loading...</span> <span data-translate="WELCOME_BADGE_USERS">active users</span>
               </div>
             </div>
             
@@ -507,6 +498,24 @@
               <button class="btn btn-secondary compact" id="btn-zoom-out" style="padding: 2px 10px; font-weight: bold; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">-</button>
               <span id="zoom-value" style="font-family: var(--font-display); font-weight: 700; font-size: 13px; min-width: 44px; text-align: center; color: var(--rune-gold);">100%</span>
               <button class="btn btn-secondary compact" id="btn-zoom-in" style="padding: 2px 8px; font-weight: bold; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">+</button>
+            </div>
+          </div>
+
+          <div class="setting-item flex-between" style="align-items: center;">
+            <div class="setting-desc">
+              <h4 data-translate="SETTING_LANG_TITLE">Application Language</h4>
+              <p data-translate="SETTING_LANG_DESC">Changes the interface language between English and Spanish.</p>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <button class="icon-btn lang-toggle-btn" id="btn-toggle-lang" data-translate-title="BTN_LANG" title="Change Language / Cambiar Idioma">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" class="feather">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span id="lang-btn-text">EN</span>
+              </button>
             </div>
           </div>
         </div>
