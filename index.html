@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -32,22 +32,31 @@
     </div>
     <div class="header-controls">
       <!-- Status Indicator -->
-      <div class="connection-pill" id="lcu-pill">
+      <div class="connection-pill" id="lcu-pill" data-translate-title="PILL_LOL_DETECTION" title="Click to enable/disable League of Legends detection">
         <span class="status-dot" id="status-dot"></span>
-        <span class="status-text" id="status-text">DESCONECTADO</span>
+        <span class="status-text" id="status-text" data-translate="STATUS_DISCONNECTED">DISCONNECTED</span>
       </div>
-      <div class="connection-pill" id="val-pill">
+      <div class="connection-pill" id="val-pill" data-translate-title="PILL_VALORANT_DETECTION" title="Click to enable/disable Valorant detection">
         <span class="status-dot" id="val-status-dot"></span>
-        <span class="status-text" id="val-status-text">VALORANT DESCONECTADO</span>
+        <span class="status-text" id="val-status-text" data-translate="STATUS_VAL_DISCONNECTED">VALORANT DISCONNECTED</span>
       </div>
-      <button class="icon-btn" id="btn-toggle-sound" title="Silenciar Sonidos">
+      <button class="icon-btn" id="btn-toggle-sound" data-translate-title="BTN_MUTE" title="Mute Sounds">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" class="feather">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
         </svg>
       </button>
-      <button class="icon-btn" id="btn-settings" title="Ajustes">
+      <!-- Language Toggle Button -->
+      <button class="icon-btn" id="btn-toggle-lang" data-translate-title="BTN_LANG" title="Change Language / Cambiar Idioma">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="feather">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" data-translate-title="BTN_SETTINGS" title="Settings">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" class="feather">
           <circle cx="12" cy="12" r="3"></circle>
@@ -90,13 +99,13 @@
           <!-- LEFT / MAIN: BRANDING & ACTIVE SEARCH RADAR -->
           <div class="welcome-brand-area">
             <div class="welcome-badges-row">
-              <div class="system-status-badge">
+              <div class="system-status-badge" style="margin-bottom: 0;">
                 <span class="pulse-status-dot"></span>
-                Sincronización Activa
+                <span data-translate="WELCOME_BADGE_SYNC">Active Sync</span>
               </div>
-              <div class="user-counter-badge">
+              <div class="user-counter-badge" style="margin-bottom: 0;">
                 <span class="pulse-blue-dot"></span>
-                <span id="active-user-count">Cargando...</span> usuarios activos
+                <span id="active-user-count" data-translate="LOADING">Loading...</span> <span data-translate="WELCOME_BADGE_USERS">active users</span>
               </div>
             </div>
             
@@ -104,18 +113,16 @@
               ONETRICKS <span class="gradient-text-accent">CLIENT</span>
             </h1>
             
-            <p class="welcome-desc">
-              El motor de análisis táctico de élite. Abre League of Legends o Valorant para comenzar la importación automatizada de perfiles y builds de One-tricks mundiales en tiempo real.
+            <p class="welcome-desc" data-translate="WELCOME_DESC">
+              The elite tactical analysis engine. Open League of Legends or Valorant to begin the automated real-time import of profiles and builds from global One-tricks.
             </p>
-            
-
           </div>
           
           <!-- RIGHT: LIVE PROFILES DOCK -->
           <div class="welcome-profiles-dock">
             <div class="dock-header">
-              <span class="dock-title">PERFILES ENLAZADOS</span>
-              <span class="dock-desc">Detección automática activa</span>
+              <span class="dock-title" data-translate="WELCOME_DOCK_TITLE">LINKED PROFILES</span>
+              <span class="dock-desc" data-translate="WELCOME_DOCK_DESC">Automatic detection active</span>
             </div>
             
             <div id="welcome-profile-container" class="profile-container-outer" style="width: 100%;"></div>
@@ -137,13 +144,13 @@
             <div class="portrait-container">
               <img src="" alt="Champion" id="champ-portrait" class="champ-portrait">
             </div>
-            <h2 id="champ-name">CAMPEÓN</h2>
+            <h2 id="champ-name">CHAMPION</h2>
             <div class="role-selector" id="role-selector">
-              <button class="role-btn" data-role="top" title="Top Lane">TOP</button>
-              <button class="role-btn" data-role="jungle" title="Jungle">JUG</button>
-              <button class="role-btn" data-role="mid" title="Mid Lane">MID</button>
-              <button class="role-btn" data-role="bot" title="Bot Lane (ADC)">BOT</button>
-              <button class="role-btn" data-role="support" title="Support">SUP</button>
+              <button class="role-btn" data-role="top" data-translate-title="ROLE_TOP" title="Top Lane">TOP</button>
+              <button class="role-btn" data-role="jungle" data-translate-title="ROLE_JUNGLE" title="Jungle">JUG</button>
+              <button class="role-btn" data-role="mid" data-translate-title="ROLE_MID" title="Mid Lane">MID</button>
+              <button class="role-btn" data-role="bot" data-translate-title="ROLE_BOT" title="Bot Lane (ADC)">BOT</button>
+              <button class="role-btn" data-role="support" data-translate-title="ROLE_SUPPORT" title="Support">SUP</button>
             </div>
           </div>
 
@@ -157,26 +164,26 @@
           <!-- Scraping Loading Indicator Overlay -->
           <div class="loading-overlay" id="loading-overlay">
             <div class="spinner"></div>
-            <p id="loading-text">Obteniendo datos...</p>
+            <p id="loading-text" data-translate="SCRAPING_DATA">Fetching data...</p>
           </div>
 
           <div class="details-header">
-            <h3>Configuración Recomendada</h3>
+            <h3 data-translate="WORKSPACE_REC_SETTINGS">Recommended Configuration</h3>
             <div class="quick-toggles">
               <label class="switch-container compact">
                 <input type="checkbox" id="check-auto-runes" checked>
                 <span class="slider"></span>
-                <span class="switch-label">Auto-Runas</span>
+                <span class="switch-label" data-translate="SETTING_AUTO_RUNES_COMPACT">Auto-Runes</span>
               </label>
               <label class="switch-container compact">
                 <input type="checkbox" id="check-auto-spells" checked>
                 <span class="slider"></span>
-                <span class="switch-label">Auto-Hechizos</span>
+                <span class="switch-label" data-translate="SETTING_AUTO_SPELLS_COMPACT">Auto-Summoners</span>
               </label>
               <label class="switch-container compact">
                 <input type="checkbox" id="check-auto-items" checked>
                 <span class="slider"></span>
-                <span class="switch-label">Auto-Objetos</span>
+                <span class="switch-label" data-translate="SETTING_AUTO_ITEMS_COMPACT">Auto-Items</span>
               </label>
             </div>
           </div>
@@ -191,7 +198,7 @@
               <div class="rune-tree-box primary">
                 <div class="tree-header">
                   <img src="" id="icon-primary-style" class="tree-icon" alt="Primary">
-                  <span id="name-primary-style">Primaria</span>
+                  <span id="name-primary-style" data-translate="WORKSPACE_PRIMARY_TREE">Primary</span>
                 </div>
                 <div class="runes-list" id="list-primary-runes">
                   <!-- JS populated -->
@@ -202,7 +209,7 @@
               <div class="rune-tree-box secondary">
                 <div class="tree-header">
                   <img src="" id="icon-sub-style" class="tree-icon" alt="Secondary">
-                  <span id="name-sub-style">Secundaria</span>
+                  <span id="name-sub-style" data-translate="WORKSPACE_SECONDARY_TREE">Secondary</span>
                 </div>
                 <div class="runes-list" id="list-secondary-runes">
                   <!-- JS populated -->
@@ -214,7 +221,7 @@
                 <!-- Stat Shards Box -->
                 <div class="rune-tree-box compact-box">
                   <div class="tree-header compact">
-                    <span>Atributos</span>
+                    <span data-translate="WORKSPACE_SHARDS">Attributes</span>
                   </div>
                   <div class="runes-list horizontal" id="list-shards">
                     <!-- JS populated -->
@@ -224,7 +231,7 @@
                 <!-- Summoner Spells Box -->
                 <div class="rune-tree-box compact-box">
                   <div class="tree-header compact">
-                    <span>Hechizos</span>
+                    <span data-translate="WORKSPACE_SPELLS">Summoners</span>
                   </div>
                   <div class="runes-list horizontal large-icons" id="list-spells">
                     <!-- JS populated -->
@@ -234,7 +241,7 @@
                 <!-- Skill Max Order Box -->
                 <div class="rune-tree-box compact-box" id="skill-order-box" style="display: none;">
                   <div class="tree-header compact">
-                    <span>Orden Habilidades</span>
+                    <span data-translate="WORKSPACE_SKILL_ORDER">Skill Order</span>
                   </div>
                   <div class="skill-order-content" id="skill-order-value">
                     <!-- JS populated (e.g. E → Q → W) -->
@@ -249,12 +256,12 @@
             <!-- Items Build Section -->
             <div class="items-build-section">
               <div class="tree-header compact">
-                <span>Objetos Recomendados</span>
+                <span data-translate="WORKSPACE_RECOMMENDED_ITEMS">Recommended Items</span>
               </div>
               <div class="items-row-container">
                 <!-- Starting Items -->
                 <div class="item-group-box group-starting">
-                  <span class="group-label">Inicial</span>
+                  <span class="group-label" data-translate="ITEM_GROUP_STARTING">Starting</span>
                   <div class="items-list-flex" id="list-starting-items">
                     <!-- JS populated -->
                   </div>
@@ -262,7 +269,7 @@
 
                 <!-- Boots -->
                 <div class="item-group-box group-boots">
-                  <span class="group-label">Botas</span>
+                  <span class="group-label" data-translate="ITEM_GROUP_BOOTS">Boots</span>
                   <div class="items-list-flex" id="list-boots-items">
                     <!-- JS populated -->
                   </div>
@@ -270,7 +277,7 @@
 
                 <!-- Core Items -->
                 <div class="item-group-box group-core">
-                  <span class="group-label">CORE (1os 3)</span>
+                  <span class="group-label" data-translate="ITEM_GROUP_CORE">CORE (First 3)</span>
                   <div class="items-list-flex" id="list-core-items">
                     <!-- JS populated -->
                   </div>
@@ -278,7 +285,7 @@
 
                 <!-- Recommended Items -->
                 <div class="item-group-box group-recommended">
-                  <span class="group-label">Recomendados</span>
+                  <span class="group-label" data-translate="ITEM_GROUP_RECOMMENDED">Recommended</span>
                   <div class="items-list-flex" id="list-recommended-items">
                     <!-- JS populated -->
                   </div>
@@ -286,8 +293,6 @@
               </div>
             </div>
           </div>
-
-
 
         </div>
       </div>
@@ -299,13 +304,13 @@
         <!-- Encabezado de la partida en curso -->
         <div class="game-header glass-card">
           <div class="game-header-info">
-            <span class="game-mode-badge">CLASIFICATORIA SOLO/DUO</span>
-            <h2>PARTIDA EN CURSO</h2>
-            <p id="game-status-lbl">Obteniendo información en tiempo real...</p>
+            <span class="game-mode-badge" data-translate="GAME_MODE_RANKED">RANKED SOLO/DUO</span>
+            <h2 data-translate="GAME_HEADER_TITLE">LIVE GAME IN PROGRESS</h2>
+            <p id="game-status-lbl" data-translate="GAME_STATUS_LOADING">Fetching real-time game information...</p>
           </div>
           <div class="game-header-actions">
-            <button class="btn btn-primary compact" id="btn-open-multi-opgg" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; box-shadow: 0 4px 12px rgba(138,43,226,0.15); transition: var(--transition-smooth); cursor: pointer;">
-              Abrir Multi OP.GG
+            <button class="btn btn-primary compact" id="btn-open-multi-opgg" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; box-shadow: 0 4px 12px rgba(138,43,226,0.15); transition: var(--transition-smooth); cursor: pointer;" data-translate="GAME_BTN_OPGG">
+              Open Multi OP.GG
             </button>
           </div>
         </div>
@@ -315,8 +320,8 @@
           <!-- Lado Azul (Aliados) -->
           <div class="team-column blue-side glass-card">
             <div class="team-header">
-              <span class="team-side-indicator">LADO AZUL</span>
-              <h3>EQUIPO ALIADO</h3>
+              <span class="team-side-indicator" data-translate="GAME_BLUE_SIDE">BLUE SIDE</span>
+              <h3 data-translate="GAME_ALLIED_TEAM">ALLIED TEAM</h3>
             </div>
             <div class="players-list" id="blue-team-players">
               <!-- Se rellena dinámicamente con renderer.js -->
@@ -326,8 +331,8 @@
           <!-- Lado Rojo (Enemigos) -->
           <div class="team-column red-side glass-card">
             <div class="team-header">
-              <span class="team-side-indicator">LADO ROJO</span>
-              <h3>EQUIPO ENEMIGO</h3>
+              <span class="team-side-indicator" data-translate="GAME_RED_SIDE">RED SIDE</span>
+              <h3 data-translate="GAME_ENEMY_TEAM">ENEMY TEAM</h3>
             </div>
             <div class="players-list" id="red-team-players">
               <!-- Se rellena dinámicamente con renderer.js -->
@@ -339,34 +344,34 @@
         <div class="game-champion-build glass-card" id="game-champion-build" style="display: none; margin-top: 24px;">
           <div class="game-build-header">
             <div class="game-build-title-area">
-              <span class="game-build-badge">TU CONFIGURACIÓN RECOMENDADA EN PARTIDA</span>
-              <h3 id="game-build-champ-name">Cargando build para tu campeón...</h3>
+              <span class="game-build-badge" data-translate="GAME_BUILD_REC_TITLE">YOUR RECOMMENDED IN-GAME BUILD</span>
+              <h3 id="game-build-champ-name" data-translate="GAME_BUILD_LOADING">Loading build for your champion...</h3>
             </div>
           </div>
           <div class="game-build-body-simple">
             <!-- Habilidades -->
             <div class="game-item-group group-skills">
-              <span class="item-group-label">Habilidades</span>
+              <span class="item-group-label" data-translate="ITEM_GROUP_SKILLS">Skills</span>
               <div class="game-build-skills-content" id="game-build-skills"></div>
             </div>
             <!-- Inicial -->
             <div class="game-item-group group-starting">
-              <span class="item-group-label">Inicial</span>
+              <span class="item-group-label" data-translate="ITEM_GROUP_STARTING">Starting</span>
               <div class="game-items-flex" id="game-build-starting-items"></div>
             </div>
             <!-- Botas -->
             <div class="game-item-group group-boots">
-              <span class="item-group-label">Botas</span>
+              <span class="item-group-label" data-translate="ITEM_GROUP_BOOTS">Boots</span>
               <div class="game-items-flex" id="game-build-boots-items"></div>
             </div>
             <!-- Core -->
             <div class="game-item-group group-core">
-              <span class="item-group-label">Core (1os 3)</span>
+              <span class="item-group-label" data-translate="ITEM_GROUP_CORE">Core (First 3)</span>
               <div class="game-items-flex" id="game-build-core-items"></div>
             </div>
             <!-- Recomendados -->
             <div class="game-item-group group-recommended">
-              <span class="item-group-label">Recomendados</span>
+              <span class="item-group-label" data-translate="ITEM_GROUP_RECOMMENDED">Recommended</span>
               <div class="game-items-flex" id="game-build-recommended-items"></div>
             </div>
           </div>
@@ -380,7 +385,7 @@
   <div class="settings-modal-overlay" id="settings-overlay">
     <div class="settings-modal glass-card">
       <div class="settings-modal-header">
-        <h2>Ajustes de Onetricks Client</h2>
+        <h2 data-translate="SETTINGS_TITLE">Onetricks Client Settings</h2>
         <button class="icon-btn" id="btn-settings-close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -392,111 +397,111 @@
 
       <div class="settings-modal-body">
         <div class="settings-section">
-          <h3>Comportamiento</h3>
+          <h3 data-translate="SETTINGS_SEC_BEHAVIOR">Behavior</h3>
+          
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Importar Runas Automáticamente</h4>
-              <p>Aplica las runas directamente al juego cuando hoverees/fijes un campeón.</p>
+              <h4 data-translate="SETTING_AUTO_RUNES_TITLE">Import Runes Automatically</h4>
+              <p data-translate="SETTING_AUTO_RUNES_DESC">Applies the runes directly to the game when you hover or lock in a champion.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-runes" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Importar Hechizos Automáticamente</h4>
-              <p>Aplica los hechizos de invocador óptimos directamente al juego.</p>
+              <h4 data-translate="SETTING_AUTO_SPELLS_TITLE">Import Spells Automatically</h4>
+              <p data-translate="SETTING_AUTO_SPELLS_DESC">Applies the optimal summoner spells directly to the game.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-spells" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Importar Objetos Automáticamente</h4>
-              <p>Genera e inyecta un set de objetos recomendado directamente en tu tienda in-game.</p>
+              <h4 data-translate="SETTING_AUTO_ITEMS_TITLE">Import Items Automatically</h4>
+              <p data-translate="SETTING_AUTO_ITEMS_DESC">Generates and injects a recommended item set directly into your in-game shop.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-items" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Destello (Flash) en la D</h4>
-              <p>Coloca siempre el Destello en la tecla D en lugar de la F si está seleccionado.</p>
+              <h4 data-translate="SETTING_FLASH_D_TITLE">Flash on D</h4>
+              <p data-translate="SETTING_FLASH_D_DESC">Always places Flash on the D key instead of F if selected.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-flash-d">
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Modo Debug (Ver Navegador)</h4>
-              <p>Muestra la ventana del navegador que realiza el scraping en segundo plano.</p>
+              <h4 data-translate="SETTING_DEBUG_BROWSER_TITLE">Debug Mode (Show Browser)</h4>
+              <p data-translate="SETTING_DEBUG_BROWSER_DESC">Shows the background chromium window performing the scraping.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-debug-browser">
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Iniciar al Encender el Ordenador</h4>
-              <p>Arranca la aplicación automáticamente en segundo plano al iniciar el sistema operativo.</p>
+              <h4 data-translate="SETTING_START_STARTUP_TITLE">Start on System Startup</h4>
+              <p data-translate="SETTING_START_STARTUP_DESC">Starts the application automatically in the background when the OS boots.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-start-login" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Efectos de Sonido Interactivos</h4>
-              <p>Activa los sonidos táctiles de los botones, transiciones y alertas de la aplicación.</p>
+              <h4 data-translate="SETTING_SOUNDS_TITLE">Interactive Sound Effects</h4>
+              <p data-translate="SETTING_SOUNDS_DESC">Enables button ticks, transitions, and application alerts.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-sounds" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Activar Detección de League of Legends</h4>
-              <p>Busca e importa datos automáticamente cuando juegues al LoL.</p>
+              <h4 data-translate="SETTING_LOL_DETECTION_TITLE">Enable League of Legends Detection</h4>
+              <p data-translate="SETTING_LOL_DETECTION_DESC">Automatically detects and imports data when you play League of Legends.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-lol-detection" checked>
               <span class="slider"></span>
             </label>
           </div>
+
           <div class="setting-item flex-between">
             <div class="setting-desc">
-              <h4>Activar Detección de Valorant</h4>
-              <p>Busca y muestra perfiles y rangos en tiempo real cuando juegues a Valorant.</p>
+              <h4 data-translate="SETTING_VAL_DETECTION_TITLE">Enable Valorant Detection</h4>
+              <p data-translate="SETTING_VAL_DETECTION_DESC">Automatically detects and displays profiles and ranks in real-time when you play Valorant.</p>
             </div>
             <label class="switch-container">
               <input type="checkbox" id="settings-check-valorant-detection" checked>
               <span class="slider"></span>
             </label>
           </div>
-          <div class="setting-item flex-between">
-            <div class="setting-desc">
-              <h4>Modo Bajo Rendimiento (Ahorro CPU)</h4>
-              <p>Desactiva animaciones y efectos de desenfoque pesados. Muy recomendado si juegas en un PC de gama media/baja.</p>
-            </div>
-            <label class="switch-container">
-              <input type="checkbox" id="settings-check-low-perf">
-              <span class="slider"></span>
-            </label>
-          </div>
+
           <div class="setting-item flex-between" style="align-items: center;">
             <div class="setting-desc">
-              <h4>Zoom de la Aplicación</h4>
-              <p>Ajusta el tamaño de la interfaz de la aplicación.</p>
+              <h4 data-translate="SETTING_ZOOM_TITLE">Application Zoom</h4>
+              <p data-translate="SETTING_ZOOM_DESC">Adjusts the scale of the application interface.</p>
             </div>
             <div class="zoom-controls" style="display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 20px;">
               <button class="btn btn-secondary compact" id="btn-zoom-out" style="padding: 2px 10px; font-weight: bold; border-radius: 12px; font-size: 14px; cursor: pointer; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">-</button>
@@ -507,59 +512,56 @@
         </div>
 
         <div class="settings-section">
-          <h3>Ubicación de League of Legends</h3>
+          <h3 data-translate="SETTINGS_SEC_LOL_PATH">League of Legends Location</h3>
           <div class="setting-item">
             <div class="setting-desc">
-              <h4>Ruta de Instalación de LoL / Lockfile</h4>
-              <p>Si la aplicación no detecta tu juego, introduce la ruta donde se encuentra el <b>lockfile</b>
-                (habitualmente <code>C:\Riot Games\League of Legends</code>).</p>
+              <h4 data-translate="SETTING_LOL_PATH_TITLE">LoL Installation Path / Lockfile</h4>
+              <p data-translate="SETTING_LOL_PATH_DESC">If the app does not detect your game, enter the path where the <b>lockfile</b> is located (usually <code>C:\Riot Games\League of Legends</code>).</p>
             </div>
             <div class="custom-path-input-group">
               <input type="text" id="input-lol-path" placeholder="C:\Riot Games\League of Legends" />
-              <button class="btn btn-secondary compact" id="btn-browse-lol" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Buscar</button>
-              <button class="btn btn-primary compact" id="btn-save-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Guardar</button>
+              <button class="btn btn-secondary compact" id="btn-browse-lol" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;" data-translate="BTN_BROWSE">Browse</button>
+              <button class="btn btn-primary compact" id="btn-save-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;" data-translate="BTN_SAVE">Save</button>
             </div>
-            <span class="path-success-lbl" id="path-success-lbl">Ruta guardada correctamente</span>
+            <span class="path-success-lbl" id="path-success-lbl" data-translate="PATH_SAVED_SUCCESS">Path saved successfully</span>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>Ubicación de Valorant</h3>
+          <h3 data-translate="SETTINGS_SEC_VAL_PATH">Valorant Location</h3>
           <div class="setting-item">
             <div class="setting-desc">
-              <h4>Ruta de Instalación de Valorant / Riot Client</h4>
-              <p>Introduce la ruta de instalación de Riot Client/Valorant si la detección no es automática (habitualmente se encuentra en <code>%LOCALAPPDATA%\Riot Games\Riot Client</code>).</p>
+              <h4 data-translate="SETTING_VAL_PATH_TITLE">Valorant Installation Path / Riot Client</h4>
+              <p data-translate="SETTING_VAL_PATH_DESC">Enter the installation path of Riot Client/Valorant if detection is not automatic (usually located at <code>C:\Users\...\AppData\Local\Riot Games</code>).</p>
             </div>
             <div class="custom-path-input-group">
               <input type="text" id="input-val-path" placeholder="C:\Users\...\AppData\Local\Riot Games" />
-              <button class="btn btn-secondary compact" id="btn-browse-val" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Buscar</button>
-              <button class="btn btn-primary compact" id="btn-save-val-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;">Guardar</button>
+              <button class="btn btn-secondary compact" id="btn-browse-val" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;" data-translate="BTN_BROWSE">Browse</button>
+              <button class="btn btn-primary compact" id="btn-save-val-path" style="padding: 0 12px; height: 28px; font-size: 10px; border-radius: 6px;" data-translate="BTN_SAVE">Save</button>
             </div>
-            <span class="path-success-lbl" id="val-path-success-lbl">Ruta guardada correctamente</span>
+            <span class="path-success-lbl" id="val-path-success-lbl" data-translate="PATH_SAVED_SUCCESS">Path saved successfully</span>
           </div>
         </div>
 
         <div class="settings-section" id="settings-updates-section">
-          <h3>Actualización Automática</h3>
+          <h3 data-translate="SETTINGS_SEC_UPDATES">Automatic Updates</h3>
           <div class="setting-item flex-between" style="align-items: center; gap: 16px;">
             <div class="setting-desc" style="flex: 1;">
-              <h4 id="update-version-label">Versión actual: v1.0.0</h4>
-              <p id="update-status-message">La aplicación se encuentra en su versión más reciente.</p>
+              <h4 id="update-version-label">Current version: v1.0.0</h4>
+              <p id="update-status-message" data-translate="UPDATE_STATUS_UPTODATE">The application is up to date.</p>
             </div>
             <div class="update-action-btn-container" id="update-action-container" style="flex-shrink: 0;">
-              <button class="btn btn-primary compact" id="btn-check-updates" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; cursor: pointer; transition: var(--transition-smooth);">Buscar actualizaciones</button>
+              <button class="btn btn-primary compact" id="btn-check-updates" style="padding: 8px 16px; font-size: 11px; font-weight: 700; font-family: var(--font-display); text-transform: uppercase; border-radius: 8px; border: 1px solid rgba(138,43,226,0.3); background: linear-gradient(135deg, rgba(138,43,226,0.35) 0%, rgba(0,191,255,0.2) 100%); color: #fff; cursor: pointer; transition: var(--transition-smooth);" data-translate="BTN_CHECK_UPDATES">Check for updates</button>
             </div>
           </div>
         </div>
       </div>
 
       <div class="settings-modal-footer">
-        <button class="btn btn-secondary" id="btn-settings-done">Cerrar</button>
+        <button class="btn btn-secondary" id="btn-settings-done" data-translate="BTN_CLOSE">Close</button>
       </div>
     </div>
   </div>
-
-
 
   <!-- Hidden action status indicator: kept for JS compatibility, no visual space -->
   <div class="action-status-indicator" id="action-status-indicator" style="position:fixed;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;"></div>

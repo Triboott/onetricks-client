@@ -220,6 +220,353 @@ const sfx = {
   }
 };
 
+// ==========================================================================
+// TRANSLATIONS DICTIONARY & INTERNATIONALIZATION SYSTEM
+// ==========================================================================
+const TRANSLATIONS = {
+  en: {
+    STATUS_DISCONNECTED: "DISCONNECTED",
+    STATUS_VAL_DISCONNECTED: "VALORANT DISCONNECTED",
+    PILL_LOL_DETECTION: "Click to enable/disable League of Legends detection",
+    PILL_VALORANT_DETECTION: "Click to enable/disable Valorant detection",
+    BTN_MUTE: "Mute Sounds",
+    BTN_LANG: "Change Language / Cambiar Idioma",
+    BTN_SETTINGS: "Settings",
+    WELCOME_BADGE_SYNC: "Active Sync",
+    LOADING: "Loading...",
+    WELCOME_BADGE_USERS: "active users",
+    WELCOME_DESC: "The elite tactical analysis engine. Open League of Legends or Valorant to begin the automated real-time import of profiles and builds from global One-tricks.",
+    WELCOME_DOCK_TITLE: "LINKED PROFILES",
+    WELCOME_DOCK_DESC: "Automatic detection active",
+    ROLE_TOP: "Top Lane",
+    ROLE_JUNGLE: "Jungle",
+    ROLE_MID: "Mid Lane",
+    ROLE_BOT: "Bot Lane (ADC)",
+    ROLE_SUPPORT: "Support",
+    SCRAPING_DATA: "Fetching data...",
+    WORKSPACE_REC_SETTINGS: "Recommended Configuration",
+    SETTING_AUTO_RUNES_COMPACT: "Auto-Runes",
+    SETTING_AUTO_SPELLS_COMPACT: "Auto-Summoners",
+    SETTING_AUTO_ITEMS_COMPACT: "Auto-Items",
+    WORKSPACE_PRIMARY_TREE: "Primary",
+    WORKSPACE_SECONDARY_TREE: "Secondary",
+    WORKSPACE_SHARDS: "Attributes",
+    WORKSPACE_SPELLS: "Summoners",
+    WORKSPACE_SKILL_ORDER: "Skill Order",
+    WORKSPACE_RECOMMENDED_ITEMS: "Recommended Items",
+    ITEM_GROUP_STARTING: "Starting",
+    ITEM_GROUP_BOOTS: "Boots",
+    ITEM_GROUP_CORE: "Core (First 3)",
+    ITEM_GROUP_RECOMMENDED: "Recommended",
+    GAME_MODE_RANKED: "RANKED SOLO/DUO",
+    GAME_HEADER_TITLE: "LIVE GAME IN PROGRESS",
+    GAME_STATUS_LOADING: "Fetching real-time game information...",
+    GAME_BTN_OPGG: "Open Multi OP.GG",
+    GAME_BLUE_SIDE: "BLUE SIDE",
+    GAME_ALLIED_TEAM: "ALLIED TEAM",
+    GAME_RED_SIDE: "RED SIDE",
+    GAME_ENEMY_TEAM: "ENEMY TEAM",
+    GAME_BUILD_REC_TITLE: "YOUR RECOMMENDED IN-GAME BUILD",
+    GAME_BUILD_LOADING: "Loading build for your champion...",
+    ITEM_GROUP_SKILLS: "Skills",
+    SETTINGS_TITLE: "Onetricks Client Settings",
+    SETTINGS_SEC_BEHAVIOR: "Behavior",
+    SETTING_AUTO_RUNES_TITLE: "Import Runes Automatically",
+    SETTING_AUTO_RUNES_DESC: "Applies the runes directly to the game when you hover or lock in a champion.",
+    SETTING_AUTO_SPELLS_TITLE: "Import Spells Automatically",
+    SETTING_AUTO_SPELLS_DESC: "Applies the optimal summoner spells directly to the game.",
+    SETTING_AUTO_ITEMS_TITLE: "Import Items Automatically",
+    SETTING_AUTO_ITEMS_DESC: "Generates and injects a recommended item set directly into your in-game shop.",
+    SETTING_FLASH_D_TITLE: "Flash on D",
+    SETTING_FLASH_D_DESC: "Always places Flash on the D key instead of F if selected.",
+    SETTING_DEBUG_BROWSER_TITLE: "Debug Mode (Show Browser)",
+    SETTING_DEBUG_BROWSER_DESC: "Shows the background chromium window performing the scraping.",
+    SETTING_START_STARTUP_TITLE: "Start on System Startup",
+    SETTING_START_STARTUP_DESC: "Starts the application automatically in the background when the OS boots.",
+    SETTING_SOUNDS_TITLE: "Interactive Sound Effects",
+    SETTING_SOUNDS_DESC: "Enables button ticks, transitions, and application alerts.",
+    SETTING_LOL_DETECTION_TITLE: "Enable League of Legends Detection",
+    SETTING_LOL_DETECTION_DESC: "Automatically detects and imports data when you play League of Legends.",
+    SETTING_VAL_DETECTION_TITLE: "Enable Valorant Detection",
+    SETTING_VAL_DETECTION_DESC: "Automatically detects and displays profiles and ranks in real-time when you play Valorant.",
+    SETTING_ZOOM_TITLE: "Application Zoom",
+    SETTING_ZOOM_DESC: "Adjusts the scale of the application interface.",
+    SETTINGS_SEC_LOL_PATH: "League of Legends Location",
+    SETTING_LOL_PATH_TITLE: "LoL Installation Path / Lockfile",
+    SETTING_LOL_PATH_DESC: "If the app does not detect your game, enter the path where the <b>lockfile</b> is located (usually <code>C:\\Riot Games\\League of Legends</code>).",
+    BTN_BROWSE: "Browse",
+    BTN_SAVE: "Save",
+    PATH_SAVED_SUCCESS: "Path saved successfully",
+    SETTINGS_SEC_VAL_PATH: "Valorant Location",
+    SETTING_VAL_PATH_TITLE: "Valorant Installation Path / Riot Client",
+    SETTING_VAL_PATH_DESC: "Enter the installation path of Riot Client/Valorant if detection is not automatic (usually located at <code>C:\\Users\\...\\AppData\\Local\\Riot Games</code>).",
+    SETTINGS_SEC_UPDATES: "Automatic Updates",
+    UPDATE_STATUS_UPTODATE: "The application is up to date.",
+    BTN_CHECK_UPDATES: "Check for updates",
+    BTN_CLOSE: "Close",
+
+    // Dynamic Strings
+    LOL_DISABLED: "LOL DISABLED",
+    LOL_ENABLED_CONNECTED: "LOL DETECTED",
+    LOL_ENABLED_SCANNING: "SEARCHING FOR CLIENT...",
+    LOL_ENABLED_DISCONNECTED: "DISCONNECTED",
+    VAL_DISABLED: "VAL DISABLED",
+    VAL_ENABLED_CONNECTED: "VALORANT DETECTED",
+    VAL_ENABLED_SCANNING: "SEARCHING VALORANT...",
+    VAL_ENABLED_DISCONNECTED: "VALORANT DISCONNECTED",
+    MUTE_SOUNDS: "Mute Sounds",
+    UNMUTE_SOUNDS: "Unmute Sounds",
+    PINNED_LABEL: "Pinned",
+    PIN_ROLE_BTN_TITLE_PINNED: "Role {role} pinned. Click to unpin.",
+    PIN_ROLE_BTN_LABEL_UNPINNED: "Pin Role",
+    PIN_ROLE_BTN_TITLE_UNPINNED: "Pin selected role to always apply it",
+    ACTIVE_GAME_LOL_LABEL: "Active Match - Viewing Solo/DuoQ Stats",
+    ACTIVE_GAME_VAL_PREGAME: "Valorant Agent Select Phase - Viewing allied team stats",
+    ACTIVE_GAME_VAL_INPROGRESS: "Active Valorant Match - Viewing MMR & Agent stats",
+    WAITING_CONNECTION_LOL: "🔌 WAITING FOR LCU CONNECTION...",
+    WAITING_CONNECTION_LOL_SUB: "Start champion select or open League of Legends",
+    VIEW_OPGG_PROFILE: "View profile on OP.GG",
+    VIEW_VAL_TRACKER_PROFILE: "View profile on Valorant Tracker",
+    EMPTY_ITEMS_LIST: "None",
+    SKILL_ORDER_PLAYRATE_TITLE: "Percentage of matches using this skill order",
+    CHAMP_SELECT_SELECTING: "SELECTING...",
+    CHAMP_PORTRAIT_TITLE: "View champion profile on onetricks.gg",
+    LOADING_BUILD_CHAMP: "Loading build for your champion...",
+    RECOMMENDED_BUILD_CHAMP: "Recommended Build for {champion}{role}",
+    APPLIED_SUCCESS: "Runes and spells applied successfully!",
+    APPLIED_DIRECTLY: "{components} applied directly to the game!",
+    RUNE_COMP: "Runes",
+    SPELL_COMP: "Spells",
+    ITEM_COMP: "Items",
+    AND: "and",
+    BROWSE_LOL_TITLE: "Select League of Legends Folder or Lockfile",
+    BROWSE_VAL_TITLE: "Select Valorant / Riot Client Folder or Lockfile",
+    UPDATER_CHECKING_BTN: "Checking...",
+    UPDATER_CHECKING: "Checking for updates...",
+    UPDATER_CHECKING_SERVER: "Checking for updates on the server...",
+    UPDATER_NEW_VERSION: "New version available: <span style=\"color:var(--accent-blue);font-weight:700;\">v{version}</span>. Downloading...",
+    UPDATER_UPTODATE: "The application is up to date.",
+    UPDATER_ERROR: "<span style=\"color:var(--status-red);\">Error checking for updates{error}</span>",
+    UPDATER_DOWNLOADING: "Downloading update... <span style=\"font-weight:700;color:var(--accent-purple-light);\">{percent}%</span>",
+    UPDATER_READY: "Version <span style=\"color:var(--status-green);font-weight:700;\">v{version}</span> ready! It will be installed automatically when you close the client.",
+    UPDATER_RESTART: "Restart",
+    UPDATER_CHECK_BTN_DEFAULT: "Check for updates",
+    GAMES_LABEL: "Games",
+    UNRANKED_LABEL: "UNRANKED"
+  },
+  es: {
+    STATUS_DISCONNECTED: "DESCONECTADO",
+    STATUS_VAL_DISCONNECTED: "VALORANT DESCONECTADO",
+    PILL_LOL_DETECTION: "Haz clic para activar o desactivar la detección de League of Legends",
+    PILL_VALORANT_DETECTION: "Haz clic para activar o desactivar la detección de Valorant",
+    BTN_MUTE: "Silenciar Sonidos",
+    BTN_LANG: "Cambiar Idioma / Change Language",
+    BTN_SETTINGS: "Configuración",
+    WELCOME_BADGE_SYNC: "Sincronización Activa",
+    LOADING: "Cargando...",
+    WELCOME_BADGE_USERS: "usuarios activos",
+    WELCOME_DESC: "El motor de análisis táctico de élite. Abre League of Legends o Valorant para comenzar la importación automatizada en tiempo real de perfiles y builds de los mejores One-tricks del mundo.",
+    WELCOME_DOCK_TITLE: "PERFILES ENLAZADOS",
+    WELCOME_DOCK_DESC: "Detección automática activa",
+    ROLE_TOP: "Carril Superior",
+    ROLE_JUNGLE: "Jungla",
+    ROLE_MID: "Carril Central",
+    ROLE_BOT: "Carril Inferior (ADC)",
+    ROLE_SUPPORT: "Soporte",
+    SCRAPING_DATA: "Obteniendo datos...",
+    WORKSPACE_REC_SETTINGS: "Configuración Recomendada",
+    SETTING_AUTO_RUNES_COMPACT: "Auto-Runas",
+    SETTING_AUTO_SPELLS_COMPACT: "Auto-Hechizos",
+    SETTING_AUTO_ITEMS_COMPACT: "Auto-Objetos",
+    WORKSPACE_PRIMARY_TREE: "Principal",
+    WORKSPACE_SECONDARY_TREE: "Secundario",
+    WORKSPACE_SHARDS: "Atributos",
+    WORKSPACE_SPELLS: "Hechizos",
+    WORKSPACE_SKILL_ORDER: "Orden de Habilidades",
+    WORKSPACE_RECOMMENDED_ITEMS: "Objetos Recomendados",
+    ITEM_GROUP_STARTING: "Inicial",
+    ITEM_GROUP_BOOTS: "Botas",
+    ITEM_GROUP_CORE: "Objetos Clave (Primeros 3)",
+    ITEM_GROUP_RECOMMENDED: "Recomendados",
+    GAME_MODE_RANKED: "SOLO/DUO CLASIFICATORIA",
+    GAME_HEADER_TITLE: "PARTIDA EN CURSO",
+    GAME_STATUS_LOADING: "Obteniendo información de la partida en tiempo real...",
+    GAME_BTN_OPGG: "Abrir Multi OP.GG",
+    GAME_BLUE_SIDE: "LADO AZUL",
+    GAME_ALLIED_TEAM: "EQUIPO ALIADO",
+    GAME_RED_SIDE: "LADO ROJO",
+    GAME_ENEMY_TEAM: "EQUIPO ENEMIGO",
+    GAME_BUILD_REC_TITLE: "TU BUILD RECOMENDADA EN PARTIDA",
+    GAME_BUILD_LOADING: "Cargando build para tu campeón...",
+    ITEM_GROUP_SKILLS: "Habilidades",
+    SETTINGS_TITLE: "Configuración de Onetricks Client",
+    SETTINGS_SEC_BEHAVIOR: "Comportamiento",
+    SETTING_AUTO_RUNES_TITLE: "Importar Runas Automáticamente",
+    SETTING_AUTO_RUNES_DESC: "Aplica las runas directamente al juego cuando pasas el cursor o seleccionas un campeón.",
+    SETTING_AUTO_SPELLS_TITLE: "Importar Hechizos Automáticamente",
+    SETTING_AUTO_SPELLS_DESC: "Aplica los hechizos de invocador óptimos directamente al juego.",
+    SETTING_AUTO_ITEMS_TITLE: "Importar Objetos Automáticamente",
+    SETTING_AUTO_ITEMS_DESC: "Genera e inyecta un conjunto de objetos recomendados directamente en tu tienda del juego.",
+    SETTING_FLASH_D_TITLE: "Destello en la D",
+    SETTING_FLASH_D_DESC: "Coloca siempre el Destello en la tecla D en lugar de la F si está seleccionado.",
+    SETTING_DEBUG_BROWSER_TITLE: "Modo Depuración (Mostrar Navegador)",
+    SETTING_DEBUG_BROWSER_DESC: "Muestra la ventana de Chromium en segundo plano que realiza el raspado de datos.",
+    SETTING_START_STARTUP_TITLE: "Iniciar con el Sistema",
+    SETTING_START_STARTUP_DESC: "Inicia la aplicación automáticamente en segundo plano cuando arranca el sistema operativo.",
+    SETTING_SOUNDS_TITLE: "Efectos de Sonido Interactivos",
+    SETTING_SOUNDS_DESC: "Activa los clics de botones, transiciones y alertas de la aplicación.",
+    SETTING_LOL_DETECTION_TITLE: "Activar Detección de League of Legends",
+    SETTING_LOL_DETECTION_DESC: "Detecta e importa datos automáticamente cuando juegas a League of Legends.",
+    SETTING_VAL_DETECTION_TITLE: "Activar Detección de Valorant",
+    SETTING_VAL_DETECTION_DESC: "Detecta y muestra perfiles y rangos automáticamente en tiempo real cuando juegas a Valorant.",
+    SETTING_ZOOM_TITLE: "Zoom de la Aplicación",
+    SETTING_ZOOM_DESC: "Ajusta la escala de la interfaz de la aplicación.",
+    SETTINGS_SEC_LOL_PATH: "Ubicación de League of Legends",
+    SETTING_LOL_PATH_TITLE: "Ruta de Instalación de LoL / Lockfile",
+    SETTING_LOL_PATH_DESC: "Si la app no detecta tu juego, introduce la ruta donde se encuentra el archivo <b>lockfile</b> (normalmente <code>C:\\Riot Games\\League of Legends</code>).",
+    BTN_BROWSE: "Examinar",
+    BTN_SAVE: "Guardar",
+    PATH_SAVED_SUCCESS: "Ruta guardada correctamente",
+    SETTINGS_SEC_VAL_PATH: "Ubicación de Valorant",
+    SETTING_VAL_PATH_TITLE: "Ruta de Instalación de Valorant / Riot Client",
+    SETTING_VAL_PATH_DESC: "Introduce la ruta de instalación de Riot Client/Valorant si la detección no es automática (normalmente en <code>C:\\Users\\...\\AppData\\Local\\Riot Games</code>).",
+    SETTINGS_SEC_UPDATES: "Actualizaciones Automáticas",
+    UPDATE_STATUS_UPTODATE: "La aplicación se encuentra en su versión más reciente.",
+    BTN_CHECK_UPDATES: "Buscar actualizaciones",
+    BTN_CLOSE: "Cerrar",
+
+    // Dynamic Strings
+    LOL_DISABLED: "LOL DESACTIVADO",
+    LOL_ENABLED_CONNECTED: "LOL DETECTADO",
+    LOL_ENABLED_SCANNING: "BUSCANDO CLIENTE...",
+    LOL_ENABLED_DISCONNECTED: "DESCONECTADO",
+    VAL_DISABLED: "VAL DESACTIVADO",
+    VAL_ENABLED_CONNECTED: "VALORANT DETECTADO",
+    VAL_ENABLED_SCANNING: "BUSCANDO VALORANT...",
+    VAL_ENABLED_DISCONNECTED: "VALORANT DESCONECTADO",
+    MUTE_SOUNDS: "Silenciar Sonidos",
+    UNMUTE_SOUNDS: "Activar Sonidos",
+    PINNED_LABEL: "Fijado",
+    PIN_ROLE_BTN_TITLE_PINNED: "Rol {role} fijado. Haz clic para desanclar.",
+    PIN_ROLE_BTN_LABEL_UNPINNED: "Fijar Rol",
+    PIN_ROLE_BTN_TITLE_UNPINNED: "Fijar rol seleccionado para que se aplique siempre",
+    ACTIVE_GAME_LOL_LABEL: "Partida activa - Visualizando estadísticas de Solo/DuoQ",
+    ACTIVE_GAME_VAL_PREGAME: "Fase de Selección de Agente de Valorant - Visualizando estadísticas de tu equipo",
+    ACTIVE_GAME_VAL_INPROGRESS: "Partida activa de Valorant - Visualizando estadísticas de MMR y Agentes",
+    WAITING_CONNECTION_LOL: "🔌 ESPERANDO CONEXIÓN LCU...",
+    WAITING_CONNECTION_LOL_SUB: "Inicia selección de campeones o abre League of Legends",
+    VIEW_OPGG_PROFILE: "Ver perfil en OP.GG",
+    VIEW_VAL_TRACKER_PROFILE: "Ver perfil en Valorant-Tracker",
+    EMPTY_ITEMS_LIST: "Ninguno",
+    SKILL_ORDER_PLAYRATE_TITLE: "Porcentaje de partidas usando este orden de habilidades",
+    CHAMP_SELECT_SELECTING: "SELECCIONANDO...",
+    CHAMP_PORTRAIT_TITLE: "Ver perfil del campeón en onetricks.gg",
+    LOADING_BUILD_CHAMP: "Cargando build para tu campeón...",
+    RECOMMENDED_BUILD_CHAMP: "Build Recomendada para {champion}{role}",
+    APPLIED_SUCCESS: "¡Runas y hechizos aplicados con éxito!",
+    APPLIED_DIRECTLY: "¡{components} aplicadas/os directamente al juego!",
+    RUNE_COMP: "Runas",
+    SPELL_COMP: "Hechizos",
+    ITEM_COMP: "Objetos",
+    AND: "y",
+    BROWSE_LOL_TITLE: "Seleccionar Carpeta o Lockfile de League of Legends",
+    BROWSE_VAL_TITLE: "Seleccionar Carpeta o Lockfile de Valorant / Riot Client",
+    UPDATER_CHECKING_BTN: "Buscando...",
+    UPDATER_CHECKING: "Buscando actualizaciones...",
+    UPDATER_CHECKING_SERVER: "Buscando actualizaciones en el servidor...",
+    UPDATER_NEW_VERSION: "Nueva versión disponible: <span style=\"color:var(--accent-blue);font-weight:700;\">v{version}</span>. Descargando...",
+    UPDATER_UPTODATE: "La aplicación se encuentra en su versión más reciente.",
+    UPDATER_ERROR: "<span style=\"color:var(--status-red);\">Error al buscar actualizaciones{error}</span>",
+    UPDATER_DOWNLOADING: "Descargando actualización... <span style=\"font-weight:700;color:var(--accent-purple-light);\">{percent}%</span>",
+    UPDATER_READY: "¡Versión <span style=\"color:var(--status-green);font-weight:700;\">v{version}</span> lista! Se instalará automáticamente al cerrar el cliente.",
+    UPDATER_RESTART: "Reiniciar",
+    UPDATER_CHECK_BTN_DEFAULT: "Buscar actualizaciones",
+    GAMES_LABEL: "Partidas",
+    UNRANKED_LABEL: "SIN CLASIFICAR"
+  }
+};
+
+let currentLang = localStorage.getItem('onetricks_lang') || 'en';
+
+function applyTranslations(lang) {
+  currentLang = lang;
+  localStorage.setItem('onetricks_lang', lang);
+
+  // Apply static text translations
+  const elements = document.querySelectorAll('[data-translate]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-translate');
+    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+      // Use innerHTML for description if it contains HTML (like b or code tags), else textContent
+      if (key.includes('_DESC') || key.includes('_HTML') || el.querySelector('span') || el.querySelector('i')) {
+        const icon = el.querySelector('i');
+        if (icon) {
+          el.innerHTML = '';
+          el.appendChild(icon);
+          el.appendChild(document.createTextNode(' ' + TRANSLATIONS[lang][key]));
+        } else {
+          el.innerHTML = TRANSLATIONS[lang][key];
+        }
+      } else {
+        el.textContent = TRANSLATIONS[lang][key];
+      }
+    }
+  });
+
+  // Apply title/tooltip translations
+  const titleElements = document.querySelectorAll('[data-translate-title]');
+  titleElements.forEach(el => {
+    const key = el.getAttribute('data-translate-title');
+    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+      el.title = TRANSLATIONS[lang][key];
+    }
+  });
+
+  // Update dynamic content as well
+  updateLcuStatusUI(lastLcuStatus);
+  updateValorantStatusUI(lastValStatus);
+  if (lastPlayerInfo) {
+    updatePlayerProfileUI(lastPlayerInfo);
+  } else {
+    updatePlayerProfileUI(null);
+  }
+
+  // Sync pinned role label and title
+  updatePinnedRoleUI(appConfig.pinnedRole);
+
+  const elLcuPill = document.getElementById('lcu-pill');
+  if (elLcuPill) {
+    elLcuPill.title = TRANSLATIONS[lang].PILL_LOL_DETECTION;
+  }
+  const elValPill = document.getElementById('val-pill');
+  if (elValPill) {
+    elValPill.title = TRANSLATIONS[lang].PILL_VALORANT_DETECTION;
+  }
+  const elPortraitContainer = document.querySelector('.portrait-container');
+  if (elPortraitContainer) {
+    elPortraitContainer.title = TRANSLATIONS[lang].CHAMP_PORTRAIT_TITLE;
+  }
+
+  updateSoundToggleButtonUI(appConfig.enableSounds !== false);
+
+  // Re-broadcast choice to main process to persist inside config.json
+  if (window.api && window.api.toggleAutoApply) {
+    window.api.toggleAutoApply({
+      autoApplyRunes: appConfig.autoApplyRunes,
+      autoApplySpells: appConfig.autoApplySpells,
+      autoApplyItems: appConfig.autoApplyItems,
+      flashOnD: appConfig.flashOnD,
+      debugBrowser: appConfig.debugBrowser,
+      startAtLogin: appConfig.startAtLogin,
+      enableSounds: appConfig.enableSounds,
+      enableLolDetection: appConfig.enableLolDetection,
+      enableValorantDetection: appConfig.enableValorantDetection,
+      enableLowPerf: appConfig.enableLowPerf,
+      lang: lang
+    });
+  }
+}
+
 // DOM Elements Cache
 const elStatusDot = document.getElementById('status-dot');
 const elStatusText = document.getElementById('status-text');
@@ -387,6 +734,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const state = await window.api.getInitialState();
     appConfig = state.config;
+    if (appConfig && appConfig.lang) {
+      currentLang = appConfig.lang;
+    }
+    
+    // Apply translations first thing
+    applyTranslations(currentLang);
+
     if (state.ddragonVersion) {
       ddragonVersion = state.ddragonVersion;
     }
@@ -394,7 +748,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       appVersion = state.version;
       const elVersionLabel = document.getElementById('update-version-label');
       if (elVersionLabel) {
-        elVersionLabel.textContent = `Versión actual: v${appVersion}`;
+        elVersionLabel.textContent = currentLang === 'en' ? `Current version: v${appVersion}` : `Versión actual: v${appVersion}`;
       }
     }
     updateConfigUI(appConfig);
@@ -450,10 +804,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.api.closeWindow();
   });
 
+  // Language switcher toggle button listener
+  const elBtnToggleLang = document.getElementById('btn-toggle-lang');
+  if (elBtnToggleLang) {
+    elBtnToggleLang.addEventListener('click', () => {
+      const nextLang = currentLang === 'en' ? 'es' : 'en';
+      sfx.playTick();
+      applyTranslations(nextLang);
+    });
+  }
+
   // Bind connection status pills click events to toggle scan detections directly
   const elLcuPill = document.getElementById('lcu-pill');
   if (elLcuPill) {
-    elLcuPill.title = "Haz clic para activar o desactivar la detección de League of Legends";
+    elLcuPill.title = TRANSLATIONS[currentLang].PILL_LOL_DETECTION;
     elLcuPill.addEventListener('click', () => {
       appConfig.enableLolDetection = !appConfig.enableLolDetection;
       if (elSettingsCheckLolDetection) {
@@ -467,7 +831,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const elValPill = document.getElementById('val-pill');
   if (elValPill) {
-    elValPill.title = "Haz clic para activar o desactivar la detección de Valorant";
+    elValPill.title = TRANSLATIONS[currentLang].PILL_VALORANT_DETECTION;
     elValPill.addEventListener('click', () => {
       appConfig.enableValorantDetection = !appConfig.enableValorantDetection;
       if (elSettingsCheckValorantDetection) {
@@ -523,7 +887,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elBtnBrowseLol.addEventListener('click', async () => {
       sfx.playTick();
       const selected = await window.api.selectPath({
-        title: 'Seleccionar Carpeta o Lockfile de League of Legends',
+        title: TRANSLATIONS[currentLang].BROWSE_LOL_TITLE,
         defaultPath: elInputLolPath.value
       });
       if (selected) {
@@ -541,7 +905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elBtnBrowseVal.addEventListener('click', async () => {
       sfx.playTick();
       const selected = await window.api.selectPath({
-        title: 'Seleccionar Carpeta o Lockfile de Valorant / Riot Client',
+        title: TRANSLATIONS[currentLang].BROWSE_VAL_TITLE,
         defaultPath: elInputValPath.value
       });
       if (selected) {
@@ -895,7 +1259,7 @@ function updatePinnedRoleUI(pinnedRole) {
   const roleLabels = {
     'default': 'default',
     'top': 'TOP',
-    'jungle': 'JUG',
+    'jungle': currentLang === 'en' ? 'JNG' : 'JUG',
     'mid': 'MID',
     'bot': 'BOT',
     'support': 'SUP'
@@ -903,12 +1267,13 @@ function updatePinnedRoleUI(pinnedRole) {
 
   if (pinnedRole && pinnedRole !== 'default') {
     elBtnPinRole.classList.add('pinned');
-    elPinRoleText.textContent = `Fijado: ${roleLabels[pinnedRole] || pinnedRole.toUpperCase()}`;
-    elBtnPinRole.title = `Rol ${pinnedRole.toUpperCase()} fijado. Haz clic para desanclar.`;
+    const label = roleLabels[pinnedRole] || pinnedRole.toUpperCase();
+    elPinRoleText.textContent = `${TRANSLATIONS[currentLang].PINNED_LABEL}: ${label}`;
+    elBtnPinRole.title = TRANSLATIONS[currentLang].PIN_ROLE_BTN_TITLE_PINNED.replace('{role}', pinnedRole.toUpperCase());
   } else {
     elBtnPinRole.classList.remove('pinned');
-    elPinRoleText.textContent = 'Fijar Rol';
-    elBtnPinRole.title = 'Fijar rol seleccionado para que se aplique siempre';
+    elPinRoleText.textContent = TRANSLATIONS[currentLang].PIN_ROLE_BTN_LABEL_UNPINNED;
+    elBtnPinRole.title = TRANSLATIONS[currentLang].PIN_ROLE_BTN_TITLE_UNPINNED;
   }
 }
 
@@ -916,7 +1281,7 @@ function updatePinnedRoleUI(pinnedRole) {
 function updateLcuStatusUI(status) {
   if (appConfig && appConfig.enableLolDetection === false) {
     elStatusDot.className = 'status-dot disconnected';
-    elStatusText.textContent = 'LOL DESACTIVADO';
+    elStatusText.textContent = TRANSLATIONS[currentLang].LOL_DISABLED;
     elLcuPill.style.borderColor = 'rgba(239, 68, 68, 0.15)';
     elLcuPill.style.opacity = '0.55';
     elLcuPill.style.borderStyle = 'dashed';
@@ -928,30 +1293,45 @@ function updateLcuStatusUI(status) {
   elStatusDot.className = 'status-dot ' + status;
 
   if (status === 'connected') {
-    elStatusText.textContent = 'LOL DETECTADO';
+    elStatusText.textContent = TRANSLATIONS[currentLang].LOL_ENABLED_CONNECTED;
     elLcuPill.style.borderColor = 'rgba(16, 185, 129, 0.25)';
   } else if (status === 'scanning') {
-    elStatusText.textContent = 'BUSCANDO CLIENTE...';
+    elStatusText.textContent = TRANSLATIONS[currentLang].LOL_ENABLED_SCANNING;
     elLcuPill.style.borderColor = 'rgba(245, 158, 11, 0.25)';
   } else {
-    elStatusText.textContent = 'DESCONECTADO';
+    elStatusText.textContent = TRANSLATIONS[currentLang].LOL_ENABLED_DISCONNECTED;
     elLcuPill.style.borderColor = 'rgba(255, 255, 255, 0.05)';
   }
 }
 
-// Translate ranks to Spanish
+// Translate ranks to dynamically active language
 const TIER_TRANSLATIONS = {
-  'IRON': 'Hierro',
-  'BRONZE': 'Bronce',
-  'SILVER': 'Plata',
-  'GOLD': 'Oro',
-  'PLATINUM': 'Platino',
-  'EMERALD': 'Esmeralda',
-  'DIAMOND': 'Diamante',
-  'MASTER': 'Maestro',
-  'GRANDMASTER': 'Gran Maestro',
-  'CHALLENGER': 'Aspirante',
-  'UNRANKED': 'Unranked'
+  en: {
+    'IRON': 'Iron',
+    'BRONZE': 'Bronze',
+    'SILVER': 'Silver',
+    'GOLD': 'Gold',
+    'PLATINUM': 'Platinum',
+    'EMERALD': 'Emerald',
+    'DIAMOND': 'Diamond',
+    'MASTER': 'Master',
+    'GRANDMASTER': 'Grandmaster',
+    'CHALLENGER': 'Challenger',
+    'UNRANKED': 'Unranked'
+  },
+  es: {
+    'IRON': 'Hierro',
+    'BRONZE': 'Bronce',
+    'SILVER': 'Plata',
+    'GOLD': 'Oro',
+    'PLATINUM': 'Platino',
+    'EMERALD': 'Esmeralda',
+    'DIAMOND': 'Diamante',
+    'MASTER': 'Maestro',
+    'GRANDMASTER': 'Gran Maestro',
+    'CHALLENGER': 'Aspirante',
+    'UNRANKED': 'Sin clasificar'
+  }
 };
 
 function updatePlayerProfileUI(playerInfo) {
@@ -963,8 +1343,8 @@ function updatePlayerProfileUI(playerInfo) {
           <div class="scan-line"></div>
           <div class="profile-card-content" style="justify-content: center; text-align: center; padding: 12px 16px;">
             <div class="profile-info" style="align-items: center; gap: 4px;">
-              <span class="profile-name pulsing-text" style="color: var(--text-muted); font-size: 13px; font-weight: 700;">🔌 ESPERANDO CONEXIÓN LCU...</span>
-              <span class="profile-tier" style="color: rgba(255, 255, 255, 0.25); font-size: 10px; font-weight: 500; letter-spacing: 0.5px;">Inicia selección de campeones o abre League of Legends</span>
+              <span class="profile-name pulsing-text" style="color: var(--text-muted); font-size: 13px; font-weight: 700;">${TRANSLATIONS[currentLang].WAITING_CONNECTION_LOL}</span>
+              <span class="profile-tier" style="color: rgba(255, 255, 255, 0.25); font-size: 10px; font-weight: 500; letter-spacing: 0.5px;">${TRANSLATIONS[currentLang].WAITING_CONNECTION_LOL_SUB}</span>
             </div>
           </div>
         </div>
@@ -979,18 +1359,18 @@ function updatePlayerProfileUI(playerInfo) {
 
   const rawTier = (playerInfo.tier || 'UNRANKED').toUpperCase();
   const tierClass = rawTier.toLowerCase();
-  const translatedTier = TIER_TRANSLATIONS[rawTier] || rawTier;
+  const translatedTier = TIER_TRANSLATIONS[currentLang][rawTier] || rawTier;
 
   const isApex = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(rawTier);
   const divisionStr = isApex ? '' : ` ${playerInfo.division || ''}`;
   const tierLabel = rawTier === 'UNRANKED' || rawTier === 'NONE'
-    ? 'SIN CLASIFICAR'
+    ? TRANSLATIONS[currentLang].UNRANKED_LABEL
     : `${translatedTier}${divisionStr} (${playerInfo.lp} LP)`;
 
   const totalGames = playerInfo.wins + playerInfo.losses;
   const statsText = totalGames > 0
-    ? `${playerInfo.winrate}% WR - ${totalGames} Partidas`
-    : '0% WR - 0 Partidas';
+    ? `${playerInfo.winrate}% WR - ${totalGames} ${TRANSLATIONS[currentLang].GAMES_LABEL}`
+    : `0% WR - 0 ${TRANSLATIONS[currentLang].GAMES_LABEL}`;
 
   const avatarUrl = `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${playerInfo.profileIconId}.png`;
 
@@ -998,8 +1378,6 @@ function updatePlayerProfileUI(playerInfo) {
   let gameName = (playerInfo.gameName || '').trim();
   let tagLine = (playerInfo.tagLine || '').trim();
   const displayName = (playerInfo.displayName || '').trim();
-
-
 
   // Robust parsing: if gameName or tagLine is missing but displayName contains '#', extract them
   if ((!gameName || !tagLine) && displayName.includes('#')) {
@@ -1024,7 +1402,7 @@ function updatePlayerProfileUI(playerInfo) {
           <img class="profile-avatar" src="${avatarUrl}" alt="Avatar" onerror="if(!this.src.includes('14.10.1')){this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/${playerInfo.profileIconId}.png';}else{this.onerror=null;this.src='https://ddragon.leagueoflegends.com/cdn/14.10.1/img/profileicon/29.png';}">
           <span class="profile-level">${playerInfo.summonerLevel}</span>
         </div>
-        <a class="profile-link-wrapper" href="${opggUrl}" target="_blank" title="Ver perfil en OP.GG">
+        <a class="profile-link-wrapper" href="${opggUrl}" target="_blank" title="${TRANSLATIONS[currentLang].VIEW_OPGG_PROFILE}">
           <div class="profile-info">
             <span class="profile-name">${playerInfo.displayName}</span>
             <div class="rank-badge-row">
@@ -2837,9 +3215,7 @@ async function initActiveUserCounter() {
   const elCounter = document.getElementById('active-user-count');
   if (!elCounter) return;
 
-  // Configuration for the active users presence ping server
-  // NOTE: Change this URL to your deployed server URL (e.g., https://your-app.onrender.com) once hosted!
-  const PING_SERVER_URL = 'http://localhost:3000';
+  const PING_SERVER_URL = 'https://onetricks-client.onrender.com';
 
   // Retrieve or generate a persistent anonymous client ID
   let clientId = localStorage.getItem('onetricks_client_id');
@@ -2858,7 +3234,7 @@ async function initActiveUserCounter() {
         const data = await response.json();
         if (data && typeof data.activeUsers === 'number') {
           usingMockFallback = false;
-          elCounter.textContent = data.activeUsers.toLocaleString('es-ES');
+          elCounter.textContent = data.activeUsers.toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES');
           return;
         }
       }
@@ -2868,7 +3244,7 @@ async function initActiveUserCounter() {
       usingMockFallback = true;
       const delta = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
       simulatedUsers = Math.max(8, simulatedUsers + delta);
-      elCounter.textContent = simulatedUsers.toLocaleString('es-ES');
+      elCounter.textContent = simulatedUsers.toLocaleString(currentLang === 'en' ? 'en-US' : 'es-ES');
     }
   }
 

@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Onetricks Client - Descargar el Motor de Análisis Táctico de Élite</title>
+  <title>Onetricks Client - Download the Elite Tactical Analysis Engine</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Descarga Onetricks Client, el asistente táctico definitivo para League of Legends y Valorant. Importación automática de runas, hechizos y objetos de los mejores OTPs en tiempo real.">
+  <meta name="description" content="Download Onetricks Client, the ultimate tactical assistant for League of Legends and Valorant. Automatic real-time import of runes, spells, and items from the best global OTPs.">
   <meta name="keywords" content="Onetricks Client, Onetricks, League of Legends, Valorant, OTP builds, runas automaticas, descargar onetricks, lol client assistant">
   <meta name="author" content="Triboott">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Onetricks Client - Descargar el Asistente Táctico Definitivo">
-  <meta property="og:description" content="Sincronización en tiempo real de builds, runas y objetos para League of Legends y Valorant. Lleva tu juego al siguiente nivel.">
+  <meta property="og:title" content="Onetricks Client - Download the Ultimate Tactical Assistant">
+  <meta property="og:description" content="Real-time synchronization of builds, runes, and items for League of Legends and Valorant. Take your game to the next level.">
   <meta property="og:image" content="https://raw.githubusercontent.com/Triboott/onetricks-client/main/app_icon.png">
 
   <link rel="icon" type="image/png" href="app_icon.png">
@@ -50,8 +50,11 @@
         <span class="logo-sub">CLIENT</span>
       </a>
       <nav class="nav-links">
-        <a href="#features" class="nav-link"><i class="fa-solid fa-wand-magic-sparkles"></i> Características</a>
-        <a href="#mockup-section" class="nav-link"><i class="fa-solid fa-desktop"></i> Interfaz</a>
+        <a href="#features" class="nav-link" data-translate="NAV_FEATURES"><i class="fa-solid fa-wand-magic-sparkles"></i> Features</a>
+        <a href="#mockup-section" class="nav-link" data-translate="NAV_INTERFACE"><i class="fa-solid fa-desktop"></i> Interface</a>
+        <button id="btn-toggle-lang" class="nav-link lang-toggle-btn" style="background: none; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 6px 12px; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 600; font-size: 13px; transition: var(--transition-fast); margin-right: 4px;">
+          <i class="fa-solid fa-globe"></i> <span>EN</span>
+        </button>
         <a href="https://github.com/Triboott/onetricks-client" target="_blank" class="nav-link github-pill" id="navbar-github-link">
           <i class="fa-brands fa-github"></i> GitHub
         </a>
@@ -62,14 +65,12 @@
   <!-- Hero Section -->
   <section class="hero-section">
     <div class="container hero-container">
-
-      
-      <h1 class="hero-title">
-        EL MOTOR DE ANÁLISIS TÁCTICO DE <span class="gradient-text-accent">ÉLITE</span>
+      <h1 class="hero-title" data-translate="HERO_TITLE">
+        THE ELITE TACTICAL <span class="gradient-text-accent">ANALYSIS</span> ENGINE
       </h1>
       
-      <p class="hero-desc">
-        Abre League of Legends o Valorant y deja que <strong>Onetricks Client</strong> realice la importación automatizada de perfiles, runas óptimas y builds recomendadas de los mejores jugadores <i>one-trick pony</i> mundiales en tiempo real.
+      <p class="hero-desc" data-translate="HERO_DESC">
+        Open League of Legends or Valorant and let <strong>Onetricks Client</strong> handle the automated real-time import of profiles, optimal runes, and recommended builds from the best global <i>one-trick pony</i> players.
       </p>
 
       <div class="download-container">
@@ -78,8 +79,8 @@
           <div class="btn-content">
             <span class="btn-icon"><i class="fa-solid fa-download"></i></span>
             <div class="btn-text">
-              <span class="btn-main-txt">DESCARGAR PARA WINDOWS</span>
-              <span class="btn-sub-txt" id="download-version-badge">Buscando última versión...</span>
+              <span class="btn-main-txt" data-translate="BTN_DOWNLOAD_MAIN">DOWNLOAD FOR WINDOWS</span>
+              <span class="btn-sub-txt" id="download-version-badge" data-translate="BTN_DOWNLOAD_SUB">Checking latest version...</span>
             </div>
           </div>
           <div class="btn-glow"></div>
@@ -87,8 +88,8 @@
         
         <!-- Alternate and Details Info -->
         <div class="download-meta">
-          <span class="meta-item" id="file-size-badge"><i class="fa-solid fa-circle-info"></i> Comprobando tamaño de archivo...</span>
-          <span class="meta-item" id="total-downloads-badge"><i class="fa-solid fa-cloud-arrow-down"></i> Descargas totales: Cargando...</span>
+          <span class="meta-item" id="file-size-badge" data-translate="META_SIZE"><i class="fa-solid fa-circle-info"></i> Checking file size...</span>
+          <span class="meta-item" id="total-downloads-badge" data-translate="META_DOWNLOADS"><i class="fa-solid fa-cloud-arrow-down"></i> Total downloads: Loading...</span>
         </div>
       </div>
     </div>
@@ -98,8 +99,8 @@
   <section class="mockup-section" id="mockup-section">
     <div class="container">
       <div class="section-header text-center">
-        <h2 class="section-title">Diseñado para la Victoria</h2>
-        <p class="section-subtitle">Una interfaz ultraligera, futurista y optimizada para integrarse a la perfección durante tus partidas.</p>
+        <h2 class="section-title" data-translate="MOCKUP_SEC_TITLE">Designed for Victory</h2>
+        <p class="section-subtitle" data-translate="MOCKUP_SEC_SUBTITLE">An ultra-lightweight, futuristic, and optimized interface designed to integrate seamlessly during your matches.</p>
       </div>
 
       <!-- App Desktop Shell Mockup -->
@@ -114,11 +115,11 @@
             <div class="mock-header-controls">
               <div class="mock-pill active-lcu">
                 <span class="status-dot-pulse connected"></span>
-                <span>LOL CONECTADO</span>
+                <span data-translate="MOCKUP_LOL_CONNECTED">LOL CONNECTED</span>
               </div>
               <div class="mock-pill active-val">
                 <span class="status-dot-pulse connected"></span>
-                <span>VALORANT ACTIVO</span>
+                <span data-translate="MOCKUP_VAL_ACTIVE">VALORANT ACTIVE</span>
               </div>
               <div class="mock-window-btn"><i class="fa-solid fa-minus"></i></div>
               <div class="mock-window-btn close-btn"><i class="fa-solid fa-xmark"></i></div>
@@ -135,26 +136,26 @@
                 <div class="welcome-badges-row">
                   <div class="system-status-badge">
                     <span class="pulse-status-dot"></span>
-                    Sincronización Activa
+                    <span data-translate="MOCKUP_SYNC_ACTIVE">Active Sync</span>
                   </div>
                   <div class="user-counter-badge">
                     <span class="pulse-blue-dot"></span>
-                    <span id="mockup-active-user-count">Cargando...</span> usuarios activos
+                    <span id="mockup-active-user-count">Loading...</span> <span data-translate="MOCKUP_ACTIVE_USERS">active users</span>
                   </div>
                 </div>
                 <h1 class="welcome-title">
                   ONETRICKS <span class="gradient-text-accent">CLIENT</span>
                 </h1>
-                <p class="welcome-desc">
-                  El motor de análisis táctico de élite. Abre League of Legends o Valorant para comenzar la importación automatizada de perfiles y builds de One-tricks mundiales en tiempo real.
+                <p class="welcome-desc" data-translate="WELCOME_DESC">
+                  The elite tactical analysis engine. Open League of Legends or Valorant to begin the automated real-time import of profiles and builds from global One-tricks.
                 </p>
               </div>
 
               <!-- Right Side Profiles Dock -->
               <div class="welcome-profiles-dock">
                 <div class="dock-header">
-                  <span class="dock-title">PERFILES ENLAZADOS</span>
-                  <span class="dock-desc">Detección automática activa</span>
+                  <span class="dock-title" data-translate="MOCKUP_LINKED_PROFILES">LINKED PROFILES</span>
+                  <span class="dock-desc" data-translate="MOCKUP_AUTO_DETECTION">Automatic detection active</span>
                 </div>
                 
                 <!-- Mockup Challenger Profile Card -->
@@ -168,7 +169,7 @@
                     <div class="profile-info">
                       <span class="profile-name">Triboott OTP #EUW</span>
                       <div class="rank-badge-row">
-                        <span class="profile-tier">Retador (Challenger)</span>
+                        <span class="profile-tier" data-translate="MOCKUP_CHALLENGER">Challenger</span>
                       </div>
                       <span class="profile-stats">LP: 1,420 | Winrate: 62.4%</span>
                     </div>
@@ -189,7 +190,7 @@
                     <div class="profile-info">
                       <span class="profile-name">RadiantOne #VAL</span>
                       <div class="rank-badge-row">
-                        <span class="profile-tier" style="color: #b3ecff;">Diamante III</span>
+                        <span class="profile-tier" style="color: #b3ecff;" data-translate="MOCKUP_DIAMOND_III">Diamond III</span>
                       </div>
                       <span class="profile-stats">K/D: 1.45 | Winrate: 58.7%</span>
                     </div>
@@ -211,8 +212,8 @@
   <section class="features-section" id="features">
     <div class="container">
       <div class="section-header text-center">
-        <h2 class="section-title">Características Principales</h2>
-        <p class="section-subtitle">Onetricks Client trabaja en segundo plano para ofrecerte las mejores ventajas competitivas.</p>
+        <h2 class="section-title" data-translate="FEATURES_SEC_TITLE">Key Features</h2>
+        <p class="section-subtitle" data-translate="FEATURES_SEC_SUBTITLE">Onetricks Client works in the background to provide you with the best competitive advantages.</p>
       </div>
 
       <div class="features-grid">
@@ -221,8 +222,8 @@
           <div class="feature-icon-wrapper">
             <i class="fa-solid fa-bolt-lightning"></i>
           </div>
-          <h3 class="feature-title">Importación Instantánea</h3>
-          <p class="feature-desc">Aplica runas óptimas, hechizos de invocador de alta prioridad y sets de objetos personalizados en tu tienda del juego al instante con un solo clic o de forma automática.</p>
+          <h3 class="feature-title" data-translate="FEATURE1_TITLE">Instant Import</h3>
+          <p class="feature-desc" data-translate="FEATURE1_DESC">Apply optimal runes, high-priority summoner spells, and custom item sets directly in your in-game shop instantly with a single click or automatically.</p>
         </div>
 
         <!-- Feature 2 -->
@@ -230,8 +231,8 @@
           <div class="feature-icon-wrapper">
             <i class="fa-solid fa-magnifying-glass-chart"></i>
           </div>
-          <h3 class="feature-title">Datos de OTP Mundiales</h3>
-          <p class="feature-desc">Accede a las estadísticas e importaciones exclusivas de los mejores jugadores "One Trick" mundiales, adaptando sus builds ganadoras y configuraciones al meta actual.</p>
+          <h3 class="feature-title" data-translate="FEATURE2_TITLE">Global OTP Data</h3>
+          <p class="feature-desc" data-translate="FEATURE2_DESC">Access exclusive stats and imports from the best "One Trick" players in the world, adapting their winning builds and setups to the current meta.</p>
         </div>
 
         <!-- Feature 3 -->
@@ -239,8 +240,8 @@
           <div class="feature-icon-wrapper">
             <i class="fa-solid fa-gamepad"></i>
           </div>
-          <h3 class="feature-title">Soporte Multijuego Nivel Élite</h3>
-          <p class="feature-desc">Detección simultánea y automatizada para League of Legends y Valorant. La aplicación cambia de contexto de forma inteligente e inmediata según el juego activo.</p>
+          <h3 class="feature-title" data-translate="FEATURE3_TITLE">Elite Multi-Game Support</h3>
+          <p class="feature-desc" data-translate="FEATURE3_DESC">Simultaneous and automated detection for League of Legends and Valorant. The application switches context intelligently and immediately based on the active game.</p>
         </div>
       </div>
     </div>
@@ -249,9 +250,9 @@
   <!-- Installation Steps or Call to Action Footer -->
   <section class="cta-section">
     <div class="container text-center">
-      <h2 class="cta-title">¿Listo para dominar la Grieta y el Servidor?</h2>
-      <p class="cta-subtitle">Instalación en un clic, actualizaciones automáticas en segundo plano y rendimiento ultraoptimizado.</p>
-      <a href="#btn-download" class="btn btn-secondary-download"><i class="fa-solid fa-angle-up"></i> Volver arriba para descargar</a>
+      <h2 class="cta-title" data-translate="CTA_TITLE">Ready to dominate the Rift and the Server?</h2>
+      <p class="cta-subtitle" data-translate="CTA_SUBTITLE">One-click installation, background automatic updates, and ultra-optimized performance.</p>
+      <a href="#btn-download" class="btn btn-secondary-download" data-translate="CTA_BTN"><i class="fa-solid fa-angle-up"></i> Back to top to download</a>
     </div>
   </section>
 
@@ -263,22 +264,22 @@
           <span class="logo-accent">ONETRICKS</span>
           <span class="logo-sub">CLIENT</span>
         </a>
-        <p class="footer-legal">Onetricks Client no está respaldado por Riot Games y no refleja las opiniones de Riot Games o de cualquier persona oficialmente involucrada en la producción o administración de las propiedades de Riot Games.</p>
+        <p class="footer-legal" data-translate="FOOTER_LEGAL">Onetricks Client is not endorsed by Riot Games and does not reflect the views of Riot Games or anyone officially involved in the production or management of Riot Games properties.</p>
       </div>
       <div class="footer-links">
         <div class="footer-link-group">
-          <h4>Proyecto</h4>
-          <a href="https://github.com/Triboott/onetricks-client" target="_blank"><i class="fa-brands fa-github"></i> Repositorio</a>
-          <a href="https://github.com/Triboott/onetricks-client/releases" target="_blank"><i class="fa-solid fa-tags"></i> Versiones</a>
+          <h4 data-translate="FOOTER_PROJECT">Project</h4>
+          <a href="https://github.com/Triboott/onetricks-client" target="_blank" data-translate="FOOTER_REPO"><i class="fa-brands fa-github"></i> Repository</a>
+          <a href="https://github.com/Triboott/onetricks-client/releases" target="_blank" data-translate="FOOTER_RELEASES"><i class="fa-solid fa-tags"></i> Versions</a>
         </div>
         <div class="footer-link-group">
-          <h4>Enlaces Oficiales</h4>
+          <h4 data-translate="FOOTER_OFFICIAL_LINKS">Official Links</h4>
           <a href="https://onetricks.gg" target="_blank"><i class="fa-solid fa-globe"></i> Onetricks.gg</a>
         </div>
       </div>
     </div>
     <div class="footer-bottom text-center">
-      <p>&copy; 2026 Onetricks Client. Desarrollado por <a href="https://github.com/Triboott" target="_blank">Triboot</a> y <strong>ZeroBRR on Top</strong>.</p>
+      <p data-translate="FOOTER_COPYRIGHT">&copy; 2026 Onetricks Client. Developed by <a href="https://github.com/Triboott" target="_blank">Triboot</a> and <strong>ZeroBRR on Top</strong>.</p>
     </div>
   </footer>
 

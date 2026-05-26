@@ -44,7 +44,8 @@ let config = {
   enableLolDetection: true,
   enableValorantDetection: true,
   zoomFactor: 1.0,
-  enableLowPerf: false
+  enableLowPerf: false,
+  lang: 'en'
 };
 
 // Global application state
@@ -418,9 +419,26 @@ function createTray() {
   const iconPath = path.join(__dirname, 'tray_icon.png');
   tray = new Tray(iconPath);
 
+  rebuildTrayMenu();
+
+  // Double click tray icon to restore application window
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
+function rebuildTrayMenu() {
+  if (!tray) return;
+  const isEn = config.lang === 'en';
+  const showLabel = isEn ? 'Show Onetricks' : 'Mostrar Onetricks';
+  const quitLabel = isEn ? 'Quit' : 'Salir';
+
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Mostrar Onetricks',
+      label: showLabel,
       click: () => {
         if (mainWindow) {
           mainWindow.show();
@@ -430,7 +448,7 @@ function createTray() {
     },
     { type: 'separator' },
     {
-      label: 'Salir',
+      label: quitLabel,
       click: () => {
         isQuitting = true;
         app.quit();
@@ -440,14 +458,6 @@ function createTray() {
 
   tray.setToolTip('Onetricks Client');
   tray.setContextMenu(contextMenu);
-
-  // Double click tray icon to restore application window
-  tray.on('double-click', () => {
-    if (mainWindow) {
-      mainWindow.show();
-      mainWindow.focus();
-    }
-  });
 }
 
 // ==========================================================================
@@ -967,11 +977,16 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf, lang }) => {
   const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
   const lolDetectionChanged = (enableLolDetection !== undefined && enableLolDetection !== config.enableLolDetection);
   const valDetectionChanged = (enableValorantDetection !== undefined && enableValorantDetection !== config.enableValorantDetection);
   const zoomChanged = (zoomFactor !== undefined && zoomFactor !== config.zoomFactor);
+
+  if (lang !== undefined && lang !== config.lang) {
+    config.lang = lang;
+    rebuildTrayMenu();
+  }
 
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
