@@ -1,0 +1,13 @@
+{
+  "name": "onetricks-counter-server",
+  "version": "1.0.0",
+  "description": "Servidor de pings en tiempo real para contar usuarios activos de Onetricks Client",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

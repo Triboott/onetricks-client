@@ -2837,50 +2837,46 @@ async function initActiveUserCounter() {
   const elCounter = document.getElementById('active-user-count');
   if (!elCounter) return;
 
-  const DEFAULT_ACTIVE_USERS = 138;
-  let activeUsers = DEFAULT_ACTIVE_USERS;
+  // Configuration for the active users presence ping server
+  // NOTE: Change this URL to your deployed server URL (e.g., https://your-app.onrender.com) once hosted!
+  const PING_SERVER_URL = 'http://localhost:3000';
 
-  try {
-    // Fetch all releases from Triboott/onetricks-client
-    const response = await fetch('https://api.github.com/repos/Triboott/onetricks-client/releases');
-    if (response.ok) {
-      const data = await response.json();
-      let totalDownloads = 0;
-      data.forEach(release => {
-        if (release.assets) {
-          release.assets.forEach(asset => {
-            if (asset.name.endsWith('.exe')) {
-              totalDownloads += (asset.download_count || 0);
-            }
-          });
-        }
-      });
-
-      if (totalDownloads > 0) {
-        // Calculate a realistic active user count: e.g. 7% to 9% of total downloads
-        const ratio = 0.07 + Math.random() * 0.02;
-        activeUsers = Math.floor(totalDownloads * ratio);
-        // Ensure at least some baseline
-        activeUsers = Math.max(25, activeUsers);
-        console.log(`[COUNTER] Calculated active users: ${activeUsers} based on ${totalDownloads} total downloads.`);
-      }
-    }
-  } catch (err) {
-    console.warn('[COUNTER] Failed to fetch total downloads, using baseline active count:', err.message);
+  // Retrieve or generate a persistent anonymous client ID
+  let clientId = localStorage.getItem('onetricks_client_id');
+  if (!clientId) {
+    clientId = 'client_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    localStorage.setItem('onetricks_client_id', clientId);
   }
 
-  // Display initial count
-  elCounter.textContent = activeUsers.toLocaleString('es-ES');
+  let usingMockFallback = false;
+  let simulatedUsers = 12 + Math.floor(Math.random() * 8); // Fallback mock baseline
 
-  // Start smooth real-time fluctuation interval every 5 seconds
-  setInterval(() => {
-    const elCounterUpdate = document.getElementById('active-user-count');
-    if (!elCounterUpdate) return;
+  async function sendPing() {
+    try {
+      const response = await fetch(`${PING_SERVER_URL}/ping?id=${clientId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && typeof data.activeUsers === 'number') {
+          usingMockFallback = false;
+          elCounter.textContent = data.activeUsers.toLocaleString('es-ES');
+          return;
+        }
+      }
+      throw new Error("Invalid response");
+    } catch (err) {
+      // If the ping fails (e.g. server not deployed or offline), we use our fallback simulation
+      usingMockFallback = true;
+      const delta = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+      simulatedUsers = Math.max(8, simulatedUsers + delta);
+      elCounter.textContent = simulatedUsers.toLocaleString('es-ES');
+    }
+  }
 
-    // Small natural fluctuations (+/- 3 users)
-    const delta = Math.floor(Math.random() * 7) - 3; // -3, -2, -1, 0, 1, 2, 3
-    activeUsers = Math.max(15, activeUsers + delta);
+  // Send first ping immediately
+  await sendPing();
 
-    elCounterUpdate.textContent = activeUsers.toLocaleString('es-ES');
-  }, 5000);
+  // Periodic ping interval every 30 seconds
+  setInterval(async () => {
+    await sendPing();
+  }, 30000);
 }

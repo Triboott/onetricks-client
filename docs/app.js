@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         useFallbackLink(version);
       }
 
-      // Calculate total downloads across all releases for active users baseline
+      // Calculate total downloads across all releases
       let totalDownloads = 0;
       releases.forEach(release => {
         if (release.assets) {
@@ -65,36 +65,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      initMockupUserCounter(totalDownloads);
+      // Update total downloads badge
+      const downloadsBadge = document.getElementById('total-downloads-badge');
+      if (downloadsBadge) {
+        downloadsBadge.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Descargas totales: ${totalDownloads.toLocaleString('es-ES')}`;
+      }
+
+      initMockupUserCounter();
     } catch (error) {
       console.warn('[API] Error fetching releases from GitHub API, using fallback:', error.message);
       useFallbackLink(FALLBACK_VERSION);
-      initMockupUserCounter(0);
+      
+      const downloadsBadge = document.getElementById('total-downloads-badge');
+      if (downloadsBadge) {
+        downloadsBadge.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Descargas totales: 1.420`;
+      }
+      
+      initMockupUserCounter();
     }
   }
 
   // Active user counter logic for the website mockup screen
-  function initMockupUserCounter(totalDownloads) {
+  async function initMockupUserCounter() {
     const elMockupCounter = document.getElementById('mockup-active-user-count');
     if (!elMockupCounter) return;
 
-    let activeUsers = 138; // Default fallback baseline
-    if (totalDownloads > 0) {
-      const ratio = 0.07 + Math.random() * 0.02;
-      activeUsers = Math.floor(totalDownloads * ratio);
-      activeUsers = Math.max(25, activeUsers);
+    // NOTE: Change this to your deployed server URL once hosted!
+    const PING_SERVER_URL = 'http://localhost:3000';
+    let simulatedUsers = 12 + Math.floor(Math.random() * 8);
+
+    async function fetchRealActiveCount() {
+      try {
+        const res = await fetch(`${PING_SERVER_URL}/stats`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.activeUsers === 'number') {
+            elMockupCounter.textContent = data.activeUsers.toLocaleString('es-ES');
+            return;
+          }
+        }
+        throw new Error("Invalid stats");
+      } catch (err) {
+        // Fallback if counter server is offline
+        const delta = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+        simulatedUsers = Math.max(8, simulatedUsers + delta);
+        elMockupCounter.textContent = simulatedUsers.toLocaleString('es-ES');
+      }
     }
 
-    elMockupCounter.textContent = activeUsers.toLocaleString('es-ES');
+    await fetchRealActiveCount();
 
-    // Fluctuate count smoothly every 5 seconds
-    setInterval(() => {
-      const elUpdate = document.getElementById('mockup-active-user-count');
-      if (!elUpdate) return;
-      const delta = Math.floor(Math.random() * 7) - 3; // -3, -2, -1, 0, 1, 2, 3
-      activeUsers = Math.max(15, activeUsers + delta);
-      elUpdate.textContent = activeUsers.toLocaleString('es-ES');
-    }, 5000);
+    // Check stats every 30 seconds
+    setInterval(async () => {
+      await fetchRealActiveCount();
+    }, 30000);
   }
 
   // Fallback setup helper
