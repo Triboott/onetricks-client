@@ -1,0 +1,307 @@
+:root {
+  --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.7);
+  --status-green: #00ffaa; /* Vibrant neon green for ally lead */
+  --status-red: #ff4a4a;   /* Vibrant neon red for enemy lead */
+  
+  --font-display: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Scoreboard spacing calibration variables - perfect for standard LoL HUD scoreboard! */
+  --header-top: 21.8vh;  /* Aligns perfectly inside the scoreboard's header gap, below dragon souls and above kills tracker */
+  --overlay-top: 45.4%;  /* Vertically centers the vertical column perfectly on the third scoreboard row */
+  --row-height: 8.6vh;   /* Exact height of each player row in scoreboard (8.6% of screen height) */
+  --row-gap: 0px;        /* Seamless row transitions */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: transparent;
+  color: #fff;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  user-select: none;
+  pointer-events: none; /* Fully click-through safety */
+  
+  /* Keyboard / independent calibration offsets */
+  --header-offset-x: 0px;
+  --header-offset-y: 0px;
+  --row0-offset-x: 0px;
+  --row0-offset-y: 0px;
+  --row1-offset-x: 0px;
+  --row1-offset-y: 0px;
+  --row2-offset-x: 0px;
+  --row2-offset-y: 0px;
+  --row3-offset-x: 0px;
+  --row3-offset-y: 0px;
+  --row4-offset-x: 0px;
+  --row4-offset-y: 0px;
+}
+
+/* ==========================================================================
+   COMPACT TEAM GOLD HEADER WIDGET
+   ========================================================================== */
+.team-comparison-header {
+  position: absolute;
+  top: var(--header-top);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 240px; /* Highly compact, sits exactly in the scoreboard header gap */
+  padding: 2px 10px;
+  background: rgba(10, 12, 16, 0.92);
+  border: 1px solid rgba(200, 155, 60, 0.25); /* Bronze/Gold LoL styled border */
+  box-shadow: var(--shadow-premium);
+  border-radius: 4px;
+  height: 24px;
+  opacity: 0;
+  animation: fadeIn 0.15s ease-out forwards;
+  margin-left: var(--header-offset-x);
+  margin-top: var(--header-offset-y);
+}
+
+.gold-icon {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.team-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.team-gold {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.blue-team .team-gold {
+  color: #00bfff; /* Blue team */
+}
+
+.red-team .team-gold {
+  color: #f59e0b; /* Red team */
+}
+
+/* Difference Badge in Header */
+.header-difference-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 3px;
+  min-width: 50px;
+  height: 16px;
+}
+
+.diff-arrow {
+  font-size: 8px;
+}
+
+.diff-val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 10px;
+  color: #ffffff;
+}
+
+/* Color codes for header difference */
+.header-difference-badge.even .diff-val {
+  color: #94a3b8;
+}
+
+.header-difference-badge.allies-ahead {
+  background: rgba(0, 255, 170, 0.15);
+  border: 0.5px solid rgba(0, 255, 170, 0.3);
+}
+
+.header-difference-badge.allies-ahead .diff-arrow,
+.header-difference-badge.allies-ahead .diff-val {
+  color: var(--status-green);
+  text-shadow: 0 0 6px rgba(0, 255, 170, 0.4);
+}
+
+.header-difference-badge.enemies-ahead {
+  background: rgba(255, 74, 74, 0.15);
+  border: 0.5px solid rgba(255, 74, 74, 0.3);
+}
+
+.header-difference-badge.enemies-ahead .diff-arrow,
+.header-difference-badge.enemies-ahead .diff-val {
+  color: var(--status-red);
+  text-shadow: 0 0 6px rgba(255, 74, 74, 0.4);
+}
+
+/* ==========================================================================
+   VERTICAL SCOREBOARD GAP MATCHUPS COLUMN
+   ========================================================================== */
+.matchups-vertical-column {
+  position: absolute;
+  top: var(--overlay-top);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  width: 100%;
+  max-width: 32px; /* Super narrow to fit exactly on the scoreboard divider line */
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+#matchup-row-0 {
+  margin-left: var(--row0-offset-x);
+  margin-top: var(--row0-offset-y);
+}
+#matchup-row-1 {
+  margin-left: var(--row1-offset-x);
+  margin-top: var(--row1-offset-y);
+}
+#matchup-row-2 {
+  margin-left: var(--row2-offset-x);
+  margin-top: var(--row2-offset-y);
+}
+#matchup-row-3 {
+  margin-left: var(--row3-offset-x);
+  margin-top: var(--row3-offset-y);
+}
+#matchup-row-4 {
+  margin-left: var(--row4-offset-x);
+  margin-top: var(--row4-offset-y);
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.matchup-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--row-height);
+  width: 100%;
+}
+
+/* Scoreboard-integrated Diamond Badge */
+.matchup-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  position: relative;
+}
+
+.indicator-diamond {
+  width: 15px;
+  height: 15px;
+  background: rgba(12, 14, 18, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 2px;
+}
+
+.indicator-arrow {
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 800;
+  transform: rotate(-45deg); /* Un-rotate arrow text so it points left/right perfectly */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.indicator-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 9px;
+  text-align: center;
+  letter-spacing: -0.2px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Dynamic State Colors (Emerald / Crimson / Slate) */
+.matchup-indicator.even .indicator-diamond {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.matchup-indicator.even .indicator-arrow,
+.matchup-indicator.even .indicator-value {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.matchup-indicator.ahead .indicator-diamond {
+  border-color: var(--status-green);
+  box-shadow: 0 0 8px rgba(0, 255, 170, 0.3);
+}
+
+.matchup-indicator.ahead .indicator-arrow,
+.matchup-indicator.ahead .indicator-value {
+  color: var(--status-green);
+  text-shadow: 0 0 6px rgba(0, 255, 170, 0.4);
+}
+
+.matchup-indicator.behind .indicator-diamond {
+  border-color: var(--status-red);
+  box-shadow: 0 0 8px rgba(255, 74, 74, 0.3);
+}
+
+.matchup-indicator.behind .indicator-arrow,
+.matchup-indicator.behind .indicator-value {
+  color: var(--status-red);
+  text-shadow: 0 0 6px rgba(255, 74, 74, 0.4);
+}
+
+/* Enable selective mouse pointer events and drag-and-drop feedback */
+.team-comparison-header,
+.matchup-indicator {
+  pointer-events: auto !important; /* Enable hover & click tracking */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  border-radius: 4px;
+}
+
+.team-comparison-header:hover,
+.matchup-indicator:hover {
+  outline: 1.5px dashed rgba(200, 155, 60, 0.7) !important;
+  cursor: move !important;
+  box-shadow: 0 0 10px rgba(200, 155, 60, 0.4) !important;
+}
+
+/* Keyboard selected element styling */
+.team-comparison-header.selected,
+.matchup-indicator.selected {
+  outline: 1.5px dashed rgba(200, 155, 60, 0.9) !important;
+  box-shadow: 0 0 15px rgba(200, 155, 60, 0.6) !important;
+  animation: selectedPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes selectedPulse {
+  0% { opacity: 0.95; }
+  50% { opacity: 0.65; }
+  100% { opacity: 0.95; }
+}

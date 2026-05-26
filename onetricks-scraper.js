@@ -186,6 +186,7 @@ class OnetricksScraper {
     this.perksMap = {}; // id -> { name, icon } mapping
     this.summonersDict = {}; // name -> id mapping
     this.spellsMap = {}; // id -> { name, icon } mapping
+    this.itemsMap = {}; // id -> { name, gold } mapping
     this.stylesDict = {
       'Precision': 8000,
       'Domination': 8100,
@@ -214,11 +215,12 @@ class OnetricksScraper {
         }
       }
 
-      // 2. Fetch Champion list, Runes, and Spells to populate dictionaries
+      // 2. Fetch Champion list, Runes, Spells, and Items to populate dictionaries
       await Promise.all([
         this.loadChampions(),
         this.loadRunes(),
-        this.loadSummoners()
+        this.loadSummoners(),
+        this.loadItems()
       ]);
 
       console.log('Static Data Dragon assets loaded successfully.');
@@ -313,6 +315,25 @@ class OnetricksScraper {
       }
     } catch (e) {
       console.error('Error loading summoners dict:', e);
+    }
+  }
+
+  async loadItems() {
+    try {
+      const data = await this.getDDragonJson(`cdn/${this.ddragonVersion}/data/es_ES/item.json`, 'item.json');
+      this.itemsMap = {};
+      if (data && data.data) {
+        Object.keys(data.data).forEach(id => {
+          const item = data.data[id];
+          this.itemsMap[id] = {
+            name: item.name,
+            gold: item.gold ? item.gold.total : 0
+          };
+        });
+      }
+      console.log(`[SCRAPER] Loaded ${Object.keys(this.itemsMap).length} items from DDragon.`);
+    } catch (e) {
+      console.error('Error loading items dict:', e);
     }
   }
 

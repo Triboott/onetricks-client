@@ -288,6 +288,8 @@ const TRANSLATIONS = {
     SETTING_LOL_DETECTION_TITLE: "Enable League of Legends Detection",
     SETTING_LOL_DETECTION_DESC: "Automatically detects and imports data when you play League of Legends.",
     SETTING_VAL_DETECTION_DESC: "Automatically detects and displays profiles and ranks in real-time when you play Valorant.",
+    SETTING_GOLD_OVERLAY_TITLE: "Gold Overlay (Tab Scoreboard)",
+    SETTING_GOLD_OVERLAY_DESC: "Shows total spent gold difference overlay when you press the TAB key in-game (100% compliant with Riot policies).",
     SETTING_LOW_PERF_TITLE: "CPU Saving / Low Performance Mode",
     SETTING_LOW_PERF_DESC: "Disables animations, transitions, and glowing backgrounds when the game is active to save CPU and RAM.",
     SETTING_ZOOM_TITLE: "Application Zoom",
@@ -422,6 +424,8 @@ const TRANSLATIONS = {
     SETTING_LOL_DETECTION_DESC: "Detecta e importa datos automáticamente cuando juegas a League of Legends.",
     SETTING_VAL_DETECTION_TITLE: "Activar Detección de Valorant",
     SETTING_VAL_DETECTION_DESC: "Detecta y muestra perfiles y rangos automáticamente en tiempo real cuando juegas a Valorant.",
+    SETTING_GOLD_OVERLAY_TITLE: "Superposición de Oro (Tabulador)",
+    SETTING_GOLD_OVERLAY_DESC: "Muestra la diferencia de oro total y por rol al mantener pulsado el TABULADOR en partida (100% permitido por Riot).",
     SETTING_LOW_PERF_TITLE: "Ahorro de CPU / Modo de Bajo Rendimiento",
     SETTING_LOW_PERF_DESC: "Desactiva las animaciones, transiciones y brillos de fondo cuando la partida está activa para ahorrar CPU y RAM.",
     SETTING_ZOOM_TITLE: "Zoom de la Aplicación",
@@ -575,7 +579,8 @@ function applyTranslations(lang) {
       enableLolDetection: appConfig.enableLolDetection,
       enableValorantDetection: appConfig.enableValorantDetection,
       enableLowPerf: appConfig.enableLowPerf,
-      lang: lang
+      lang: lang,
+      enableGoldOverlay: appConfig.enableGoldOverlay
     });
   }
 }
@@ -659,6 +664,7 @@ const elSettingsCheckStartLogin = document.getElementById('settings-check-start-
 const elSettingsCheckSounds = document.getElementById('settings-check-sounds');
 const elSettingsCheckLolDetection = document.getElementById('settings-check-lol-detection');
 const elSettingsCheckValorantDetection = document.getElementById('settings-check-valorant-detection');
+const elSettingsCheckGoldOverlay = document.getElementById('settings-check-gold-overlay');
 const elSettingsCheckLowPerf = document.getElementById('settings-check-low-perf');
 const elBtnZoomOut = document.getElementById('btn-zoom-out');
 const elBtnZoomIn = document.getElementById('btn-zoom-in');
@@ -947,6 +953,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     appConfig.enableSounds = elSettingsCheckSounds.checked;
     appConfig.enableLolDetection = elSettingsCheckLolDetection.checked;
     appConfig.enableValorantDetection = elSettingsCheckValorantDetection.checked;
+    if (elSettingsCheckGoldOverlay) {
+      appConfig.enableGoldOverlay = elSettingsCheckGoldOverlay.checked;
+    }
     if (elSettingsCheckLowPerf) {
       appConfig.enableLowPerf = elSettingsCheckLowPerf.checked;
     }
@@ -973,7 +982,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       enableSounds: appConfig.enableSounds,
       enableLolDetection: appConfig.enableLolDetection,
       enableValorantDetection: appConfig.enableValorantDetection,
-      enableLowPerf: appConfig.enableLowPerf
+      enableLowPerf: appConfig.enableLowPerf,
+      enableGoldOverlay: appConfig.enableGoldOverlay
     });
 
     // If activeScrapedData is loaded and any of the settings transitioned from OFF to ON, apply directly!
@@ -1031,6 +1041,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   elSettingsCheckSounds.addEventListener('change', handleToggleChange);
   elSettingsCheckLolDetection.addEventListener('change', handleToggleChange);
   elSettingsCheckValorantDetection.addEventListener('change', handleToggleChange);
+  if (elSettingsCheckGoldOverlay) {
+    elSettingsCheckGoldOverlay.addEventListener('change', handleToggleChange);
+  }
   if (elSettingsCheckLowPerf) {
     elSettingsCheckLowPerf.addEventListener('change', handleToggleChange);
   }
@@ -1057,7 +1070,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           enableLolDetection: appConfig.enableLolDetection,
           enableValorantDetection: appConfig.enableValorantDetection,
           zoomFactor: nextZoom,
-          enableLowPerf: appConfig.enableLowPerf
+          enableLowPerf: appConfig.enableLowPerf,
+          enableGoldOverlay: appConfig.enableGoldOverlay
         });
       }
     });
@@ -1085,7 +1099,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           enableLolDetection: appConfig.enableLolDetection,
           enableValorantDetection: appConfig.enableValorantDetection,
           zoomFactor: nextZoom,
-          enableLowPerf: appConfig.enableLowPerf
+          enableLowPerf: appConfig.enableLowPerf,
+          enableGoldOverlay: appConfig.enableGoldOverlay
         });
       }
     });
@@ -1225,6 +1240,9 @@ function updateConfigUI(config) {
   elSettingsCheckSounds.checked = config.enableSounds !== false;
   elSettingsCheckLolDetection.checked = config.enableLolDetection !== false;
   elSettingsCheckValorantDetection.checked = config.enableValorantDetection !== false;
+  if (elSettingsCheckGoldOverlay) {
+    elSettingsCheckGoldOverlay.checked = config.enableGoldOverlay !== false;
+  }
   if (elSettingsCheckLowPerf) {
     elSettingsCheckLowPerf.checked = config.enableLowPerf === true;
   }

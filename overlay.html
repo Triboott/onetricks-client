@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Onetricks Scoreboard Gold Overlay</title>
+  <!-- Google Fonts Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Outfit:wght@800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <!-- Highly Compact Scoreboard Header Gold Widget -->
+  <div class="team-comparison-header" id="team-header">
+    <div class="team-info blue-team">
+      <span class="gold-icon">🪙</span>
+      <span class="team-gold" id="blue-gold-lbl">0</span>
+    </div>
+    
+    <div class="header-difference-badge" id="header-diff-badge">
+      <span id="header-diff-arrow" class="diff-arrow"></span>
+      <span id="header-diff-val" class="diff-val">0</span>
+    </div>
+    
+    <div class="team-info red-team">
+      <span class="team-gold" id="red-gold-lbl">0</span>
+      <span class="gold-icon">🪙</span>
+    </div>
+  </div>
+
+  <!-- Vertical Matchups Column (Centered exactly on the divider line) -->
+  <div class="matchups-vertical-column" id="matchups-column">
+    <!-- Generated dynamically in javascript -->
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const blueGoldLbl = document.getElementById('blue-gold-lbl');
+    const redGoldLbl = document.getElementById('red-gold-lbl');
+    const headerDiffBadge = document.getElementById('header-diff-badge');
+    const headerDiffArrow = document.getElementById('header-diff-arrow');
+    const headerDiffVal = document.getElementById('header-diff-val');
+    const matchupsColumn = document.getElementById('matchups-column');
+
+    const formatGold = (amount) => {
+      // Return raw amount if small, or formatted k
+      if (amount >= 1000) {
+        return (amount / 1000).toFixed(1) + 'k';
+      }
+      return amount;
+    };
+
+    ipcRenderer.on('update-gold', (event, data) => {
+      if (!data) return;
+
+      // Update team totals (raw numbers look more native)
+      blueGoldLbl.textContent = data.alliesTotalGold;
+      redGoldLbl.textContent = data.enemiesTotalGold;
+
+      const diff = data.teamGoldDifference;
+      if (diff === 0) {
+        headerDiffVal.textContent = "0";
+        headerDiffArrow.textContent = "=";
+        headerDiffBadge.className = "header-difference-badge even";
+      } else if (diff > 0) {
+        // Allies ahead (pointing left)
+        headerDiffVal.textContent = diff;
+        headerDiffArrow.textContent = "◀";
+        headerDiffBadge.className = "header-difference-badge allies-ahead";
+      } else {
+        // Enemies ahead (pointing right)
+        headerDiffVal.textContent = Math.abs(diff);
+        headerDiffArrow.textContent = "▶";
+        headerDiffBadge.className = "header-difference-badge enemies-ahead";
+      }
+
+      // Generate matchup rows vertically (Diamond indicators)
+      matchupsColumn.innerHTML = '';
+      if (data.matchups && data.matchups.length > 0) {
+        data.matchups.forEach((m, idx) => {
+          const row = document.createElement('div');
+          row.className = 'matchup-row';
+          row.id = 'matchup-row-' + idx;
+
+          const diffVal = m.difference;
+          let diffClass = 'even';
+          let arrowSymbol = '=';
+          let diffText = '';
+
+          if (diffVal > 0) {
+            diffClass = 'ahead';
+            arrowSymbol = '◀';
+            diffText = formatGold(diffVal);
+          } else if (diffVal < 0) {
+            diffClass = 'behind';
+            arrowSymbol = '▶';
+            diffText = formatGold(Math.abs(diffVal));
+          }
+
+          row.innerHTML = `
+            <div class="matchup-indicator ${diffClass}" id="matchup-indicator-${idx}">
+              <div class="indicator-diamond">
+                <span class="indicator-arrow">${arrowSymbol}</span>
+              </div>
+              <div class="indicator-value">${diffVal !== 0 ? diffText : ''}</div>
+            </div>
+          `;
+          matchupsColumn.appendChild(row);
+        });
+
+        // Dynamically wire drag and hover listeners for each new lane indicator row!
+        const len = data.matchups.length;
+        for (let i = 0; i < len; i++) {
+          const indicator = document.getElementById('matchup-indicator-' + i);
+          if (indicator) {
+            indicator.addEventListener('mouseenter', () => {
+              ipcRenderer.send('set-click-through', false);
+            });
+            indicator.addEventListener('mouseleave', () => {
+              if (!rowDraggingFlags[i]) {
+                ipcRenderer.send('set-click-through', true);
+              }
+            });
+
+            setupDraggable(indicator, 'row' + i, () => rowOffsets[i].x, () => rowOffsets[i].y, (val) => { rowDraggingFlags[i] = val; });
+          }
+        }
+      }
+    });
+
+    const teamHeader = document.getElementById('team-header');
+
+    let isDraggingHeader = false;
+    let rowDraggingFlags = [false, false, false, false, false];
+    let rowOffsets = [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 }
+    ];
+
+    teamHeader.addEventListener('mouseenter', () => {
+      ipcRenderer.send('set-click-through', false);
+    });
+    teamHeader.addEventListener('mouseleave', () => {
+      if (!isDraggingHeader) {
+        ipcRenderer.send('set-click-through', true);
+      }
+    });
+
+    let headerX = 0, headerY = 0;
+
+    ipcRenderer.on('update-offsets', (event, offsets) => {
+      if (!offsets) return;
+      headerX = offsets.headerX !== undefined ? offsets.headerX : (offsets.globalX || 0);
+      headerY = offsets.headerY !== undefined ? offsets.headerY : (offsets.globalY || 0);
+
+      document.documentElement.style.setProperty('--header-offset-x', headerX + 'px');
+      document.documentElement.style.setProperty('--header-offset-y', headerY + 'px');
+
+      for (let i = 0; i < 5; i++) {
+        rowOffsets[i].x = offsets['row' + i + 'X'] !== undefined ? offsets['row' + i + 'X'] : (offsets.globalX || 0);
+        rowOffsets[i].y = offsets['row' + i + 'Y'] !== undefined ? offsets['row' + i + 'Y'] : (offsets.globalY || 0);
+        document.documentElement.style.setProperty('--row' + i + '-offset-x', rowOffsets[i].x + 'px');
+        document.documentElement.style.setProperty('--row' + i + '-offset-y', rowOffsets[i].y + 'px');
+      }
+    });
+
+    ipcRenderer.on('select-element', (event, elementId) => {
+      // Clear visual selected style from all indicators
+      teamHeader.classList.remove('selected');
+      for (let i = 0; i < 5; i++) {
+        const indicator = document.getElementById('matchup-indicator-' + i);
+        if (indicator) indicator.classList.remove('selected');
+      }
+
+      // Highlight the targeted element
+      if (elementId === 'header') {
+        teamHeader.classList.add('selected');
+      } else if (elementId && elementId.startsWith('row')) {
+        const idx = elementId.substring(3);
+        const indicator = document.getElementById('matchup-indicator-' + idx);
+        if (indicator) indicator.classList.add('selected');
+      }
+    });
+
+    function setupDraggable(element, saveType, getOffsetX, getOffsetY, setDraggingFlag) {
+      let isDraggingElement = false;
+      let startX = 0;
+      let startY = 0;
+      let startOffsetX = 0;
+      let startOffsetY = 0;
+
+      element.addEventListener('mousedown', (e) => {
+        isDraggingElement = true;
+        setDraggingFlag(true);
+        startX = e.clientX;
+        startY = e.clientY;
+        startOffsetX = getOffsetX();
+        startOffsetY = getOffsetY();
+        
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDraggingElement) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        const newX = startOffsetX + dx;
+        const newY = startOffsetY + dy;
+        
+        ipcRenderer.send('save-element-offset', { type: saveType, x: newX, y: newY });
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (isDraggingElement) {
+          isDraggingElement = false;
+          setDraggingFlag(false);
+          
+          // Verify if mouse actually left the boundary on release
+          const rect = element.getBoundingClientRect();
+          const isInside = (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          );
+          if (!isInside) {
+            ipcRenderer.send('set-click-through', true);
+          }
+        }
+      });
+    }
+
+    setupDraggable(teamHeader, 'header', () => headerX, () => headerY, (val) => { isDraggingHeader = val; });
+  </script>
+</body>
+</html>

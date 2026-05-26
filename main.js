@@ -2,11 +2,25 @@ const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen, dialog } = requi
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const { exec, spawn } = require('child_process');
 const LcuConnector = require('./lcu-connector');
 const OnetricksScraper = require('./onetricks-scraper');
 const ValorantConnector = require('./valorant-connector');
 
+// Prevent crashes from unhandled LCU API/websocket promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Uncaught Exception:', err);
+});
+
 let mainWindow = null;
+let overlayWindow = null; // transparent scoreboard overlay
+let tabListenerProcess = null; // C# Tab key listener child process
+let liveGamePollInterval = null; // live client data polling interval
+let selectedCalibrationElement = 'header'; // tracks element currently selected for arrow keys
 let connector = null;
 let valorantConnector = null;
 let scraper = null;
@@ -45,7 +59,24 @@ let config = {
   enableValorantDetection: true,
   zoomFactor: 1.0,
   enableLowPerf: true,
-  lang: 'en'
+  lang: 'en',
+  enableGoldOverlay: true,
+  overlayOffsetX: 0,
+  overlayOffsetY: 0,
+  headerOffsetX: 0,
+  headerOffsetY: 0,
+  columnOffsetX: 0,
+  columnOffsetY: 0,
+  row0OffsetX: 0,
+  row0OffsetY: 0,
+  row1OffsetX: 0,
+  row1OffsetY: 0,
+  row2OffsetX: 0,
+  row2OffsetY: 0,
+  row3OffsetX: 0,
+  row3OffsetY: 0,
+  row4OffsetX: 0,
+  row4OffsetY: 0
 };
 
 // Global application state
@@ -529,8 +560,360 @@ function setupAutoUpdater() {
   });
 }
 
+// ==========================================================================
+// SCOREBOARD GOLD OVERLAY HELPER FUNCTIONS & COMPILATION
+// ==========================================================================
+function compileTabListener() {
+  const scratchDir = path.join(__dirname, 'scratch');
+  const csPath = path.join(scratchDir, 'tab_listener.cs');
+  const exePath = path.join(scratchDir, 'tab_listener.exe');
+
+  if (!fs.existsSync(csPath)) {
+    console.log('[OVERLAY] C# listener file missing. Skipping compilation.');
+    return;
+  }
+
+  // Compile if EXE doesn't exist OR the CS file is newer than the EXE
+  let shouldCompile = true;
+  if (fs.existsSync(exePath)) {
+    const csStats = fs.statSync(csPath);
+    const exeStats = fs.statSync(exePath);
+    if (exeStats.mtimeMs > csStats.mtimeMs) {
+      shouldCompile = false;
+    }
+  }
+
+  if (!shouldCompile) {
+    console.log('[OVERLAY] tab_listener.exe is up to date.');
+    return;
+  }
+
+  console.log('[OVERLAY] Compiling tab_listener.cs...');
+  const cscPath = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe';
+  if (!fs.existsSync(cscPath)) {
+    console.error('[OVERLAY] csc.exe not found! Cannot compile C# Tab listener.');
+    return;
+  }
+
+  const cmd = `"${cscPath}" /out:"${exePath}" "${csPath}"`;
+  exec(cmd, (err, stdout, stderr) => {
+    if (err) {
+      console.error('[OVERLAY] Compilation failed:', err, stderr);
+    } else {
+      console.log('[OVERLAY] Compiled tab_listener.exe successfully.');
+    }
+  });
+}
+
+function createOverlayWindow() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) return;
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { x, y, width, height } = primaryDisplay.bounds;
+
+  overlayWindow = new BrowserWindow({
+    x: x,
+    y: y,
+    width: width,
+    height: height,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    focusable: false,
+    show: false, // Hidden by default, toggled via Tab key listener
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  // Make the window click-through but forward mouse events so JS hover works
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+  });
+}
+
+function startLiveGameTracking() {
+  stopLiveGameTracking();
+
+  if (config.enableGoldOverlay === false) {
+    console.log('[OVERLAY] Gold overlay is disabled in settings. Skipping tracking.');
+    return;
+  }
+
+  console.log('[OVERLAY] Starting live game overlay tracking...');
+  
+  // 1. Create the overlay window
+  createOverlayWindow();
+
+  // 2. Spawn the Tab key listener C# background process
+  const exePath = path.join(__dirname, 'scratch', 'tab_listener.exe');
+  if (fs.existsSync(exePath)) {
+    try {
+      tabListenerProcess = spawn(exePath);
+      console.log('[OVERLAY] Spawned tab_listener.exe process.');
+
+      tabListenerProcess.stdout.on('data', (data) => {
+        const lines = data.toString().split(/\r?\n/);
+        for (let rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+
+          const getOffsetsPayload = () => {
+            const globalX = config.overlayOffsetX || 0;
+            const globalY = config.overlayOffsetY || 0;
+            return {
+              globalX,
+              globalY,
+              headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
+              headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
+              columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
+              columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
+              row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
+              row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
+              row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
+              row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
+              row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
+              row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
+              row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
+              row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
+              row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
+              row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
+            };
+          };
+
+          if (line.startsWith('SELECT ')) {
+            const num = parseInt(line.substring(7), 10) || 0;
+            if (num === 0) selectedCalibrationElement = 'header';
+            else selectedCalibrationElement = 'row' + (num - 1);
+            
+            console.log('[OVERLAY] Keyboard selected calibration target:', selectedCalibrationElement);
+            
+            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+              overlayWindow.webContents.send('select-element', selectedCalibrationElement);
+            }
+          } else if (line.startsWith('DRAG ')) {
+            const parts = line.split(' ');
+            const dx = parseInt(parts[1], 10) || 0;
+            const dy = parseInt(parts[2], 10) || 0;
+            
+            config.overlayOffsetX = (config.overlayOffsetX || 0) + dx;
+            config.overlayOffsetY = (config.overlayOffsetY || 0) + dy;
+            config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX - dx)) + dx;
+            config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY - dy)) + dy;
+            config.columnOffsetX = (config.columnOffsetX !== undefined ? config.columnOffsetX : (config.overlayOffsetX - dx)) + dx;
+            config.columnOffsetY = (config.columnOffsetY !== undefined ? config.columnOffsetY : (config.overlayOffsetY - dy)) + dy;
+            
+            for (let i = 0; i < 5; i++) {
+              const rx = 'row' + i + 'OffsetX';
+              const ry = 'row' + i + 'OffsetY';
+              config[rx] = (config[rx] !== undefined ? config[rx] : (config.overlayOffsetX - dx)) + dx;
+              config[ry] = (config[ry] !== undefined ? config[ry] : (config.overlayOffsetY - dy)) + dy;
+            }
+            
+            saveConfig();
+            
+            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+            }
+          } else if (line.startsWith('CAL_')) {
+            const dir = line.substring(4);
+            const step = 4; // Move by 4px steps
+            let dx = 0, dy = 0;
+            if (dir === 'UP') dy = -step;
+            else if (dir === 'DOWN') dy = step;
+            else if (dir === 'LEFT') dx = -step;
+            else if (dir === 'RIGHT') dx = step;
+
+            if (selectedCalibrationElement === 'header') {
+              config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX || 0)) + dx;
+              config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY || 0)) + dy;
+            } else {
+              const rowKeyX = selectedCalibrationElement + 'OffsetX';
+              const rowKeyY = selectedCalibrationElement + 'OffsetY';
+              config[rowKeyX] = (config[rowKeyX] !== undefined ? config[rowKeyX] : (config.overlayOffsetX || 0)) + dx;
+              config[rowKeyY] = (config[rowKeyY] !== undefined ? config[rowKeyY] : (config.overlayOffsetY || 0)) + dy;
+            }
+            
+            saveConfig();
+            
+            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+            }
+          } else if (overlayWindow && !overlayWindow.isDestroyed()) {
+            if (line === 'DOWN') {
+              overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+              // Reset visual selection when opening scoreboard
+              overlayWindow.webContents.send('select-element', selectedCalibrationElement);
+              overlayWindow.showInactive(); // Show without stealing focus
+            } else if (line === 'UP') {
+              overlayWindow.hide();
+            }
+          }
+        }
+      });
+
+      tabListenerProcess.on('error', (err) => {
+        console.error('[OVERLAY] Tab listener process error:', err.message);
+      });
+    } catch (e) {
+      console.error('[OVERLAY] Failed to spawn tab_listener.exe:', e);
+    }
+  } else {
+    console.warn('[OVERLAY] tab_listener.exe not found. Cannot listen to Tab key.');
+  }
+
+  // 3. Start polling the Live Client Data API
+  liveGamePollInterval = setInterval(pollLiveClientData, 1500);
+  pollLiveClientData(); // Immediate poll
+}
+
+function stopLiveGameTracking() {
+  console.log('[OVERLAY] Stopping live game overlay tracking...');
+
+  if (liveGamePollInterval) {
+    clearInterval(liveGamePollInterval);
+    liveGamePollInterval = null;
+  }
+
+  if (tabListenerProcess) {
+    try {
+      tabListenerProcess.kill();
+    } catch (e) {}
+    tabListenerProcess = null;
+  }
+
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.close();
+    overlayWindow = null;
+  }
+}
+
+function pollLiveClientData() {
+  const options = {
+    hostname: '127.0.0.1',
+    port: 2999,
+    path: '/liveclientdata/allgamedata',
+    method: 'GET',
+    rejectUnauthorized: false, // Bypass self-signed SSL cert check
+    timeout: 1000
+  };
+
+  const req = https.request(options, (res) => {
+    let rawData = '';
+    res.on('data', (chunk) => { rawData += chunk; });
+    res.on('end', () => {
+      try {
+        if (res.statusCode !== 200) return;
+        const data = JSON.parse(rawData);
+        processLiveGameGoldData(data);
+      } catch (err) {
+        // Parsing issues, safe to ignore during fast polling
+      }
+    });
+  });
+
+  req.on('error', (err) => {
+    // API not ready or loading, safe to ignore
+  });
+  req.on('timeout', () => {
+    req.destroy();
+  });
+  req.end();
+}
+
+function processLiveGameGoldData(data) {
+  if (!data || !data.allPlayers || data.allPlayers.length === 0) return;
+  if (!scraper || !scraper.itemsMap) return;
+
+  const activeSummonerName = data.activePlayer && data.activePlayer.summonerName;
+  const me = data.allPlayers.find(p => p.summonerName === activeSummonerName);
+  const myTeam = me ? me.team : 'ORDER'; // Fallback to ORDER if activePlayer not ready
+
+  // Filter players into Allies vs Enemies
+  const allies = data.allPlayers.filter(p => p.team === myTeam);
+  const enemies = data.allPlayers.filter(p => p.team !== myTeam);
+
+  // Calculate spent gold value from active items
+  const calculatePlayerGold = (player) => {
+    if (!player.items || !Array.isArray(player.items)) return 0;
+    return player.items.reduce((sum, item) => {
+      const id = String(item.itemID);
+      const count = item.count || 1;
+      const itemCost = scraper.itemsMap[id] ? scraper.itemsMap[id].gold : 0;
+      return sum + (itemCost * count);
+    }, 0);
+  };
+
+  let alliesTotalGold = 0;
+  let enemiesTotalGold = 0;
+
+  const alliesGoldInfo = allies.map(p => {
+    const gold = calculatePlayerGold(p);
+    alliesTotalGold += gold;
+    return {
+      summonerName: p.summonerName,
+      championName: p.championName,
+      gold: gold
+    };
+  });
+
+  const enemiesGoldInfo = enemies.map(p => {
+    const gold = calculatePlayerGold(p);
+    enemiesTotalGold += gold;
+    return {
+      summonerName: p.summonerName,
+      championName: p.championName,
+      gold: gold
+    };
+  });
+
+  // Calculate team difference
+  const teamGoldDifference = alliesTotalGold - enemiesTotalGold;
+
+  // Align matchups by role index (allies[i] vs enemies[i] in standard scoreboard role order)
+  const roles = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+  const matchups = [];
+  const len = Math.min(alliesGoldInfo.length, enemiesGoldInfo.length, 5);
+
+  for (let i = 0; i < len; i++) {
+    const ally = alliesGoldInfo[i];
+    const enemy = enemiesGoldInfo[i];
+    const role = roles[i] || 'UNKNOWN';
+
+    matchups.push({
+      role: role,
+      allyChampion: ally.championName,
+      enemyChampion: enemy.championName,
+      allyGold: ally.gold,
+      enemyGold: enemy.gold,
+      difference: ally.gold - enemy.gold
+    });
+  }
+
+  const payload = {
+    ddragonVersion: scraper.ddragonVersion,
+    lang: config.lang || 'en',
+    alliesTotalGold,
+    enemiesTotalGold,
+    teamGoldDifference,
+    matchups
+  };
+
+  if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+    overlayWindow.webContents.send('update-gold', payload);
+  }
+}
+
 app.whenReady().then(() => {
   createWindow();
+  compileTabListener();
   createTray();
   updateLoginItemSettings();
   setupAutoUpdater();
@@ -739,10 +1122,11 @@ function handleGameflowPhaseUpdate(phase) {
 
   // Reset workspace if gameflow returns to non-active phase (lobby, none, dodged, ended)
   const resetPhases = ['None', 'Lobby', 'Matchmaking', 'ReadyCheck', 'EndOfGame', 'WaitingForStats'];
-  if (resetPhases.includes(phase)) {
+    if (resetPhases.includes(phase)) {
     appState.activeGame = null;
     resetWorkspace();
     sendToRenderer('game-ended', {});
+    stopLiveGameTracking();
     
     // Resume Valorant detection if enabled in config
     if (config.enableValorantDetection !== false && valorantConnector) {
@@ -751,6 +1135,7 @@ function handleGameflowPhaseUpdate(phase) {
     }
   } else if (['GameStart', 'InProgress', 'Reconnect'].includes(phase)) {
     console.log(`[CLIENT] Game active/started (Phase: ${phase}). Fetching players info...`);
+    startLiveGameTracking();
     
     // Stop Valorant detection when LoL match starts to save CPU
     if (valorantConnector) {
@@ -1003,6 +1388,55 @@ ipcMain.handle('get-initial-state', async () => {
   };
 });
 
+ipcMain.on('save-element-offset', (event, { type, x, y }) => {
+  if (type === 'header') {
+    config.headerOffsetX = x;
+    config.headerOffsetY = y;
+  } else if (type === 'column') {
+    config.columnOffsetX = x;
+    config.columnOffsetY = y;
+  } else if (type.startsWith('row')) {
+    const rx = type + 'OffsetX';
+    const ry = type + 'OffsetY';
+    config[rx] = x;
+    config[ry] = y;
+  }
+  saveConfig();
+  
+  const getOffsetsPayload = () => {
+    const globalX = config.overlayOffsetX || 0;
+    const globalY = config.overlayOffsetY || 0;
+    return {
+      globalX,
+      globalY,
+      headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
+      headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
+      columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
+      columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
+      row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
+      row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
+      row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
+      row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
+      row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
+      row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
+      row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
+      row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
+      row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
+      row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
+    };
+  };
+
+  if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+    overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+  }
+});
+
+ipcMain.on('set-click-through', (event, ignore) => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setIgnoreMouseEvents(ignore, { forward: true });
+  }
+});
+
 ipcMain.on('change-role', async (event, newRole) => {
   appState.activeRole = newRole;
   if (appState.activeChampionId !== 0 && appState.activeChampionName) {
@@ -1035,11 +1469,12 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf, lang }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf, lang, enableGoldOverlay }) => {
   const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
   const lolDetectionChanged = (enableLolDetection !== undefined && enableLolDetection !== config.enableLolDetection);
   const valDetectionChanged = (enableValorantDetection !== undefined && enableValorantDetection !== config.enableValorantDetection);
   const zoomChanged = (zoomFactor !== undefined && zoomFactor !== config.zoomFactor);
+  const goldOverlayChanged = (enableGoldOverlay !== undefined && enableGoldOverlay !== config.enableGoldOverlay);
 
   if (lang !== undefined && lang !== config.lang) {
     config.lang = lang;
@@ -1072,6 +1507,9 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   }
   if (enableValorantDetection !== undefined) {
     config.enableValorantDetection = enableValorantDetection;
+  }
+  if (enableGoldOverlay !== undefined) {
+    config.enableGoldOverlay = enableGoldOverlay;
   }
   if (zoomFactor !== undefined) {
     const sanitizedZoom = Math.min(Math.max(zoomFactor, 0.7), 1.3);
@@ -1108,6 +1546,17 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
     }
   }
   saveConfig();
+
+  // If gold overlay setting changed dynamically during an active game
+  if (goldOverlayChanged) {
+    if (['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
+      if (config.enableGoldOverlay) {
+        startLiveGameTracking();
+      } else {
+        stopLiveGameTracking();
+      }
+    }
+  }
 
   // If LoL detection status changed dynamically
   if (lolDetectionChanged) {
