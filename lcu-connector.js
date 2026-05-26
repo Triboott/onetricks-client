@@ -32,6 +32,13 @@ class LcuConnector {
     }
   }
 
+  setThrottled(isThrottled) {
+    this.isThrottled = isThrottled;
+    if (this.status !== 'connected') {
+      this.restartScan();
+    }
+  }
+
   start() {
     this.restartScan();
   }
@@ -46,7 +53,8 @@ class LcuConnector {
 
   restartScan() {
     this.stopScan();
-    this.scanInterval = setInterval(() => this.scan(), 2000);
+    const interval = this.isThrottled ? 10000 : 2000;
+    this.scanInterval = setInterval(() => this.scan(), interval);
     this.scan(); // immediate run
   }
 

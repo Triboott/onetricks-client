@@ -45,6 +45,15 @@ class ValorantConnector {
     }
   }
 
+  setThrottled(isThrottled) {
+    this.isThrottled = isThrottled;
+    if (this.status !== 'connected') {
+      this.restartScan();
+    } else {
+      this.startPolling();
+    }
+  }
+
   start() {
     this.loadStaticAssets();
     this.restartScan();
@@ -65,7 +74,8 @@ class ValorantConnector {
 
   restartScan() {
     this.stopScan();
-    this.scanInterval = setInterval(() => this.scan(), 3000);
+    const interval = this.isThrottled ? 12000 : 3000;
+    this.scanInterval = setInterval(() => this.scan(), interval);
     this.scan(); // immediate run
   }
 
@@ -78,7 +88,8 @@ class ValorantConnector {
 
   startPolling() {
     this.stopPolling();
-    this.pollInterval = setInterval(() => this.pollMatchState(), 5000);
+    const interval = this.isThrottled ? 15000 : 5000;
+    this.pollInterval = setInterval(() => this.pollMatchState(), interval);
   }
 
   stopPolling() {

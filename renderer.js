@@ -287,8 +287,9 @@ const TRANSLATIONS = {
     SETTING_SOUNDS_DESC: "Enables button ticks, transitions, and application alerts.",
     SETTING_LOL_DETECTION_TITLE: "Enable League of Legends Detection",
     SETTING_LOL_DETECTION_DESC: "Automatically detects and imports data when you play League of Legends.",
-    SETTING_VAL_DETECTION_TITLE: "Enable Valorant Detection",
     SETTING_VAL_DETECTION_DESC: "Automatically detects and displays profiles and ranks in real-time when you play Valorant.",
+    SETTING_LOW_PERF_TITLE: "CPU Saving / Low Performance Mode",
+    SETTING_LOW_PERF_DESC: "Disables animations, transitions, and glowing backgrounds when the game is active to save CPU and RAM.",
     SETTING_ZOOM_TITLE: "Application Zoom",
     SETTING_ZOOM_DESC: "Adjusts the scale of the application interface.",
     SETTING_LANG_TITLE: "Application Language",
@@ -421,6 +422,8 @@ const TRANSLATIONS = {
     SETTING_LOL_DETECTION_DESC: "Detecta e importa datos automáticamente cuando juegas a League of Legends.",
     SETTING_VAL_DETECTION_TITLE: "Activar Detección de Valorant",
     SETTING_VAL_DETECTION_DESC: "Detecta y muestra perfiles y rangos automáticamente en tiempo real cuando juegas a Valorant.",
+    SETTING_LOW_PERF_TITLE: "Ahorro de CPU / Modo de Bajo Rendimiento",
+    SETTING_LOW_PERF_DESC: "Desactiva las animaciones, transiciones y brillos de fondo cuando la partida está activa para ahorrar CPU y RAM.",
     SETTING_ZOOM_TITLE: "Zoom de la Aplicación",
     SETTING_ZOOM_DESC: "Ajusta la escala de la interfaz de la aplicación.",
     SETTING_LANG_TITLE: "Idioma de la Aplicación",
@@ -3261,8 +3264,26 @@ async function initActiveUserCounter() {
   // Send first ping immediately
   await sendPing();
 
-  // Periodic ping interval every 30 seconds
-  setInterval(async () => {
-    await sendPing();
+  // Periodic ping interval every 30 seconds (or 5 minutes if hidden to save network/CPU)
+  let pingInterval = setInterval(async () => {
+    if (!document.hidden) {
+      await sendPing();
+    }
   }, 30000);
+
+  document.addEventListener('visibilitychange', async () => {
+    clearInterval(pingInterval);
+    if (document.hidden) {
+      // When hidden, ping less frequently (every 5 minutes)
+      pingInterval = setInterval(async () => {
+        await sendPing();
+      }, 5 * 60 * 1000);
+    } else {
+      // When visible, ping immediately and reset to 30 seconds
+      await sendPing();
+      pingInterval = setInterval(async () => {
+        await sendPing();
+      }, 30000);
+    }
+  });
 }

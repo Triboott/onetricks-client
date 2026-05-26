@@ -44,7 +44,7 @@ let config = {
   enableLolDetection: true,
   enableValorantDetection: true,
   zoomFactor: 1.0,
-  enableLowPerf: false,
+  enableLowPerf: true,
   lang: 'en'
 };
 
@@ -400,7 +400,29 @@ function createWindow() {
     if (!isQuitting) {
       event.preventDefault();
       mainWindow.hide();
+      if (connector) connector.setThrottled(true);
+      if (valorantConnector) valorantConnector.setThrottled(true);
     }
+  });
+
+  mainWindow.on('minimize', () => {
+    if (connector) connector.setThrottled(true);
+    if (valorantConnector) valorantConnector.setThrottled(true);
+  });
+
+  mainWindow.on('restore', () => {
+    if (connector) connector.setThrottled(false);
+    if (valorantConnector) valorantConnector.setThrottled(false);
+  });
+
+  mainWindow.on('hide', () => {
+    if (connector) connector.setThrottled(true);
+    if (valorantConnector) valorantConnector.setThrottled(true);
+  });
+
+  mainWindow.on('show', () => {
+    if (connector) connector.setThrottled(false);
+    if (valorantConnector) valorantConnector.setThrottled(false);
   });
 
   mainWindow.on('closed', () => {
@@ -583,11 +605,29 @@ app.whenReady().then(() => {
       console.log(`[CLIENT] Valorant Game started! Dispatched event to renderer.`);
       appState.activeValorantGame = gameData;
       sendToRenderer('valorant-game-started', gameData);
+      
+      // Stop LoL detection when Valorant match starts to save CPU
+      if (connector) {
+        console.log('[CLIENT] Valorant game started. Stopping LoL detection to save CPU.');
+        connector.stop();
+        sendToRenderer('lcu-status', {
+          status: 'disconnected',
+          config,
+          playerInfo: null,
+          ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
+        });
+      }
     },
     onGameEnded: () => {
       console.log(`[CLIENT] Valorant Game ended! Dispatched event to renderer.`);
       appState.activeValorantGame = null;
       sendToRenderer('valorant-game-ended');
+      
+      // Resume LoL detection if enabled in config
+      if (config.enableLolDetection !== false && connector) {
+        console.log('[CLIENT] Valorant game ended. Resuming LoL detection.');
+        connector.start();
+      }
     }
   });
   
@@ -699,8 +739,22 @@ function handleGameflowPhaseUpdate(phase) {
     appState.activeGame = null;
     resetWorkspace();
     sendToRenderer('game-ended', {});
+    
+    // Resume Valorant detection if enabled in config
+    if (config.enableValorantDetection !== false && valorantConnector) {
+      console.log('[CLIENT] LoL game ended. Resuming Valorant detection.');
+      valorantConnector.start();
+    }
   } else if (['GameStart', 'InProgress', 'Reconnect'].includes(phase)) {
     console.log(`[CLIENT] Game active/started (Phase: ${phase}). Fetching players info...`);
+    
+    // Stop Valorant detection when LoL match starts to save CPU
+    if (valorantConnector) {
+      console.log('[CLIENT] LoL game active. Stopping Valorant detection to save CPU.');
+      valorantConnector.stop();
+      sendToRenderer('valorant-status', { status: 'disconnected', playerInfo: null });
+    }
+    
     // Wait a brief moment to ensure LCU game session is fully instantiated
     setTimeout(async () => {
       // Confirm that the phase hasn't changed back to a reset phase in the meantime
