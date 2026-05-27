@@ -1947,7 +1947,7 @@ function updateDiscordRPCStatus() {
       state,
       'app_icon',
       'Onetricks Client',
-      'tray_icon',
+      'app_icon',
       'Valorant Active',
       startTimestamp,
       lang
