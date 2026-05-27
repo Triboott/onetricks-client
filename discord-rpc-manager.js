@@ -1,4 +1,5 @@
 const DiscordRPC = require('discord-rpc');
+const { shell, app } = require('electron');
 
 class DiscordRPCManager {
   constructor() {
@@ -18,12 +19,18 @@ class DiscordRPCManager {
     };
   }
 
-  /**
-   * Initialize and start the RPC manager based on saved settings
-   * @param {boolean} initiallyEnabled Whether the feature is turned on in config
-   */
   init(initiallyEnabled) {
     console.log(`[DISCORD-RPC] Initializing manager. Enabled = ${initiallyEnabled}`);
+    try {
+      if (app && app.isPackaged) {
+        DiscordRPC.register(this.clientId);
+        console.log('[DISCORD-RPC] Registered custom protocol handler successfully.');
+      } else {
+        console.log('[DISCORD-RPC] Running in development mode. Skipping protocol registration to avoid dev path errors.');
+      }
+    } catch (e) {
+      console.warn('[DISCORD-RPC] Failed to register custom protocol handler:', e.message);
+    }
     this.setEnabled(initiallyEnabled);
   }
 
@@ -71,6 +78,15 @@ class DiscordRPCManager {
       this.client.on('ready', () => {
         console.log('[DISCORD-RPC] Client connected successfully and ready.');
         this.connected = true;
+        try {
+          this.client.subscribe('GAME_JOIN');
+          this.client.on('join', (secret) => {
+            console.log('[DISCORD-RPC] User clicked join with secret:', secret);
+            shell.openExternal('https://triboott.github.io/onetricks-client/');
+          });
+        } catch (e) {
+          console.warn('[DISCORD-RPC] Failed to subscribe to join events:', e.message);
+        }
         this.applyActivity(this.lastActivity);
       });
 
@@ -153,9 +169,10 @@ class DiscordRPCManager {
         state: act.state,
         largeImageKey: act.largeImageKey || 'app_icon',
         largeImageText: act.largeImageText || 'Onetricks Client',
-        buttons: [
-          { label: buttonLabel, url: 'https://triboott.github.io/onetricks-client/' }
-        ]
+        partyId: 'onetricks_client_lobby',
+        partySize: 1,
+        partyMax: 5,
+        joinSecret: 'download_onetricks_client'
       };
 
       if (act.smallImageKey) {

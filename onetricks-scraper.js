@@ -595,10 +595,6 @@ class OnetricksScraper {
 
     // HEURISTIC 1: Check Next.js state data first (Primary/Optimal Path)
     if (nextData && nextData.props && nextData.props.pageProps) {
-      // DEBUG: always save scraped JSON for inspection
-      try {
-        fs.writeFileSync(`${championName.toLowerCase()}_nextData.json`, JSON.stringify(nextData, null, 2), 'utf8');
-      } catch (e) { }
       const pp = nextData.props.pageProps;
       if (pp.firstItemStats) {
         let bestPatchData = null;

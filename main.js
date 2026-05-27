@@ -37,7 +37,8 @@ let scraper = null;
 let tray = null;
 let isQuitting = false;
 
-// Set Windows AppUserModelId so notification headers show the correct app name
+// Set Windows AppUserModelId and app name so notification headers show the correct app name
+app.name = 'Onetricks Client';
 if (process.platform === 'win32') {
   app.setAppUserModelId('com.onetricks.client');
 }
@@ -1947,8 +1948,8 @@ function updateDiscordRPCStatus() {
       state,
       'app_icon',
       'Onetricks Client',
-      'app_icon',
-      'Valorant Active',
+      null,
+      null,
       startTimestamp,
       lang
     );
@@ -1983,8 +1984,8 @@ function updateDiscordRPCStatus() {
       state,
       largeImage,
       `Champion: ${championName}`,
-      'app_icon',
-      'League of Legends Active',
+      null,
+      null,
       startTimestamp,
       lang
     );
@@ -2013,8 +2014,8 @@ function updateDiscordRPCStatus() {
       lang === 'es' ? 'Preparando Tácticas' : 'Preparing Tactics',
       largeImage,
       largeImageText,
-      'app_icon',
-      'Onetricks Client',
+      null,
+      null,
       null,
       lang
     );
