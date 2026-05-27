@@ -1,6 +1,6 @@
 {
   "name": "onetricks-client",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Onetricks.gg LoL Desktop Client",
   "main": "main.js",
   "scripts": {
