@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   const TRANSLATIONS = {
     en: {
-      PAGE_TITLE: "Onetricks Client - Download the Elite Tactical Analysis Engine",
-      PAGE_DESC: "Download Onetricks Client, the ultimate tactical assistant for League of Legends and Valorant. Automatic real-time import of runes, spells, and items from the best global OTPs.",
+      PAGE_TITLE: "Onetricks Client - Official Download | Ultimate LoL & Valorant Assistant",
+      PAGE_DESC: "Download the official Onetricks Client for Windows. Get automatic real-time imports of optimal runes, summoner spells, and item builds from the best global OTP players for League of Legends & Valorant.",
       NAV_FEATURES: "<i class=\"fa-solid fa-wand-magic-sparkles\"></i> Features",
       NAV_INTERFACE: "<i class=\"fa-solid fa-desktop\"></i> Interface",
       HERO_TITLE: "THE ELITE TACTICAL <span class=\"gradient-text-accent\">ANALYSIS</span> ENGINE",
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
       TOTAL_DOWNLOADS: "<i class=\"fa-solid fa-cloud-arrow-down\"></i> Total downloads: {count}"
     },
     es: {
-      PAGE_TITLE: "Onetricks Client - Descargar el Motor de Análisis Táctico de Élite",
-      PAGE_DESC: "Descarga Onetricks Client, el asistente táctico definitivo para League of Legends y Valorant. Importación automática de runas, hechizos y objetos de los mejores OTPs en tiempo real.",
+      PAGE_TITLE: "Onetricks Client - Sitio Oficial | Descargar Onetricks Client Gratis",
+      PAGE_DESC: "Descarga la aplicación oficial de Onetricks Client. Importación automática y en tiempo real de runas, hechizos e item builds de los mejores OTPs para ganar en League of Legends y Valorant.",
       NAV_FEATURES: "<i class=\"fa-solid fa-wand-magic-sparkles\"></i> Características",
       NAV_INTERFACE: "<i class=\"fa-solid fa-desktop\"></i> Interfaz",
       HERO_TITLE: "EL MOTOR DE ANÁLISIS TÁCTICO DE <span class=\"gradient-text-accent\">ÉLITE</span>",

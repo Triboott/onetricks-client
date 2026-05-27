@@ -36,6 +36,10 @@ let scraper = null;
 let tray = null;
 let isQuitting = false;
 
+// Set Windows AppUserModelId so notification headers show the correct app name
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.onetricks.client');
+}
 
 // Request single instance lock to prevent duplicate app windows
 const gotTheLock = app.requestSingleInstanceLock();
