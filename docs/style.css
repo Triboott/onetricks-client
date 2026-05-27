@@ -755,9 +755,24 @@ body {
   background: radial-gradient(circle at 80% 20%, rgba(240, 230, 210, 0.2) 0%, transparent 60%);
 }
 
-.player-profile-card.rank-diamond {
-  background: linear-gradient(135deg, rgba(28, 81, 134, 0.7) 0%, rgba(14, 41, 68, 0.7) 100%);
-  border-color: rgba(0, 191, 255, 0.25);
+.player-profile-card.rank-radiant {
+  background: linear-gradient(135deg, rgba(255, 70, 85, 0.22) 0%, rgba(255, 184, 0, 0.12) 100%), rgba(12, 15, 23, 0.85);
+  border-color: rgba(255, 70, 85, 0.35);
+  box-shadow: 0 0 15px rgba(255, 70, 85, 0.08) inset, 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.player-profile-card.rank-radiant .rank-bg-glow {
+  background: radial-gradient(circle at 80% 20%, rgba(255, 184, 0, 0.2) 0%, transparent 60%);
+}
+
+.player-profile-card.rank-radiant .profile-avatar {
+  border-color: rgba(255, 70, 85, 0.5);
+}
+
+.player-profile-card.rank-radiant .profile-level {
+  background: linear-gradient(135deg, #ff4655 0%, #ffb800 100%);
+  color: white;
+  border-color: #ff4655;
 }
 
 .profile-card-content {
@@ -850,8 +865,8 @@ body {
   color: #f0e6d2;
 }
 
-.player-profile-card.rank-diamond .profile-tier {
-  color: #b3ecff;
+.player-profile-card.rank-radiant .profile-tier {
+  color: #ffb800;
 }
 
 .profile-stats {
