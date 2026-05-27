@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://triboott.github.io/onetricks-client/sitemap.xml
