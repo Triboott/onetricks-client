@@ -312,6 +312,8 @@ const TRANSLATIONS = {
     SETTINGS_SEC_LOL_PATH: "League of Legends Location",
     SETTING_LOL_PATH_TITLE: "LoL Installation Path / Lockfile",
     SETTING_LOL_PATH_DESC: "If the app does not detect your game, enter the path where the <b>lockfile</b> is located (usually <code>C:\\Riot Games\\League of Legends</code>).",
+    SETTING_DISCORD_RPC_TITLE: "Discord Rich Presence",
+    SETTING_DISCORD_RPC_DESC: "Show your active game status, champion, and a download button in your Discord profile.",
     BTN_BROWSE: "Browse",
     BTN_SAVE: "Save",
     PATH_SAVED_SUCCESS: "Path saved successfully",
@@ -461,6 +463,8 @@ const TRANSLATIONS = {
     SETTINGS_SEC_LOL_PATH: "Ubicación de League of Legends",
     SETTING_LOL_PATH_TITLE: "Ruta de Instalación de LoL / Lockfile",
     SETTING_LOL_PATH_DESC: "Si la app no detecta tu juego, introduce la ruta donde se encuentra el archivo <b>lockfile</b> (normalmente <code>C:\\Riot Games\\League of Legends</code>).",
+    SETTING_DISCORD_RPC_TITLE: "Rich Presence de Discord",
+    SETTING_DISCORD_RPC_DESC: "Muestra el estado de tu partida, campeón y un botón de descarga en tu perfil de Discord.",
     BTN_BROWSE: "Examinar",
     BTN_SAVE: "Guardar",
     PATH_SAVED_SUCCESS: "Ruta guardada correctamente",
@@ -606,7 +610,8 @@ function applyTranslations(lang) {
       enableValorantDetection: appConfig.enableValorantDetection,
       enableLowPerf: appConfig.enableLowPerf,
       lang: lang,
-      enableGoldOverlay: appConfig.enableGoldOverlay
+      enableGoldOverlay: appConfig.enableGoldOverlay,
+      enableDiscordRPC: appConfig.enableDiscordRPC
     });
   }
 }
@@ -693,6 +698,7 @@ const elSettingsCheckValorantDetection = document.getElementById('settings-check
 const elSettingsCheckGoldOverlay = document.getElementById('settings-check-gold-overlay');
 const elSettingsCheckLowPerf = document.getElementById('settings-check-low-perf');
 const elSettingsCheckPreviewOverlay = document.getElementById('settings-check-preview-overlay');
+const elSettingsCheckDiscordRpc = document.getElementById('settings-check-discord-rpc');
 const elBtnZoomOut = document.getElementById('btn-zoom-out');
 const elBtnZoomIn = document.getElementById('btn-zoom-in');
 const elZoomValue = document.getElementById('zoom-value');
@@ -993,6 +999,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (elSettingsCheckLowPerf) {
       appConfig.enableLowPerf = elSettingsCheckLowPerf.checked;
     }
+    if (elSettingsCheckDiscordRpc) {
+      appConfig.enableDiscordRPC = elSettingsCheckDiscordRpc.checked;
+    }
 
     updateLowPerfClass();
     updateSoundToggleButtonUI(appConfig.enableSounds);
@@ -1017,7 +1026,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       enableLolDetection: appConfig.enableLolDetection,
       enableValorantDetection: appConfig.enableValorantDetection,
       enableLowPerf: appConfig.enableLowPerf,
-      enableGoldOverlay: appConfig.enableGoldOverlay
+      enableGoldOverlay: appConfig.enableGoldOverlay,
+      enableDiscordRPC: appConfig.enableDiscordRPC
     });
 
     // If activeScrapedData is loaded and any of the settings transitioned from OFF to ON, apply directly!
@@ -1080,6 +1090,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (elSettingsCheckLowPerf) {
     elSettingsCheckLowPerf.addEventListener('change', handleToggleChange);
+  }
+  if (elSettingsCheckDiscordRpc) {
+    elSettingsCheckDiscordRpc.addEventListener('change', handleToggleChange);
   }
 
   if (elBtnZoomOut) {
@@ -1323,6 +1336,9 @@ function updateConfigUI(config) {
   }
   if (elSettingsCheckLowPerf) {
     elSettingsCheckLowPerf.checked = config.enableLowPerf === true;
+  }
+  if (elSettingsCheckDiscordRpc) {
+    elSettingsCheckDiscordRpc.checked = config.enableDiscordRPC !== false;
   }
   updateLowPerfClass();
   updateSoundToggleButtonUI(config.enableSounds !== false);

@@ -7,6 +7,7 @@ const { exec, spawn } = require('child_process');
 const LcuConnector = require('./lcu-connector');
 const OnetricksScraper = require('./onetricks-scraper');
 const ValorantConnector = require('./valorant-connector');
+const discordRPC = require('./discord-rpc-manager');
 
 // Prevent crashes from unhandled LCU API/websocket promise rejections
 process.on('unhandledRejection', (reason, promise) => {
@@ -71,6 +72,7 @@ let config = {
   enableSounds: true,
   enableLolDetection: true,
   enableValorantDetection: true,
+  enableDiscordRPC: true,
   zoomFactor: 1.0,
   enableLowPerf: true,
   lang: 'en',
@@ -104,6 +106,8 @@ let appState = {
   activeRole: 'default', // e.g. 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'
   scrapedData: null,
   activeGame: null,
+  activeGamePlayerScores: null,
+  activeGamePlayerLevel: 1,
   valorantStatus: 'disconnected', // 'disconnected', 'scanning', 'connected'
   activeValorantGame: null,
   valorantPlayerInfo: null
@@ -954,6 +958,13 @@ function processLiveGameGoldData(data) {
 
   const activeSummonerName = data.activePlayer && data.activePlayer.summonerName;
   const me = data.allPlayers.find(p => p.summonerName === activeSummonerName);
+  
+  if (me) {
+    appState.activeGamePlayerScores = me.scores;
+    appState.activeGamePlayerLevel = me.level;
+    updateDiscordRPCStatus();
+  }
+ 
   const myTeam = me ? me.team : 'ORDER'; // Fallback to ORDER if activePlayer not ready
 
   // Filter players into Allies vs Enemies
@@ -1081,6 +1092,8 @@ app.whenReady().then(() => {
   createTray();
   updateLoginItemSettings();
   setupAutoUpdater();
+  discordRPC.init(config.enableDiscordRPC !== false);
+  updateDiscordRPCStatus();
 
   // Check for updates on startup (after 5 seconds)
   setTimeout(() => {
@@ -1116,8 +1129,12 @@ app.whenReady().then(() => {
         playerInfo,
         ddragonVersion: scraper ? scraper.ddragonVersion : '14.10.1'
       });
+      updateDiscordRPCStatus();
     },
-    onChampSelectUpdate: handleChampSelectUpdate,
+    onChampSelectUpdate: (session) => {
+      handleChampSelectUpdate(session);
+      updateDiscordRPCStatus();
+    },
     onGameflowPhaseUpdate: handleGameflowPhaseUpdate
   });
 
@@ -1146,11 +1163,13 @@ app.whenReady().then(() => {
         appState.valorantPlayerInfo = null;
       }
       sendToRenderer('valorant-status', { status, playerInfo: valPlayerInfo, config });
+      updateDiscordRPCStatus();
     },
     onGameStarted: (gameData) => {
       console.log(`[CLIENT] Valorant Game started! Dispatched event to renderer.`);
       appState.activeValorantGame = gameData;
       sendToRenderer('valorant-game-started', gameData);
+      updateDiscordRPCStatus();
       
       // Stop LoL detection ONLY when actual match is in progress (not pre-game agent select)
       if (gameData && !gameData.isPregame) {
@@ -1170,6 +1189,7 @@ app.whenReady().then(() => {
       console.log(`[CLIENT] Valorant Game ended! Dispatched event to renderer.`);
       appState.activeValorantGame = null;
       sendToRenderer('valorant-game-ended');
+      updateDiscordRPCStatus();
       
       // Resume LoL detection if enabled in config
       if (config.enableLolDetection !== false && connector) {
@@ -1281,10 +1301,11 @@ function handleGameflowPhaseUpdate(phase) {
   console.log(`[CLIENT] LCU Gameflow Phase updated: ${phase}`);
   appState.currentGameflowPhase = phase;
 
-  // Reset workspace if gameflow returns to non-active phase (lobby, none, dodged, ended)
   const resetPhases = ['None', 'Lobby', 'Matchmaking', 'ReadyCheck', 'EndOfGame', 'WaitingForStats'];
     if (resetPhases.includes(phase)) {
     appState.activeGame = null;
+    appState.activeGamePlayerScores = null;
+    appState.activeGamePlayerLevel = 1;
     resetWorkspace();
     sendToRenderer('game-ended', {});
     stopLiveGameTracking();
@@ -1294,6 +1315,7 @@ function handleGameflowPhaseUpdate(phase) {
       console.log('[CLIENT] LoL game ended. Resuming Valorant detection.');
       valorantConnector.start();
     }
+    updateDiscordRPCStatus();
   } else if (['GameStart', 'InProgress', 'Reconnect'].includes(phase)) {
     console.log(`[CLIENT] Game active/started (Phase: ${phase}). Fetching players info...`);
     startLiveGameTracking();
@@ -1311,10 +1333,12 @@ function handleGameflowPhaseUpdate(phase) {
       if (['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
         const activeGame = await fetchActiveGamePlayersInfo();
         if (activeGame) {
+          activeGame.startTimestamp = Date.now();
           appState.activeGame = activeGame;
           sendToRenderer('game-started', activeGame);
           console.log(`[CLIENT] Compiled active game info and dispatched 'game-started' event to renderer. Allied players: ${activeGame.blueTeam.length}, Enemy players: ${activeGame.redTeam.length}`);
           await checkAndTriggerActiveGameBuildScrape(activeGame);
+          updateDiscordRPCStatus();
         }
       }
     }, 2000);
@@ -1384,6 +1408,7 @@ async function handleChampSelectUpdate(session) {
       appState.activeRole = 'default';
       appState.scrapedData = null;
       sendToRenderer('champ-select-update', { active: true, championId: 0, skinId: 0 });
+      updateDiscordRPCStatus();
       return;
     }
 
@@ -1684,18 +1709,19 @@ ipcMain.on('apply-build', async (event, data) => {
   }
 });
 
-ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf, lang, enableGoldOverlay }) => {
+ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoApplyItems, flashOnD, debugBrowser, startAtLogin, enableSounds, enableLolDetection, enableValorantDetection, zoomFactor, enableLowPerf, lang, enableGoldOverlay, enableDiscordRPC }) => {
   const flashPreferenceChanged = (flashOnD !== undefined && flashOnD !== config.flashOnD);
   const lolDetectionChanged = (enableLolDetection !== undefined && enableLolDetection !== config.enableLolDetection);
   const valDetectionChanged = (enableValorantDetection !== undefined && enableValorantDetection !== config.enableValorantDetection);
   const zoomChanged = (zoomFactor !== undefined && zoomFactor !== config.zoomFactor);
   const goldOverlayChanged = (enableGoldOverlay !== undefined && enableGoldOverlay !== config.enableGoldOverlay);
-
+  const discordRPCChanged = (enableDiscordRPC !== undefined && enableDiscordRPC !== config.enableDiscordRPC);
+ 
   if (lang !== undefined && lang !== config.lang) {
     config.lang = lang;
     rebuildTrayMenu();
   }
-
+ 
   config.autoApplyRunes = autoApplyRunes;
   config.autoApplySpells = autoApplySpells;
   if (autoApplyItems !== undefined) {
@@ -1725,6 +1751,10 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
   }
   if (enableGoldOverlay !== undefined) {
     config.enableGoldOverlay = enableGoldOverlay;
+  }
+  if (enableDiscordRPC !== undefined) {
+    config.enableDiscordRPC = enableDiscordRPC;
+    discordRPC.setEnabled(enableDiscordRPC);
   }
   if (zoomFactor !== undefined) {
     const sanitizedZoom = Math.min(Math.max(zoomFactor, 0.7), 1.3);
@@ -1832,6 +1862,7 @@ ipcMain.on('toggle-auto-apply', (event, { autoApplyRunes, autoApplySpells, autoA
       });
     }
   }
+  updateDiscordRPCStatus();
 });
 
 ipcMain.on('save-custom-path', (event, pathStr) => {
@@ -1892,4 +1923,137 @@ ipcMain.on('restart-and-install', () => {
   console.log('[UPDATER] Restart and install requested by renderer');
   autoUpdater.quitAndInstall();
 });
+ 
+function updateDiscordRPCStatus() {
+  if (config.enableDiscordRPC === false) {
+    discordRPC.clearActivity();
+    return;
+  }
+ 
+  const lang = config.lang || 'en';
+ 
+  // Case 1: Valorant Game Active
+  if (appState.activeValorantGame) {
+    const isPregame = appState.activeValorantGame.isPregame;
+    const details = lang === 'es' ? 'Jugando Valorant' : 'Playing Valorant';
+    const state = isPregame
+      ? (lang === 'es' ? 'En Selección de Agente' : 'In Agent Select')
+      : (lang === 'es' ? 'Partida en Curso' : 'In Match');
+ 
+    const startTimestamp = appState.activeValorantGame.startTimestamp || Date.now();
+ 
+    discordRPC.updateActivity(
+      details,
+      state,
+      'app_icon',
+      'Onetricks Client',
+      'tray_icon',
+      'Valorant Active',
+      startTimestamp,
+      lang
+    );
+    return;
+  }
+ 
+  // Case 2: League of Legends Active Game
+  if (appState.activeGame && ['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
+    const championName = appState.activeChampionName || 'Unknown';
+    const role = appState.activeRole && appState.activeRole !== 'default' ? appState.activeRole.toUpperCase() : '';
+    const roleStr = role ? ` (${role})` : '';
+ 
+    const details = lang === 'es'
+      ? `Jugando ${championName}${roleStr}`
+      : `Playing ${championName}${roleStr}`;
+ 
+    let state = lang === 'es' ? 'En Partida' : 'In Game';
+    if (appState.activeGamePlayerScores) {
+      const { kills, deaths, assists, creepScore } = appState.activeGamePlayerScores;
+      state = `KDA: ${kills}/${deaths}/${assists} | CS: ${creepScore}`;
+    }
+ 
+    const ddragonVer = scraper ? scraper.ddragonVersion : '14.10.1';
+    const largeImage = championName !== 'Unknown'
+      ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVer}/img/champion/${championName}.png`
+      : 'app_icon';
+ 
+    const startTimestamp = appState.activeGame.startTimestamp || Date.now();
+ 
+    discordRPC.updateActivity(
+      details,
+      state,
+      largeImage,
+      `Champion: ${championName}`,
+      'app_icon',
+      'League of Legends Active',
+      startTimestamp,
+      lang
+    );
+    return;
+  }
+ 
+  // Case 3: League of Legends Champion Select
+  if (appState.currentGameflowPhase === 'ChampSelect') {
+    const championName = appState.activeChampionName;
+    const role = appState.activeRole && appState.activeRole !== 'default' ? appState.activeRole.toUpperCase() : '';
+    const roleStr = role ? ` - ${role}` : '';
+ 
+    let details = lang === 'es' ? 'En Selección de Campeón' : 'In Champion Select';
+    let largeImage = 'app_icon';
+    let largeImageText = 'Selecting...';
+ 
+    if (championName) {
+      details = lang === 'es' ? `Eligiendo a ${championName}` : `Selecting ${championName}`;
+      const ddragonVer = scraper ? scraper.ddragonVersion : '14.10.1';
+      largeImage = `https://ddragon.leagueoflegends.com/cdn/${ddragonVer}/img/champion/${championName}.png`;
+      largeImageText = `Champion: ${championName}${roleStr}`;
+    }
+ 
+    discordRPC.updateActivity(
+      details,
+      lang === 'es' ? 'Preparando Tácticas' : 'Preparing Tactics',
+      largeImage,
+      largeImageText,
+      'app_icon',
+      'Onetricks Client',
+      null,
+      lang
+    );
+    return;
+  }
+ 
+  // Case 4: Idle / Browsing the client
+  let detailsStr = lang === 'es' ? 'En el Menú' : 'In the Menu';
+  let stateStr = lang === 'es' ? 'Buscando Partida' : 'Idle';
+ 
+  if (appState.lcuStatus === 'connected') {
+    const phase = appState.currentGameflowPhase;
+    if (phase === 'Lobby') {
+      detailsStr = lang === 'es' ? 'En la Sala de Espera' : 'In the Lobby';
+      stateStr = lang === 'es' ? 'Preparándose para Jugar' : 'Preparing to Play';
+    } else if (phase === 'Matchmaking') {
+      detailsStr = lang === 'es' ? 'Buscando Partida' : 'In Queue';
+      stateStr = lang === 'es' ? 'Esperando Oponentes' : 'Searching for Match';
+    } else if (phase === 'ReadyCheck') {
+      detailsStr = lang === 'es' ? '¡Partida Encontrada!' : 'Match Found!';
+      stateStr = lang === 'es' ? 'Aceptando Partida' : 'Accepting Match';
+    } else {
+      detailsStr = lang === 'es' ? 'En el Menú de LoL' : 'In LoL Menu';
+      stateStr = lang === 'es' ? 'Esperando Partida' : 'Waiting for Game';
+    }
+  } else if (appState.valorantStatus === 'connected') {
+    detailsStr = lang === 'es' ? 'En el Menú de Valorant' : 'In Valorant Menu';
+    stateStr = lang === 'es' ? 'Esperando Partida' : 'Waiting for Game';
+  }
+ 
+  discordRPC.updateActivity(
+    detailsStr,
+    stateStr,
+    'app_icon',
+    'Onetricks Client',
+    null,
+    null,
+    null,
+    lang
+  );
+}
 

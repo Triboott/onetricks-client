@@ -8,6 +8,7 @@
     "dist": "electron-builder --win"
   },
   "dependencies": {
+    "discord-rpc": "^4.0.1",
     "electron-updater": "^6.8.3",
     "selfsigned": "^5.5.0",
     "ws": "^8.18.0"
