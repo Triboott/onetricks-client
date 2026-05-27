@@ -10,48 +10,59 @@
   <link rel="stylesheet" href="overlay.css">
   <style>
     /* ── Preview / Calibration Mode ── */
-    #preview-done-wrap {
+    #preview-hint-wrap {
       display: none;
       position: fixed;
       top: 16px;
       right: 20px;
       z-index: 99999;
-      pointer-events: auto !important;
-      animation: fadeIn 0.2s ease-out forwards;
-    }
-    body.preview-mode #preview-done-wrap {
-      display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 6px;
+      gap: 8px;
+      animation: fadeIn 0.2s ease-out forwards;
     }
-    #btn-end-preview {
-      background: linear-gradient(135deg, #c89b3c 0%, #f0bc4a 100%);
-      color: #0a0c10;
-      border: none;
-      padding: 9px 20px;
-      border-radius: 8px;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 13px;
-      cursor: pointer;
-      letter-spacing: 0.3px;
-      box-shadow: 0 4px 18px rgba(200,155,60,0.45);
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    #btn-end-preview:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(200,155,60,0.6);
+    body.preview-mode #preview-hint-wrap {
+      display: flex;
     }
     #preview-hint {
       font-family: 'Inter', sans-serif;
-      font-size: 10px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.45);
+      font-size: 11px;
+      font-weight: 700;
+      color: #c89b3c;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      background: rgba(10, 12, 16, 0.88);
+      border: 1px solid rgba(200, 155, 60, 0.35);
+      padding: 6px 14px;
+      border-radius: 6px;
       text-align: right;
       letter-spacing: 0.3px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      pointer-events: none;
     }
-    /* In preview mode, ALL elements accept pointer events so dragging works without hovering */
+    #preview-done-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: #0a0c10;
+      background: linear-gradient(135deg, #f0c060, #c89b3c);
+      border: none;
+      padding: 7px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 4px 16px rgba(200, 155, 60, 0.5);
+      letter-spacing: 0.4px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    #preview-done-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(200, 155, 60, 0.7);
+    }
+    #preview-done-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(200, 155, 60, 0.4);
+    }
+    /* In preview mode, draggable elements show move cursor */
     body.preview-mode .team-comparison-header,
     body.preview-mode .matchup-indicator,
     body.preview-mode .matchup-row {
@@ -61,10 +72,10 @@
   </style>
 </head>
 <body>
-  <!-- Preview Mode: floating Done button (hidden by default) -->
-  <div id="preview-done-wrap">
-    <button id="btn-end-preview">✓ Done Calibrating</button>
-    <span id="preview-hint">Drag the elements to reposition them</span>
+  <!-- Preview Mode: floating hint + done button (hidden by default) -->
+  <div id="preview-hint-wrap">
+    <span id="preview-hint">Arrastra los elementos · ESC para salir</span>
+    <button id="preview-done-btn">✓ Listo</button>
   </div>
 
   <!-- Highly Compact Scoreboard Header Gold Widget -->
@@ -85,7 +96,7 @@
     </div>
   </div>
 
-  <!-- Vertical Matchups Column (Centered exactly on the divider line) -->
+  <!-- Vertical Matchups Column (rows are individually position:fixed in CSS) -->
   <div class="matchups-vertical-column" id="matchups-column">
     <div class="matchup-row" id="matchup-row-0" style="display: none;">
       <div class="matchup-indicator even" id="matchup-indicator-0">
@@ -133,250 +144,207 @@
     const { ipcRenderer } = require('electron');
 
     const blueGoldLbl = document.getElementById('blue-gold-lbl');
-    const redGoldLbl = document.getElementById('red-gold-lbl');
+    const redGoldLbl  = document.getElementById('red-gold-lbl');
     const headerDiffBadge = document.getElementById('header-diff-badge');
     const headerDiffArrow = document.getElementById('header-diff-arrow');
-    const headerDiffVal = document.getElementById('header-diff-val');
-    const matchupsColumn = document.getElementById('matchups-column');
+    const headerDiffVal   = document.getElementById('header-diff-val');
 
     const formatGold = (amount) => {
-      // Return raw amount if small, or formatted k
-      if (amount >= 1000) {
-        return (amount / 1000).toFixed(1) + 'k';
-      }
+      if (amount >= 1000) return (amount / 1000).toFixed(1) + 'k';
       return amount;
     };
 
+    // ── Gold data update ──
     ipcRenderer.on('update-gold', (event, data) => {
       if (!data) return;
 
-      // Update team totals (raw numbers look more native)
       blueGoldLbl.textContent = data.alliesTotalGold;
-      redGoldLbl.textContent = data.enemiesTotalGold;
+      redGoldLbl.textContent  = data.enemiesTotalGold;
 
       const diff = data.teamGoldDifference;
       if (diff === 0) {
-        headerDiffVal.textContent = "0";
-        headerDiffArrow.textContent = "=";
-        headerDiffBadge.className = "header-difference-badge even";
+        headerDiffVal.textContent   = '0';
+        headerDiffArrow.textContent = '=';
+        headerDiffBadge.className   = 'header-difference-badge even';
       } else if (diff > 0) {
-        // Allies ahead (pointing left)
-        headerDiffVal.textContent = diff;
-        headerDiffArrow.textContent = "◀";
-        headerDiffBadge.className = "header-difference-badge allies-ahead";
+        headerDiffVal.textContent   = diff;
+        headerDiffArrow.textContent = '◀';
+        headerDiffBadge.className   = 'header-difference-badge allies-ahead';
       } else {
-        // Enemies ahead (pointing right)
-        headerDiffVal.textContent = Math.abs(diff);
-        headerDiffArrow.textContent = "▶";
-        headerDiffBadge.className = "header-difference-badge enemies-ahead";
+        headerDiffVal.textContent   = Math.abs(diff);
+        headerDiffArrow.textContent = '▶';
+        headerDiffBadge.className   = 'header-difference-badge enemies-ahead';
       }
 
-      // Update matchup rows vertically (Diamond indicators)
       if (data.matchups && data.matchups.length > 0) {
         data.matchups.forEach((m, idx) => {
           if (idx >= 5) return;
-
-          const row = document.getElementById('matchup-row-' + idx);
+          const row       = document.getElementById('matchup-row-' + idx);
           const indicator = document.getElementById('matchup-indicator-' + idx);
-          const arrow = document.getElementById('matchup-arrow-' + idx);
-          const val = document.getElementById('matchup-val-' + idx);
-
+          const arrow     = document.getElementById('matchup-arrow-' + idx);
+          const val       = document.getElementById('matchup-val-' + idx);
           if (row && indicator && arrow && val) {
             const diffVal = m.difference;
-            let diffClass = 'even';
-            let arrowSymbol = '=';
-            let diffText = '';
-
+            let diffClass  = 'even', arrowSymbol = '=', diffText = '';
             if (diffVal > 0) {
-              diffClass = 'ahead';
-              arrowSymbol = '◀';
-              diffText = formatGold(diffVal);
+              diffClass = 'ahead'; arrowSymbol = '◀'; diffText = formatGold(diffVal);
             } else if (diffVal < 0) {
-              diffClass = 'behind';
-              arrowSymbol = '▶';
-              diffText = formatGold(Math.abs(diffVal));
+              diffClass = 'behind'; arrowSymbol = '▶'; diffText = formatGold(Math.abs(diffVal));
             }
-
-            indicator.className = `matchup-indicator ${diffClass}`;
-            arrow.textContent = arrowSymbol;
-            val.textContent = diffVal !== 0 ? diffText : '';
-            
-            row.style.display = 'flex';
+            indicator.className    = `matchup-indicator ${diffClass}`;
+            arrow.textContent      = arrowSymbol;
+            val.textContent        = diffVal !== 0 ? diffText : '';
+            row.style.display      = 'flex';
           }
         });
-
-        // Hide unused rows
         for (let i = data.matchups.length; i < 5; i++) {
           const row = document.getElementById('matchup-row-' + i);
-          if (row) {
-            row.style.display = 'none';
-          }
+          if (row) row.style.display = 'none';
         }
       } else {
-        // Hide all rows if no matchups
         for (let i = 0; i < 5; i++) {
           const row = document.getElementById('matchup-row-' + i);
-          if (row) {
-            row.style.display = 'none';
-          }
+          if (row) row.style.display = 'none';
         }
       }
     });
 
+    // ── State ──
     const teamHeader = document.getElementById('team-header');
-
+    let isPreviewMode   = false;
     let isDraggingHeader = false;
     let rowDraggingFlags = [false, false, false, false, false];
-    let rowOffsets = [
-      { x: 0, y: 0 },
-      { x: 0, y: 0 },
-      { x: 0, y: 0 },
-      { x: 0, y: 0 },
-      { x: 0, y: 0 }
-    ];
-
-    teamHeader.addEventListener('mouseenter', () => {
-      ipcRenderer.send('set-click-through', false);
-    });
-    teamHeader.addEventListener('mouseleave', () => {
-      if (!isDraggingHeader) {
-        ipcRenderer.send('set-click-through', true);
-      }
-    });
-
+    let rowOffsets = [{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
     let headerX = 0, headerY = 0;
 
+    // ── Direct CSS var helpers (instant visual update, no IPC) ──
+    function applyHeaderOffset(x, y) {
+      headerX = x; headerY = y;
+      document.documentElement.style.setProperty('--header-offset-x', x + 'px');
+      document.documentElement.style.setProperty('--header-offset-y', y + 'px');
+    }
+    function applyRowOffset(i, x, y) {
+      rowOffsets[i].x = x; rowOffsets[i].y = y;
+      document.documentElement.style.setProperty('--row' + i + '-offset-x', x + 'px');
+      document.documentElement.style.setProperty('--row' + i + '-offset-y', y + 'px');
+    }
+
+    // ── Receive initial/updated offsets from main process ──
     ipcRenderer.on('update-offsets', (event, offsets) => {
       if (!offsets) return;
-      headerX = offsets.headerX !== undefined ? offsets.headerX : (offsets.globalX || 0);
-      headerY = offsets.headerY !== undefined ? offsets.headerY : (offsets.globalY || 0);
-
-      document.documentElement.style.setProperty('--header-offset-x', headerX + 'px');
-      document.documentElement.style.setProperty('--header-offset-y', headerY + 'px');
-
+      applyHeaderOffset(
+        offsets.headerX !== undefined ? offsets.headerX : (offsets.globalX || 0),
+        offsets.headerY !== undefined ? offsets.headerY : (offsets.globalY || 0)
+      );
       for (let i = 0; i < 5; i++) {
-        rowOffsets[i].x = offsets['row' + i + 'X'] !== undefined ? offsets['row' + i + 'X'] : (offsets.globalX || 0);
-        rowOffsets[i].y = offsets['row' + i + 'Y'] !== undefined ? offsets['row' + i + 'Y'] : (offsets.globalY || 0);
-        document.documentElement.style.setProperty('--row' + i + '-offset-x', rowOffsets[i].x + 'px');
-        document.documentElement.style.setProperty('--row' + i + '-offset-y', rowOffsets[i].y + 'px');
+        applyRowOffset(
+          i,
+          offsets['row' + i + 'X'] !== undefined ? offsets['row' + i + 'X'] : (offsets.globalX || 0),
+          offsets['row' + i + 'Y'] !== undefined ? offsets['row' + i + 'Y'] : (offsets.globalY || 0)
+        );
       }
+    });
+
+    // ── Click-through toggle (normal game mode only) ──
+    teamHeader.addEventListener('mouseenter', () => {
+      if (!isPreviewMode) ipcRenderer.send('set-click-through', false);
+    });
+    teamHeader.addEventListener('mouseleave', () => {
+      if (!isPreviewMode && !isDraggingHeader) ipcRenderer.send('set-click-through', true);
     });
 
     ipcRenderer.on('select-element', (event, elementId) => {
-      // Clear visual selected style from all indicators
       teamHeader.classList.remove('selected');
       for (let i = 0; i < 5; i++) {
-        const indicator = document.getElementById('matchup-indicator-' + i);
-        if (indicator) indicator.classList.remove('selected');
+        const ind = document.getElementById('matchup-indicator-' + i);
+        if (ind) ind.classList.remove('selected');
       }
-
-      // Highlight the targeted element
       if (elementId === 'header') {
         teamHeader.classList.add('selected');
       } else if (elementId && elementId.startsWith('row')) {
-        const idx = elementId.substring(3);
-        const indicator = document.getElementById('matchup-indicator-' + idx);
-        if (indicator) indicator.classList.add('selected');
+        const ind = document.getElementById('matchup-indicator-' + elementId.substring(3));
+        if (ind) ind.classList.add('selected');
       }
     });
 
-    function setupDraggable(element, saveType, getOffsetX, getOffsetY, setDraggingFlag) {
-      let isDraggingElement = false;
-      let startX = 0;
-      let startY = 0;
-      let startOffsetX = 0;
-      let startOffsetY = 0;
+    // ── Drag system: visual update is LOCAL, IPC only on mouseup to persist ──
+    function setupDraggable(element, saveType, getOffsetX, getOffsetY, setOffsetXY, setDraggingFlag) {
+      let isDragging = false, startMX = 0, startMY = 0, startOX = 0, startOY = 0;
 
       element.addEventListener('mousedown', (e) => {
-        isDraggingElement = true;
+        isDragging = true;
         setDraggingFlag(true);
-        startX = e.clientX;
-        startY = e.clientY;
-        startOffsetX = getOffsetX();
-        startOffsetY = getOffsetY();
-        
+        ipcRenderer.send('dragging-state-change', true); // Let main process ignore scoreboard DRAG deltas
+        startMX = e.clientX; startMY = e.clientY;
+        startOX = getOffsetX(); startOY = getOffsetY();
         e.preventDefault();
         e.stopPropagation();
       });
 
       window.addEventListener('mousemove', (e) => {
-        if (!isDraggingElement) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        const newX = startOffsetX + dx;
-        const newY = startOffsetY + dy;
-        
-        ipcRenderer.send('save-element-offset', { type: saveType, x: newX, y: newY });
+        if (!isDragging) return;
+        setOffsetXY(startOX + (e.clientX - startMX), startOY + (e.clientY - startMY));
       });
 
       window.addEventListener('mouseup', (e) => {
-        if (isDraggingElement) {
-          isDraggingElement = false;
-          setDraggingFlag(false);
-          
-          // Verify if mouse actually left the boundary on release
-          const rect = element.getBoundingClientRect();
-          const isInside = (
-            e.clientX >= rect.left &&
-            e.clientX <= rect.right &&
-            e.clientY >= rect.top &&
-            e.clientY <= rect.bottom
-          );
-          if (!isInside) {
-            ipcRenderer.send('set-click-through', true);
-          }
+        if (!isDragging) return;
+        isDragging = false;
+        setDraggingFlag(false);
+        ipcRenderer.send('dragging-state-change', false); // Allow scoreboard DRAG deltas again
+        // Persist final position to disk via IPC
+        ipcRenderer.send('save-element-offset', { type: saveType, x: getOffsetX(), y: getOffsetY() });
+        // In normal mode: restore click-through if mouse left the element
+        if (!isPreviewMode) {
+          const r = element.getBoundingClientRect();
+          const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+          if (!inside) ipcRenderer.send('set-click-through', true);
         }
       });
     }
 
-    setupDraggable(teamHeader, 'header', () => headerX, () => headerY, (val) => { isDraggingHeader = val; });
+    setupDraggable(
+      teamHeader, 'header',
+      () => headerX, () => headerY,
+      (x, y) => applyHeaderOffset(x, y),
+      (v) => { isDraggingHeader = v; }
+    );
 
-    // Wire static matchup listeners once at startup!
     for (let i = 0; i < 5; i++) {
       const indicator = document.getElementById('matchup-indicator-' + i);
-      if (indicator) {
-        setupDraggable(indicator, 'row' + i, () => rowOffsets[i].x, () => rowOffsets[i].y, (val) => { rowDraggingFlags[i] = val; });
-
-        indicator.addEventListener('mouseenter', () => {
-          if (!document.body.classList.contains('preview-mode')) {
-            ipcRenderer.send('set-click-through', false);
-          }
-        });
-        indicator.addEventListener('mouseleave', () => {
-          if (!document.body.classList.contains('preview-mode') && !rowDraggingFlags[i]) {
-            ipcRenderer.send('set-click-through', true);
-          }
-        });
-      }
+      if (!indicator) continue;
+      const idx = i;
+      setupDraggable(
+        indicator, 'row' + idx,
+        () => rowOffsets[idx].x, () => rowOffsets[idx].y,
+        (x, y) => applyRowOffset(idx, x, y),
+        (v) => { rowDraggingFlags[idx] = v; }
+      );
+      indicator.addEventListener('mouseenter', () => {
+        if (!isPreviewMode) ipcRenderer.send('set-click-through', false);
+      });
+      indicator.addEventListener('mouseleave', () => {
+        if (!isPreviewMode && !rowDraggingFlags[idx]) ipcRenderer.send('set-click-through', true);
+      });
     }
 
-    // Also suppress click-through changes on teamHeader during preview
-    teamHeader.addEventListener('mouseenter', () => {
-      if (!document.body.classList.contains('preview-mode')) {
-        ipcRenderer.send('set-click-through', false);
-      }
-    });
-    teamHeader.addEventListener('mouseleave', () => {
-      if (!document.body.classList.contains('preview-mode') && !isDraggingHeader) {
-        ipcRenderer.send('set-click-through', true);
-      }
+    // ── Preview / Calibration Mode ──
+    const endPreviewFn = () => ipcRenderer.send('end-preview');
+
+    document.getElementById('preview-done-btn').addEventListener('click', endPreviewFn);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isPreviewMode) endPreviewFn();
     });
 
-    // ── Preview / Calibration Mode ──
     ipcRenderer.on('start-preview', () => {
+      isPreviewMode = true;
       document.body.classList.add('preview-mode');
     });
 
     ipcRenderer.on('end-preview', () => {
+      isPreviewMode = false;
       document.body.classList.remove('preview-mode');
-    });
-
-    document.getElementById('btn-end-preview').addEventListener('click', () => {
-      document.body.classList.remove('preview-mode');
-      ipcRenderer.send('end-preview');
     });
   </script>
 </body>
 </html>
-

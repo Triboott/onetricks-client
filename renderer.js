@@ -292,6 +292,8 @@ const TRANSLATIONS = {
     SETTING_GOLD_OVERLAY_DESC: "Shows total spent gold difference overlay when you press the TAB key in-game (100% compliant with Riot policies).",
     SETTING_OVERLAY_CAL_TITLE: "Manual Overlay Positioning",
     SETTING_OVERLAY_CAL_DESC: "If you cannot drag the overlay in-game (because the game captures mouse input), use these controls to set the pixel offset for each element.",
+    SETTING_PREVIEW_OVERLAY_TITLE: "Preview Overlay & Drag elements",
+    SETTING_PREVIEW_OVERLAY_DESC: "Enables a visual preview overlay on screen. Drag the elements to reposition them, and when you turn off the preview it will stay saved.",
     CAL_SELECT_ELEMENT: "Select Target Element:",
     CAL_OPT_HEADER: "Header (Total Gold Difference)",
     CAL_OPT_ROW0: "Row 1 — Top",
@@ -439,6 +441,8 @@ const TRANSLATIONS = {
     SETTING_GOLD_OVERLAY_DESC: "Muestra la diferencia de oro total y por rol al mantener pulsado el TABULADOR en partida (100% permitido por Riot).",
     SETTING_OVERLAY_CAL_TITLE: "Posicionamiento Manual del Overlay",
     SETTING_OVERLAY_CAL_DESC: "Si no puedes arrastrar el overlay dentro de la partida (porque el juego captura el ratón), usa estos controles para ajustar el desplazamiento en píxeles de cada elemento.",
+    SETTING_PREVIEW_OVERLAY_TITLE: "Vista Previa y Arrastrar Elementos",
+    SETTING_PREVIEW_OVERLAY_DESC: "Muestra una vista previa del overlay en pantalla. Arrastra los elementos para recolocarlos y al desactivar la vista previa se guardará su posición.",
     CAL_SELECT_ELEMENT: "Seleccionar Elemento:",
     CAL_OPT_HEADER: "Cabecera (Diferencia Total de Oro)",
     CAL_OPT_ROW0: "Fila 1 — Top",
@@ -688,6 +692,7 @@ const elSettingsCheckLolDetection = document.getElementById('settings-check-lol-
 const elSettingsCheckValorantDetection = document.getElementById('settings-check-valorant-detection');
 const elSettingsCheckGoldOverlay = document.getElementById('settings-check-gold-overlay');
 const elSettingsCheckLowPerf = document.getElementById('settings-check-low-perf');
+const elSettingsCheckPreviewOverlay = document.getElementById('settings-check-preview-overlay');
 const elBtnZoomOut = document.getElementById('btn-zoom-out');
 const elBtnZoomIn = document.getElementById('btn-zoom-in');
 const elZoomValue = document.getElementById('zoom-value');
@@ -896,6 +901,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     elPathSuccessLbl.style.display = 'none';
     if (elValPathSuccessLbl) {
       elValPathSuccessLbl.style.display = 'none';
+    }
+    // Turn off preview when settings modal is closed
+    if (elSettingsCheckPreviewOverlay && elSettingsCheckPreviewOverlay.checked) {
+      elSettingsCheckPreviewOverlay.checked = false;
+      if (window.api && window.api.endPreview) {
+        window.api.endPreview();
+      }
     }
   };
   elBtnSettingsClose.addEventListener('click', closeSettings);
@@ -1132,7 +1144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // OVERLAY CALIBRATION PANEL LOGIC
   // ==========================================================================
   const elCalBtnResetAll = document.getElementById('cal-btn-reset-all');
-  const elCalBtnPreview  = document.getElementById('cal-btn-preview');
 
   // Reset ALL elements to (0, 0)
   if (elCalBtnResetAll) {
@@ -1147,19 +1158,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Calibrate button: show overlay fully interactive so user can drag elements directly
-  if (elCalBtnPreview) {
-    elCalBtnPreview.addEventListener('click', () => {
-      sfx.playTick();
-      if (window.api && window.api.previewOverlay) {
-        window.api.previewOverlay();
-        elCalBtnPreview.textContent = '⏳ Calibrating... (click ✓ Done on overlay)';
-        elCalBtnPreview.disabled = true;
-        // Re-enable the button after a safety timeout in case user closes overlay externally
-        setTimeout(() => {
-          elCalBtnPreview.textContent = TRANSLATIONS[currentLang].CAL_BTN_ENTER || '🎯 Calibrate Overlay';
-          elCalBtnPreview.disabled = false;
-        }, 60000);
+  // Toggle preview overlay switch listener
+  if (elSettingsCheckPreviewOverlay) {
+    elSettingsCheckPreviewOverlay.addEventListener('change', () => {
+      sfx.playSwitch();
+      if (elSettingsCheckPreviewOverlay.checked) {
+        if (window.api && window.api.previewOverlay) {
+          window.api.previewOverlay();
+        }
+      } else {
+        if (window.api && window.api.endPreview) {
+          window.api.endPreview();
+        }
+      }
+    });
+  }
+
+  // When the overlay's Done button / Escape key ends the preview, sync the toggle back to unchecked
+  if (window.api && window.api.onPreviewEnded) {
+    window.api.onPreviewEnded(() => {
+      if (elSettingsCheckPreviewOverlay && elSettingsCheckPreviewOverlay.checked) {
+        elSettingsCheckPreviewOverlay.checked = false;
       }
     });
   }

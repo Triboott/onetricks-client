@@ -7,10 +7,24 @@
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Scoreboard spacing calibration variables - perfect for standard LoL HUD scoreboard! */
-  --header-top: 21.8vh;  /* Aligns perfectly inside the scoreboard's header gap, below dragon souls and above kills tracker */
-  --overlay-top: 45.4%;  /* Vertically centers the vertical column perfectly on the third scoreboard row */
-  --row-height: 8.6vh;   /* Exact height of each player row in scoreboard (8.6% of screen height) */
-  --row-gap: 0px;        /* Seamless row transitions */
+  --header-top: 20.8vh;
+  --overlay-top: 43.5%;
+  --row-height: 6.93vh;
+  --row-gap: 0px;
+
+  /* Individual element offsets (updated by JS on drag) */
+  --header-offset-x: 0px;
+  --header-offset-y: 0px;
+  --row0-offset-x: 0px;
+  --row0-offset-y: 0px;
+  --row1-offset-x: 0px;
+  --row1-offset-y: 0px;
+  --row2-offset-x: 0px;
+  --row2-offset-y: 0px;
+  --row3-offset-x: 0px;
+  --row3-offset-y: 0px;
+  --row4-offset-x: 0px;
+  --row4-offset-y: 0px;
 }
 
 * {
@@ -28,47 +42,30 @@ body {
   height: 100vh;
   position: relative;
   user-select: none;
-  pointer-events: none; /* Fully click-through safety */
-  
-  /* Keyboard / independent calibration offsets */
-  --header-offset-x: 0px;
-  --header-offset-y: 0px;
-  --row0-offset-x: 0px;
-  --row0-offset-y: 0px;
-  --row1-offset-x: 0px;
-  --row1-offset-y: 0px;
-  --row2-offset-x: 0px;
-  --row2-offset-y: 0px;
-  --row3-offset-x: 0px;
-  --row3-offset-y: 0px;
-  --row4-offset-x: 0px;
-  --row4-offset-y: 0px;
 }
 
 /* ==========================================================================
    COMPACT TEAM GOLD HEADER WIDGET
    ========================================================================== */
 .team-comparison-header {
-  position: absolute;
-  top: var(--header-top);
-  left: 50%;
+  position: fixed;
+  top: calc(var(--header-top) + var(--header-offset-y));
+  left: calc(50% + var(--header-offset-x));
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 240px; /* Highly compact, sits exactly in the scoreboard header gap */
+  max-width: 240px;
   padding: 2px 10px;
   background: rgba(10, 12, 16, 0.92);
-  border: 1px solid rgba(200, 155, 60, 0.25); /* Bronze/Gold LoL styled border */
+  border: 1px solid rgba(200, 155, 60, 0.25);
   box-shadow: var(--shadow-premium);
   border-radius: 4px;
   height: 24px;
-  opacity: 0;
-  animation: fadeIn 0.15s ease-out forwards;
-  margin-left: var(--header-offset-x);
-  margin-top: var(--header-offset-y);
+  opacity: 1;
 }
+
 
 .gold-icon {
   font-size: 10px;
@@ -151,39 +148,54 @@ body {
    VERTICAL SCOREBOARD GAP MATCHUPS COLUMN
    ========================================================================== */
 .matchups-vertical-column {
-  position: absolute;
-  top: var(--overlay-top);
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  gap: var(--row-gap);
-  width: 100%;
-  max-width: 32px; /* Super narrow to fit exactly on the scoreboard divider line */
-  align-items: center;
-  opacity: 0;
-  animation: fadeIn 0.2s ease-out forwards;
+  /* This container is invisible and non-interactive - rows use position:fixed directly */
+  position: fixed;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  pointer-events: none;
+  visibility: hidden; /* container hidden; rows below are independently shown */
 }
 
+/* Each row is fixed, centered on screen, with offset from calibration */
 #matchup-row-0 {
-  margin-left: var(--row0-offset-x);
-  margin-top: var(--row0-offset-y);
+  position: fixed;
+  visibility: visible;
+  top: calc(var(--overlay-top) - var(--row-height) * 2 + var(--row0-offset-y));
+  left: calc(50% + var(--row0-offset-x));
+  transform: translateX(-50%);
+  opacity: 1;
 }
 #matchup-row-1 {
-  margin-left: var(--row1-offset-x);
-  margin-top: var(--row1-offset-y);
+  position: fixed;
+  visibility: visible;
+  top: calc(var(--overlay-top) - var(--row-height) * 1 + var(--row1-offset-y));
+  left: calc(50% + var(--row1-offset-x));
+  transform: translateX(-50%);
+  opacity: 1;
 }
 #matchup-row-2 {
-  margin-left: var(--row2-offset-x);
-  margin-top: var(--row2-offset-y);
+  position: fixed;
+  visibility: visible;
+  top: calc(var(--overlay-top) + var(--row2-offset-y));
+  left: calc(50% + var(--row2-offset-x));
+  transform: translateX(-50%);
+  opacity: 1;
 }
 #matchup-row-3 {
-  margin-left: var(--row3-offset-x);
-  margin-top: var(--row3-offset-y);
+  position: fixed;
+  visibility: visible;
+  top: calc(var(--overlay-top) + var(--row-height) * 1 + var(--row3-offset-y));
+  left: calc(50% + var(--row3-offset-x));
+  transform: translateX(-50%);
+  opacity: 1;
 }
 #matchup-row-4 {
-  margin-left: var(--row4-offset-x);
-  margin-top: var(--row4-offset-y);
+  position: fixed;
+  visibility: visible;
+  top: calc(var(--overlay-top) + var(--row-height) * 2 + var(--row4-offset-y));
+  left: calc(50% + var(--row4-offset-x));
+  transform: translateX(-50%);
+  opacity: 1;
 }
 
 @keyframes fadeIn {
@@ -197,8 +209,10 @@ body {
   justify-content: center;
   align-items: center;
   height: var(--row-height);
-  width: 100%;
+  width: 32px;
+  pointer-events: auto;
 }
+
 
 /* Scoreboard-integrated Diamond Badge */
 .matchup-indicator {

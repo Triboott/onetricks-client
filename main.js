@@ -20,8 +20,16 @@ let mainWindow = null;
 let overlayWindow = null; // transparent scoreboard overlay
 let tabListenerProcess = null; // C# Tab key listener child process
 let liveGamePollInterval = null; // live client data polling interval
+let playerBootsCache = {}; // tracks each player's purchased boots item ID to handle dedicated quest slots
+const BOOTS_IDS = new Set([
+  '1001', '2422', // Tier 1
+  '3005', '3006', '3008', '3009', '3010', '3013', '3020', '3047', '3111', '3117', '3158', // Tier 2
+  '3168', '3170', '3171', '3173', '3174', '3175', '3176', // Tier 3
+]);
 let selectedCalibrationElement = 'header'; // tracks element currently selected for arrow keys
 let isPreviewMode = false; // true while calibration preview is active
+let isDraggingElement = false; // true while user is dragging header or lanes on the overlay in-game
+let isCalibratingMode = false; // true when user holds Ctrl + Tab to calibrate in-game using arrow keys
 let connector = null;
 let valorantConnector = null;
 let scraper = null;
@@ -63,12 +71,12 @@ let config = {
   enableLowPerf: true,
   lang: 'en',
   enableGoldOverlay: true,
-  overlayOffsetX: 0,
-  overlayOffsetY: 0,
+  overlayOffsetX: 996,
+  overlayOffsetY: 1462,
   headerOffsetX: 0,
   headerOffsetY: 0,
-  columnOffsetX: 0,
-  columnOffsetY: 0,
+  columnOffsetX: 545,
+  columnOffsetY: 1182,
   row0OffsetX: 0,
   row0OffsetY: 0,
   row1OffsetX: 0,
@@ -607,8 +615,16 @@ function compileTabListener() {
   });
 }
 
-function createOverlayWindow() {
-  if (overlayWindow && !overlayWindow.isDestroyed()) return;
+function createOverlayWindow(isCalibration = false) {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    // If the focusable state is different from what we want, destroy it first so we can recreate it
+    if (overlayWindow.focusable !== isCalibration) {
+      overlayWindow.destroy();
+      overlayWindow = null;
+    } else {
+      return;
+    }
+  }
 
   const primaryDisplay = screen.getPrimaryDisplay();
   const { x, y, width, height } = primaryDisplay.bounds;
@@ -622,7 +638,7 @@ function createOverlayWindow() {
     frame: false,
     alwaysOnTop: true,
     skipTaskbar: true,
-    focusable: false,
+    focusable: isCalibration, // focusable during calibration preview so drag-and-drop works flawlessly!
     show: false, // Hidden by default, toggled via Tab key listener
     webPreferences: {
       nodeIntegration: true,
@@ -630,14 +646,194 @@ function createOverlayWindow() {
     }
   });
 
+  overlayWindow.focusable = isCalibration; // Store focusable state as custom property
+
   // Make the window click-through but forward mouse events so JS hover works
   overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver'); // Force overlay above full-screen/borderless game
 
   overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
+
+  overlayWindow.webContents.on('console-message', (event, level, message) => {
+    console.log(`[OVERLAY CONSOLE] ${message}`);
+  });
 
   overlayWindow.on('closed', () => {
     overlayWindow = null;
   });
+}
+
+const getOffsetsPayload = () => {
+  const globalX = config.overlayOffsetX || 0;
+  const globalY = config.overlayOffsetY || 0;
+  return {
+    globalX,
+    globalY,
+    headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
+    headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
+    columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
+    columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
+    row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
+    row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
+    row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
+    row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
+    row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
+    row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
+    row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
+    row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
+    row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
+    row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
+  };
+};
+
+function handleTabListenerLine(line) {
+  if (line.startsWith('SELECT ')) {
+    const num = parseInt(line.substring(7), 10) || 0;
+    if (num === 0) selectedCalibrationElement = 'header';
+    else selectedCalibrationElement = 'row' + (num - 1);
+    
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.webContents.send('select-element', selectedCalibrationElement);
+    }
+  } else if (line.startsWith('DRAG ')) {
+    if (isDraggingElement) return; // Skip shifting elements if user is manually dragging one!
+    
+    // Check global cursor position to ignore player reordering drags in-game
+    const cursor = screen.getCursorScreenPoint();
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const W = primaryDisplay.bounds.width;
+    const scoreboardCenter = (W / 2) + (config.overlayOffsetX || 0);
+    
+    // Clicks on the outer left/right halves (player rows) are ignored.
+    // Clicks in the center scoreboard area (CS/matchups column) are treated as scoreboard drags.
+    if (Math.abs(cursor.x - scoreboardCenter) > W * 0.08) {
+      return;
+    }
+    
+    const parts = line.split(' ');
+    const dx = parseInt(parts[1], 10) || 0;
+    const dy = parseInt(parts[2], 10) || 0;
+    
+    config.overlayOffsetX = (config.overlayOffsetX || 0) + dx;
+    config.overlayOffsetY = (config.overlayOffsetY || 0) + dy;
+    config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX - dx)) + dx;
+    config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY - dy)) + dy;
+    config.columnOffsetX = (config.columnOffsetX !== undefined ? config.columnOffsetX : (config.overlayOffsetX - dx)) + dx;
+    config.columnOffsetY = (config.columnOffsetY !== undefined ? config.columnOffsetY : (config.overlayOffsetY - dy)) + dy;
+    
+    for (let i = 0; i < 5; i++) {
+      const rx = 'row' + i + 'OffsetX';
+      const ry = 'row' + i + 'OffsetY';
+      config[rx] = (config[rx] !== undefined ? config[rx] : (config.overlayOffsetX - dx)) + dx;
+      config[ry] = (config[ry] !== undefined ? config[ry] : (config.overlayOffsetY - dy)) + dy;
+    }
+    
+    saveConfig();
+    
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+    }
+  } else if (line.startsWith('CAL_')) {
+    const dir = line.substring(4);
+    const step = 4; // Move by 4px steps
+    let dx = 0, dy = 0;
+    if (dir === 'UP') dy = -step;
+    else if (dir === 'DOWN') dy = step;
+    else if (dir === 'LEFT') dx = -step;
+    else if (dir === 'RIGHT') dx = step;
+
+    if (selectedCalibrationElement === 'header') {
+      config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX || 0)) + dx;
+      config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY || 0)) + dy;
+    } else {
+      const rowKeyX = selectedCalibrationElement + 'OffsetX';
+      const rowKeyY = selectedCalibrationElement + 'OffsetY';
+      config[rowKeyX] = (config[rowKeyX] !== undefined ? config[rowKeyX] : (config.overlayOffsetX || 0)) + dx;
+      config[rowKeyY] = (config[rowKeyY] !== undefined ? config[rowKeyY] : (config.overlayOffsetY || 0)) + dy;
+    }
+    
+    saveConfig();
+    
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+    }
+  } else if (line === 'CALIBRATION_ON') {
+    isCalibratingMode = true;
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.webContents.send('select-element', selectedCalibrationElement);
+    }
+  } else if (line === 'CALIBRATION_OFF') {
+    isCalibratingMode = false;
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.send('select-element', null);
+    }
+  } else if (overlayWindow && !overlayWindow.isDestroyed()) {
+    if (line === 'DOWN') {
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+      // Reset visual selection when opening scoreboard (only if calibrating!)
+      overlayWindow.webContents.send('select-element', isCalibratingMode ? selectedCalibrationElement : null);
+      
+      // Dynamic screen bounds adjustment in case of resolution changes!
+      try {
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { x, y, width, height } = primaryDisplay.bounds;
+        overlayWindow.setBounds({ x, y, width, height });
+      } catch (err) {
+        console.error('[OVERLAY] Failed to dynamically update bounds on Tab:', err);
+      }
+
+      overlayWindow.setAlwaysOnTop(true, 'screen-saver'); // Pull overlay to the top of the z-order above the fullscreen game!
+      overlayWindow.showInactive(); // Show without stealing focus
+    } else if (line === 'UP') {
+      overlayWindow.hide();
+      isCalibratingMode = false;
+      overlayWindow.webContents.send('select-element', null);
+    }
+  }
+}
+
+function restartTabListener() {
+  if (tabListenerProcess) {
+    try {
+      const pid = tabListenerProcess.pid;
+      exec(`taskkill /pid ${pid} /f /t`);
+    } catch (e) {
+      try {
+        tabListenerProcess.kill();
+      } catch (err) {}
+    }
+    tabListenerProcess = null;
+  }
+
+  const exePath = path.join(__dirname, 'scratch', 'tab_listener.exe');
+  if (fs.existsSync(exePath)) {
+    try {
+      tabListenerProcess = spawn(exePath);
+      console.log('[OVERLAY] Spawned tab_listener.exe process.');
+
+      tabListenerProcess.stdout.on('data', (data) => {
+        const str = data.toString();
+        const lines = str.split(/\r?\n/);
+        for (let rawLine of lines) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          handleTabListenerLine(line);
+        }
+      });
+
+      tabListenerProcess.on('error', (err) => {
+        console.error('[OVERLAY] Tab listener process error:', err.message);
+      });
+
+      tabListenerProcess.on('close', (code) => {
+        console.log(`[OVERLAY] Tab listener process exited with code ${code}`);
+        tabListenerProcess = null;
+      });
+    } catch (e) {
+      console.error('[OVERLAY] Failed to spawn tab_listener.exe:', e);
+    }
+  }
 }
 
 function startLiveGameTracking() {
@@ -650,134 +846,14 @@ function startLiveGameTracking() {
 
   console.log('[OVERLAY] Starting live game overlay tracking...');
   
-  // 1. Create the overlay window
-  createOverlayWindow();
-
-  // 2. Spawn the Tab key listener C# background process
-  const exePath = path.join(__dirname, 'scratch', 'tab_listener.exe');
-  if (fs.existsSync(exePath)) {
-    try {
-      tabListenerProcess = spawn(exePath);
-      console.log('[OVERLAY] Spawned tab_listener.exe process.');
-
-      tabListenerProcess.stdout.on('data', (data) => {
-        const lines = data.toString().split(/\r?\n/);
-        for (let rawLine of lines) {
-          const line = rawLine.trim();
-          if (!line) continue;
-
-          const getOffsetsPayload = () => {
-            const globalX = config.overlayOffsetX || 0;
-            const globalY = config.overlayOffsetY || 0;
-            return {
-              globalX,
-              globalY,
-              headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
-              headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
-              columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
-              columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
-              row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
-              row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
-              row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
-              row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
-              row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
-              row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
-              row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
-              row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
-              row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
-              row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
-            };
-          };
-
-          if (line.startsWith('SELECT ')) {
-            const num = parseInt(line.substring(7), 10) || 0;
-            if (num === 0) selectedCalibrationElement = 'header';
-            else selectedCalibrationElement = 'row' + (num - 1);
-            
-            console.log('[OVERLAY] Keyboard selected calibration target:', selectedCalibrationElement);
-            
-            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
-              overlayWindow.webContents.send('select-element', selectedCalibrationElement);
-            }
-          } else if (line.startsWith('DRAG ')) {
-            const parts = line.split(' ');
-            const dx = parseInt(parts[1], 10) || 0;
-            const dy = parseInt(parts[2], 10) || 0;
-            
-            config.overlayOffsetX = (config.overlayOffsetX || 0) + dx;
-            config.overlayOffsetY = (config.overlayOffsetY || 0) + dy;
-            config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX - dx)) + dx;
-            config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY - dy)) + dy;
-            config.columnOffsetX = (config.columnOffsetX !== undefined ? config.columnOffsetX : (config.overlayOffsetX - dx)) + dx;
-            config.columnOffsetY = (config.columnOffsetY !== undefined ? config.columnOffsetY : (config.overlayOffsetY - dy)) + dy;
-            
-            for (let i = 0; i < 5; i++) {
-              const rx = 'row' + i + 'OffsetX';
-              const ry = 'row' + i + 'OffsetY';
-              config[rx] = (config[rx] !== undefined ? config[rx] : (config.overlayOffsetX - dx)) + dx;
-              config[ry] = (config[ry] !== undefined ? config[ry] : (config.overlayOffsetY - dy)) + dy;
-            }
-            
-            saveConfig();
-            
-            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
-              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
-            }
-          } else if (line.startsWith('CAL_')) {
-            const dir = line.substring(4);
-            const step = 4; // Move by 4px steps
-            let dx = 0, dy = 0;
-            if (dir === 'UP') dy = -step;
-            else if (dir === 'DOWN') dy = step;
-            else if (dir === 'LEFT') dx = -step;
-            else if (dir === 'RIGHT') dx = step;
-
-            if (selectedCalibrationElement === 'header') {
-              config.headerOffsetX = (config.headerOffsetX !== undefined ? config.headerOffsetX : (config.overlayOffsetX || 0)) + dx;
-              config.headerOffsetY = (config.headerOffsetY !== undefined ? config.headerOffsetY : (config.overlayOffsetY || 0)) + dy;
-            } else {
-              const rowKeyX = selectedCalibrationElement + 'OffsetX';
-              const rowKeyY = selectedCalibrationElement + 'OffsetY';
-              config[rowKeyX] = (config[rowKeyX] !== undefined ? config[rowKeyX] : (config.overlayOffsetX || 0)) + dx;
-              config[rowKeyY] = (config[rowKeyY] !== undefined ? config[rowKeyY] : (config.overlayOffsetY || 0)) + dy;
-            }
-            
-            saveConfig();
-            
-            if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
-              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
-            }
-          } else if (overlayWindow && !overlayWindow.isDestroyed()) {
-            if (line === 'DOWN') {
-              overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-              overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
-              // Reset visual selection when opening scoreboard
-              overlayWindow.webContents.send('select-element', selectedCalibrationElement);
-              overlayWindow.showInactive(); // Show without stealing focus
-            } else if (line === 'UP') {
-              overlayWindow.hide();
-            }
-          }
-        }
-      });
-
-      tabListenerProcess.on('error', (err) => {
-        console.error('[OVERLAY] Tab listener process error:', err.message);
-      });
-    } catch (e) {
-      console.error('[OVERLAY] Failed to spawn tab_listener.exe:', e);
-    }
-  } else {
-    console.warn('[OVERLAY] tab_listener.exe not found. Cannot listen to Tab key.');
-  }
-
-  // 3. Start polling the Live Client Data API
+  // Start polling the Live Client Data API (overlay window & tab listener will be spawned once game API responds successfully)
   liveGamePollInterval = setInterval(pollLiveClientData, 1500);
   pollLiveClientData(); // Immediate poll
 }
 
 function stopLiveGameTracking() {
   console.log('[OVERLAY] Stopping live game overlay tracking...');
+  playerBootsCache = {};
 
   if (liveGamePollInterval) {
     clearInterval(liveGamePollInterval);
@@ -786,10 +862,20 @@ function stopLiveGameTracking() {
 
   if (tabListenerProcess) {
     try {
-      tabListenerProcess.kill();
-    } catch (e) {}
+      const pid = tabListenerProcess.pid;
+      exec(`taskkill /pid ${pid} /f /t`);
+    } catch (e) {
+      try {
+        tabListenerProcess.kill();
+      } catch (err) {}
+    }
     tabListenerProcess = null;
   }
+
+  // Forceful fail-safe cleanup of any loose tab_listener processes on Windows
+  try {
+    exec('taskkill /f /im tab_listener.exe');
+  } catch (e) {}
 
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.close();
@@ -798,6 +884,11 @@ function stopLiveGameTracking() {
 }
 
 function pollLiveClientData() {
+  // Phase-guard: ignore polling if not in an active game phase
+  if (!['GameStart', 'InProgress', 'Reconnect'].includes(appState.currentGameflowPhase)) {
+    return;
+  }
+
   const options = {
     hostname: '127.0.0.1',
     port: 2999,
@@ -834,6 +925,20 @@ function processLiveGameGoldData(data) {
   if (!data || !data.allPlayers || data.allPlayers.length === 0) return;
   if (!scraper || !scraper.itemsMap) return;
 
+  // Spawn the C# global input hook process only when the game client's live API is fully active,
+  // and the match has actually started (gameTime > 0), to ensure it sits at the top of the hook chain
+  // after the game client has completed its startup and input/window initialization!
+  const gameTime = data.gameData ? data.gameData.gameTime : 0;
+  if (!tabListenerProcess && gameTime > 0) {
+    console.log(`[OVERLAY] Live game active (gameTime: ${gameTime}). Creating overlay window & spawning tab listener...`);
+    
+    // Create the overlay window now when the game is fully loaded and active!
+    // This completely prevents Chromium background suspension and guarantees it sits on top in the z-order!
+    createOverlayWindow();
+    
+    restartTabListener();
+  }
+
   const activeSummonerName = data.activePlayer && data.activePlayer.summonerName;
   const me = data.allPlayers.find(p => p.summonerName === activeSummonerName);
   const myTeam = me ? me.team : 'ORDER'; // Fallback to ORDER if activePlayer not ready
@@ -845,12 +950,56 @@ function processLiveGameGoldData(data) {
   // Calculate spent gold value from active items
   const calculatePlayerGold = (player) => {
     if (!player.items || !Array.isArray(player.items)) return 0;
-    return player.items.reduce((sum, item) => {
+    
+    let hasBoots = false;
+    let gold = player.items.reduce((sum, item) => {
       const id = String(item.itemID);
       const count = item.count || 1;
+      
+      if (BOOTS_IDS.has(id)) {
+        hasBoots = true;
+        playerBootsCache[player.summonerName] = id;
+      }
+      
       const itemCost = scraper.itemsMap[id] ? scraper.itemsMap[id].gold : 0;
       return sum + (itemCost * count);
     }, 0);
+
+    // If the player has completed their role quest, their boots will be in the dedicated quest slot,
+    // which may be omitted from the player.items array by the local Live Client API.
+    // In this case, we manually add their cached boots' gold cost to their total spent gold!
+    if (!hasBoots && playerBootsCache[player.summonerName]) {
+      const cachedId = playerBootsCache[player.summonerName];
+      let bootCost = scraper.itemsMap[cachedId] ? scraper.itemsMap[cachedId].gold : 0;
+      if (bootCost === 0) {
+        const fallbackCosts = {
+          '1001': 300,  // Boots
+          '2422': 300,  // Slightly Magical Footwear
+          '3005': 1000, // Ghostly Explorers
+          '3006': 1100, // Berserker's Greaves
+          '3008': 1000, // Greedy Greaves
+          '3009': 1000, // Boots of Swiftness
+          '3010': 900,  // Symbiotic Soles
+          '3013': 900,  // Synchronized Souls
+          '3020': 1100, // Sorcerer's Shoes
+          '3047': 1200, // Plated Steelcaps
+          '3111': 1250, // Mercury's Treads
+          '3117': 1000, // Boots of Mobility
+          '3158': 900,  // Ionian Boots of Lucidity
+          '3168': 1000, // Immortal Path
+          '3170': 1000, // Swift March
+          '3171': 900,  // Crimson Lucidity
+          '3173': 1250, // Chain Wrecker
+          '3174': 1200, // Armored Advance
+          '3175': 1100, // Spellcaster's Boots
+          '3176': 900,  // Eternal Advance
+        };
+        bootCost = fallbackCosts[cachedId] || 0;
+      }
+      gold += bootCost;
+    }
+
+    return gold;
   };
 
   let alliesTotalGold = 0;
@@ -908,7 +1057,7 @@ function processLiveGameGoldData(data) {
     matchups
   };
 
-  if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send('update-gold', payload);
   }
 }
@@ -930,10 +1079,7 @@ app.whenReady().then(() => {
 
   // Check for updates periodically every 2 hours while the app is running
   setInterval(() => {
-    console.log('[UPDATER] Periodic update check...');
-    autoUpdater.checkForUpdates().catch(err => {
-      console.warn('[UPDATER] Periodic update check failed:', err.message);
-    });
+    autoUpdater.checkForUpdates().catch(() => {});
   }, 2 * 60 * 60 * 1000);
 
   // Instantiate Modules
@@ -1390,6 +1536,10 @@ ipcMain.handle('get-initial-state', async () => {
   };
 });
 
+ipcMain.on('dragging-state-change', (event, state) => {
+  isDraggingElement = state;
+});
+
 ipcMain.on('save-element-offset', (event, { type, x, y }) => {
   if (type === 'header') {
     config.headerOffsetX = x;
@@ -1404,40 +1554,10 @@ ipcMain.on('save-element-offset', (event, { type, x, y }) => {
     config[ry] = y;
   }
   saveConfig();
-  
-  const getOffsetsPayload = () => {
-    const globalX = config.overlayOffsetX || 0;
-    const globalY = config.overlayOffsetY || 0;
-    return {
-      globalX,
-      globalY,
-      headerX: config.headerOffsetX !== undefined ? config.headerOffsetX : globalX,
-      headerY: config.headerOffsetY !== undefined ? config.headerOffsetY : globalY,
-      columnX: config.columnOffsetX !== undefined ? config.columnOffsetX : globalX,
-      columnY: config.columnOffsetY !== undefined ? config.columnOffsetY : globalY,
-      row0X: config.row0OffsetX !== undefined ? config.row0OffsetX : globalX,
-      row0Y: config.row0OffsetY !== undefined ? config.row0OffsetY : globalY,
-      row1X: config.row1OffsetX !== undefined ? config.row1OffsetX : globalX,
-      row1Y: config.row1OffsetY !== undefined ? config.row1OffsetY : globalY,
-      row2X: config.row2OffsetX !== undefined ? config.row2OffsetX : globalX,
-      row2Y: config.row2OffsetY !== undefined ? config.row2OffsetY : globalY,
-      row3X: config.row3OffsetX !== undefined ? config.row3OffsetX : globalX,
-      row3Y: config.row3OffsetY !== undefined ? config.row3OffsetY : globalY,
-      row4X: config.row4OffsetX !== undefined ? config.row4OffsetX : globalX,
-      row4Y: config.row4OffsetY !== undefined ? config.row4OffsetY : globalY
-    };
-  };
-
-  // Always send update to overlay (visible or not) so next show picks up new offsets immediately
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
-  }
 });
 
 ipcMain.on('preview-overlay', (event) => {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
-    createOverlayWindow();
-  }
+  createOverlayWindow(true);
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     const getOffsetsPayload = () => {
       const globalX = config.overlayOffsetX || 0;
@@ -1473,13 +1593,29 @@ ipcMain.on('preview-overlay', (event) => {
       ]
     };
 
-    // Make FULLY interactive so all elements can be dragged without hovering first
     isPreviewMode = true;
+
+    // CRITICAL: In preview/calibration mode, the overlay MUST receive mouse events
+    // so the user can drag elements. setIgnoreMouseEvents(false) enables this.
     overlayWindow.setIgnoreMouseEvents(false);
-    overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
-    overlayWindow.webContents.send('update-gold', fakeGold);
-    overlayWindow.webContents.send('start-preview');
-    overlayWindow.showInactive();
+
+    const sendPreviewData = () => {
+      overlayWindow.webContents.send('update-offsets', getOffsetsPayload());
+      overlayWindow.webContents.send('update-gold', fakeGold);
+      overlayWindow.webContents.send('start-preview');
+    };
+
+    if (overlayWindow.webContents.isLoading()) {
+      // Page is still loading — wait for it to finish
+      overlayWindow.webContents.once('did-finish-load', sendPreviewData);
+    } else {
+      // Page is already loaded — send immediately
+      sendPreviewData();
+    }
+
+    // show() + focus() so the window actually gets mouse input on Windows
+    overlayWindow.show();
+    overlayWindow.focus();
   }
 });
 
@@ -1490,11 +1626,12 @@ ipcMain.on('end-preview', () => {
     overlayWindow.setIgnoreMouseEvents(true, { forward: true });
     overlayWindow.hide();
   }
+  createOverlayWindow(false);
+  // Notify the main renderer so it can uncheck the preview toggle
+  sendToRenderer('preview-ended');
 });
 
 ipcMain.on('set-click-through', (event, ignore) => {
-  // Don't interfere with click-through state while in preview/calibration mode
-  if (isPreviewMode) return;
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setIgnoreMouseEvents(ignore, { forward: true });
   }

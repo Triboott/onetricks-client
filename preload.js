@@ -36,6 +36,8 @@ contextBridge.exposeInMainWorld('api', {
   closeWindow: () => ipcRenderer.send('window-close'),
   saveElementOffset: (data) => ipcRenderer.send('save-element-offset', data),
   previewOverlay: () => ipcRenderer.send('preview-overlay'),
+  endPreview: () => ipcRenderer.send('end-preview'),
+  onPreviewEnded: (cb) => ipcRenderer.on('preview-ended', cb),
   
   // Auto-Updater Actions
   checkForUpdates: () => ipcRenderer.send('check-for-updates'),

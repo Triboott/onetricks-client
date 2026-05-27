@@ -13,6 +13,9 @@ class TabListener {
     [DllImport("user32.dll")]
     private static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
 
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT {
         public int X;
@@ -30,15 +33,31 @@ class TabListener {
         bool isCalibrating = false;
         POINT lastMousePos = new POINT();
         
+        IntPtr lastHwnd = IntPtr.Zero;
+        bool lastIsLolActive = false;
+        
         while (true) {
             IntPtr hwnd = GetForegroundWindow();
             if (hwnd != IntPtr.Zero) {
-                StringBuilder sb = new StringBuilder(256);
-                GetWindowText(hwnd, sb, 256);
-                string title = sb.ToString();
-                
-                // League of Legends in-game window class/title checks
-                bool isLolActive = title.IndexOf("League of Legends (TM) Client", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool isLolActive = false;
+                if (hwnd == lastHwnd) {
+                    isLolActive = lastIsLolActive;
+                } else {
+                    lastHwnd = hwnd;
+                    try {
+                        uint pid;
+                        GetWindowThreadProcessId(hwnd, out pid);
+                        if (pid != 0) {
+                            using (System.Diagnostics.Process proc = System.Diagnostics.Process.GetProcessById((int)pid)) {
+                                string procName = proc.ProcessName;
+                                isLolActive = procName.Equals("League of Legends", StringComparison.OrdinalIgnoreCase);
+                            }
+                        }
+                    } catch {
+                        // Safe fallback if querying a privileged process
+                    }
+                    lastIsLolActive = isLolActive;
+                }
                 
                 if (isLolActive) {
                     // TAB virtual key code is 0x09
