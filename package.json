@@ -1,6 +1,6 @@
 {
   "name": "onetricks-client",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Onetricks.gg LoL Desktop Client",
   "main": "main.js",
   "scripts": {
@@ -24,6 +24,16 @@
       "owner": "Triboott",
       "repo": "onetricks-client"
     },
+    "extraResources": [
+      {
+        "from": "scratch/tab_listener.exe",
+        "to": "tab_listener.exe"
+      },
+      {
+        "from": "scratch/tab_listener.cs",
+        "to": "tab_listener.cs"
+      }
+    ],
     "directories": {
       "output": "dist"
     },

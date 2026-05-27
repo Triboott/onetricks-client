@@ -574,9 +574,15 @@ function setupAutoUpdater() {
 // SCOREBOARD GOLD OVERLAY HELPER FUNCTIONS & COMPILATION
 // ==========================================================================
 function compileTabListener() {
-  const scratchDir = path.join(__dirname, 'scratch');
-  const csPath = path.join(scratchDir, 'tab_listener.cs');
-  const exePath = path.join(scratchDir, 'tab_listener.exe');
+  // In a packaged app, the exe lives in process.resourcesPath (outside the ASAR).
+  // In dev mode it lives in scratch/.
+  const isPackaged = app.isPackaged;
+  const csPath  = isPackaged
+    ? path.join(process.resourcesPath, 'tab_listener.cs')
+    : path.join(__dirname, 'scratch', 'tab_listener.cs');
+  const exePath = isPackaged
+    ? path.join(process.resourcesPath, 'tab_listener.exe')
+    : path.join(__dirname, 'scratch', 'tab_listener.exe');
 
   if (!fs.existsSync(csPath)) {
     console.log('[OVERLAY] C# listener file missing. Skipping compilation.');
@@ -806,7 +812,10 @@ function restartTabListener() {
     tabListenerProcess = null;
   }
 
-  const exePath = path.join(__dirname, 'scratch', 'tab_listener.exe');
+  // Resolve the exe path: use resourcesPath when packaged, scratch/ in dev
+  const exePath = app.isPackaged
+    ? path.join(process.resourcesPath, 'tab_listener.exe')
+    : path.join(__dirname, 'scratch', 'tab_listener.exe');
   if (fs.existsSync(exePath)) {
     try {
       tabListenerProcess = spawn(exePath);
